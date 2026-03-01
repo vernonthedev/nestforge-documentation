@@ -1,0 +1,70 @@
+---
+title: Configuration
+description: How NestForge loads, validates, and injects typed configuration.
+---
+
+# Configuration crate
+
+Configuration support lives in `nestforge-config` and is re-exported by the public
+`nestforge` crate when the `config` feature is enabled.
+
+Important types:
+
+- `ConfigModule`
+- `ConfigOptions`
+- `EnvSchema`
+- `FromEnv`
+- `EnvStore`
+
+# Standard application pattern
+
+The example app uses a helper function that validates environment values before building
+the application config:
+
+```rust
+fn load_app_config() -> anyhow::Result<AppConfig> {
+    let allowed_levels = vec!["trace", "debug", "info", "warn", "error"];
+    let schema = nestforge::EnvSchema::new()
+        .min_len("APP_NAME", 2)
+        .one_of("LOG_LEVEL", &allowed_levels);
+
+    Ok(nestforge::ConfigModule::for_root::<AppConfig>(
+        nestforge::ConfigOptions::new().env_file(".env").validate_with(schema),
+    )?)
+}
+```
+
+# Implementing `FromEnv`
+
+Your application config stays strongly typed by implementing `FromEnv`:
+
+```rust
+impl nestforge::FromEnv for AppConfig {
+    fn from_env(env: &nestforge::EnvStore) -> Result<Self, nestforge::ConfigError> {
+        Ok(Self {
+            app_name: env.get("APP_NAME").unwrap_or("NestForge").to_string(),
+            log_level: env.get("LOG_LEVEL").unwrap_or("info").to_string(),
+        })
+    }
+}
+```
+
+# Why validation matters
+
+Configuration errors are startup errors, not request-time surprises. Use `EnvSchema` to
+fail fast on:
+
+- missing required keys
+- values that are too short
+- values outside an accepted set
+
+# Where configuration belongs
+
+A useful application rule is:
+
+- parsing environment values belongs in config loading
+- application behavior belongs in services and modules
+- transport-specific config stays close to the relevant bootstrap code
+
+That keeps configuration as a stable provider instead of letting env parsing spread
+through the codebase.

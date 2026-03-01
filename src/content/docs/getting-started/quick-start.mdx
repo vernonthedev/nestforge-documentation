@@ -1,0 +1,94 @@
+---
+title: Quick Start
+description: Build and run a first NestForge application with the current CLI and framework APIs.
+---
+
+# Create a new application
+
+The fastest path into NestForge is the CLI:
+
+```bash
+nestforge new demo-api
+cd demo-api
+cargo run
+```
+
+That gives you a runnable HTTP app with:
+
+- `src/main.rs`
+- `src/app_module.rs`
+- root controllers
+- service, DTO, guard, interceptor, and environment scaffolding
+
+# Create transport-first variants
+
+The CLI also supports transport-specific templates:
+
+```bash
+nestforge new demo-graphql --transport graphql
+nestforge new demo-grpc --transport grpc
+nestforge new demo-bus --transport microservices
+nestforge new demo-events --transport websockets
+```
+
+These templates change the bootstrap files and generated folders so the project starts
+from the chosen runtime model instead of from plain HTTP.
+
+# Minimal bootstrap
+
+The core HTTP bootstrap pattern is:
+
+```rust
+use nestforge::{NestForgeFactory, NestForgeFactoryOpenApiExt};
+
+NestForgeFactory::<AppModule>::create()?
+    .with_global_prefix("api")
+    .with_openapi_docs("My API", "1.0.0")?
+    .listen(3000)
+    .await?;
+```
+
+This is the main equivalent of `NestFactory.create(AppModule)` in NestJS terms.
+
+# Minimal module
+
+NestForge applications are wired through a module:
+
+```rust
+use nestforge::module;
+
+#[module(
+    imports = [],
+    controllers = [AppController],
+    providers = [load_app_config()?],
+    exports = []
+)]
+pub struct AppModule;
+```
+
+Modules are where you make feature boundaries explicit. They also determine provider
+registration order and export visibility.
+
+# Add a feature module
+
+The CLI can generate a feature module:
+
+```bash
+nestforge g module users
+nestforge g resource users --module users
+```
+
+That pattern creates a Nest-style folder layout under `src/users/` and patches the
+application module so the feature becomes part of the app.
+
+# What to inspect next
+
+After your first app boots, inspect these files in the generated or example app:
+
+- `src/main.rs` for runtime bootstrap
+- `src/app_module.rs` for module wiring
+- `src/users/` or another feature folder for the module pattern
+- `.env` and `.env.example` for configuration assumptions
+
+If you prefer to learn from a maintained example instead of from generated output, read
+[Hello NestForge](/examples/hello-nestforge/).

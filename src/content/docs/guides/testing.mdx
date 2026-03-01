@@ -1,0 +1,62 @@
+---
+title: Testing
+description: Use NestForge testing helpers for provider overrides, HTTP tests, GraphQL tests, and transport-level testing.
+---
+
+# Testing feature
+
+NestForge testing helpers are enabled through the `testing` feature:
+
+```toml
+nestforge = { version = "1", features = ["testing"] }
+```
+
+# Build a testing module
+
+The main entry point is `TestFactory::<AppModule>`:
+
+```rust
+let module = nestforge::TestFactory::<AppModule>::create()
+    .override_provider(AppConfig {
+        app_name: "test".to_string(),
+        log_level: "debug".to_string(),
+    })
+    .build()?;
+```
+
+That creates a module runtime with provider overrides applied before your tests run.
+
+# Resolve providers directly
+
+Testing modules can resolve providers in the same style as production code:
+
+```rust
+let config = module.resolve::<AppConfig>()?;
+```
+
+# Test HTTP routes
+
+`TestingModule::http_router()` returns an Axum router with the framework state attached.
+That makes request-level tests straightforward with `tower::ServiceExt::oneshot(...)`.
+
+# Test GraphQL
+
+If your app uses GraphQL, `TestingModule::graphql_router(...)` and related helpers let
+you mount a schema into the same test container, which means resolvers can access the
+same overridden providers.
+
+# Test transport logic directly
+
+The testing module can also create transport contexts:
+
+- `grpc_context()`
+- `websocket_context()`
+- `microservice_context(transport, pattern)`
+
+These are useful when you want focused tests around transport integration or message
+handler behavior without running a full server.
+
+# Shutdown matters
+
+If your modules use lifecycle hooks, call `module.shutdown()?` at the end of the test so
+destroy and shutdown hooks run inside the testing runtime.

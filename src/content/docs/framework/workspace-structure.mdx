@@ -1,0 +1,37 @@
+---
+title: Workspace Structure
+description: Understand how the NestForge repository is organized and where to make changes.
+---
+
+# Root layout
+
+The `nestforge/` repository is a Rust workspace, not a single crate. At the top level,
+the directories that matter most are:
+
+- `crates/`
+- `examples/`
+- `docs/`
+- `tests/`
+- `scripts/`
+
+# Where work belongs
+
+Use these placement rules:
+
+- framework logic belongs in the most specific crate under `crates/`
+- user-facing examples belong under `examples/`
+- markdown source documentation in the framework repo lives under `docs/`
+- automation scripts and release helpers live under `scripts/`
+
+# Why this matters
+
+Keeping code in the right place protects API boundaries. For example:
+
+- request pipeline logic belongs in core or HTTP crates, not in examples
+- transport integrations belong in dedicated feature crates
+- example apps should demonstrate usage, not host unreleased internal abstractions
+
+# Examples as documentation
+
+The workspace examples are not filler. They are part of the public learning surface and
+should be updated when framework behavior changes in a user-visible way.

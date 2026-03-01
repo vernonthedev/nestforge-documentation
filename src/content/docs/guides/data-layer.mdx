@@ -1,0 +1,53 @@
+---
+title: Data Layer
+description: Understand the data-related crates in the NestForge workspace and when to use each one.
+---
+
+# Data crates in the workspace
+
+NestForge does not treat persistence as a single crate. The current workspace includes:
+
+- `nestforge-db`
+- `nestforge-orm`
+- `nestforge-data`
+- `nestforge-mongo`
+- `nestforge-redis`
+
+# What each crate is for
+
+## `nestforge-db`
+
+This is the SQL-oriented foundation. It contains the DB wrapper and migration support
+used by the CLI database workflow.
+
+## `nestforge-orm`
+
+This provides relational repository-style abstractions on top of the DB layer when your
+application wants a more structured persistence surface.
+
+## `nestforge-data`
+
+This crate collects more general data abstractions that are not tied only to relational
+storage.
+
+## `nestforge-mongo`
+
+This is the Mongo-oriented adapter surface for document-style workflows.
+
+## `nestforge-redis`
+
+This is the Redis-oriented store surface and is also relevant for cache scenarios.
+
+# Practical rule of thumb
+
+Choose the simplest layer that matches your needs:
+
+- use `ResourceService` for prototypes and examples
+- use `nestforge-db` when you need SQL access and migrations
+- use `nestforge-orm` when repository-style abstractions improve maintainability
+- use `nestforge-mongo` or `nestforge-redis` only when your application actually needs
+  those backends
+
+Because these crates are still part of an evolving framework workspace, prefer explicit
+boundaries in application code instead of coupling every service directly to one crate's
+concrete types.

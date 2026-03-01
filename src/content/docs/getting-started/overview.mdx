@@ -1,0 +1,85 @@
+---
+title: Overview
+description: What NestForge is, who it is for, and how to approach the documentation.
+---
+
+# What NestForge is
+
+NestForge is a modular backend framework for Rust that borrows the mental model of
+NestJS while staying idiomatic to Rust's runtime and type system. In practice, that
+means:
+
+- modules define feature boundaries
+- providers are resolved through dependency injection
+- controllers describe HTTP routes with macros
+- optional crates add GraphQL, gRPC, WebSocket, scheduling, cache, and microservice support
+- the workspace ships a CLI plus runnable examples, not just library crates
+
+# Who this documentation is for
+
+This site is intentionally split for two audiences.
+
+## 1. Application developers
+
+This track is for teams that want to build an API or service with NestForge. You
+care about:
+
+- how to bootstrap an app
+- how modules, providers, controllers, DTOs, and validation work
+- how to add middleware, guards, interceptors, auth, and OpenAPI
+- which transport to choose
+- how the CLI scaffolds projects and resources
+
+Read these sections first:
+
+- [Installation](/getting-started/installation/)
+- [Quick Start](/getting-started/quick-start/)
+- [Architecture](/concepts/architecture/)
+- [Modules and DI](/concepts/modules-and-di/)
+- [Controllers and Routing](/concepts/controllers-routing/)
+
+## 2. Framework developers
+
+This track is for contributors working inside the `nestforge/` workspace. You care
+about:
+
+- crate ownership and why functionality lives where it does
+- public API boundaries and re-export rules
+- how examples, docs, and tests fit into feature changes
+- contribution and release expectations
+
+Start here:
+
+- [Workspace Structure](/framework/workspace-structure/)
+- [Crate Architecture](/framework/crate-architecture/)
+- [Contributing](/framework/contributing/)
+- [Release Process](/framework/release-process/)
+
+# What ships in the current workspace
+
+The root workspace currently includes:
+
+- core framework crates such as `nestforge-core`, `nestforge-http`, and `nestforge-macros`
+- optional feature crates such as `nestforge-graphql`, `nestforge-grpc`, `nestforge-websockets`, `nestforge-schedule`, `nestforge-cache`, and `nestforge-microservices`
+- data-oriented crates including `nestforge-db`, `nestforge-orm`, `nestforge-data`, `nestforge-mongo`, and `nestforge-redis`
+- a CLI crate for scaffolding and project maintenance
+- example applications for HTTP, GraphQL, gRPC, microservices, and WebSockets
+
+# How to read the docs efficiently
+
+If you are new to NestForge, read the docs in this order:
+
+1. Installation
+2. Quick Start
+3. Architecture
+4. Modules and DI
+5. Controllers and Routing
+6. Request Pipeline
+7. The transport page that matches your application
+
+If you are already comfortable with NestJS, the biggest differences to watch are:
+
+- Rust ownership and concrete types replace runtime reflection-heavy patterns
+- features are activated through Cargo features and separate crates
+- transport integrations are explicit instead of hidden behind a single opaque runtime
+- examples and tests are critical for learning the framework surface

@@ -1,0 +1,56 @@
+---
+title: Microservices
+description: Understand the transport-neutral message and event pattern system in NestForge.
+---
+
+# Purpose
+
+NestForge microservices support is transport-neutral by design. It is meant to provide a
+shared message-pattern layer that can sit behind:
+
+- gRPC services
+- WebSocket gateways
+- future broker or queue adapters
+
+# Registry model
+
+You define a registry with typed handlers:
+
+```rust
+let registry = nestforge::MicroserviceRegistry::builder()
+    .message("users.count", |_payload: (), ctx| async move {
+        let service = ctx.resolve::<UsersService>()?;
+        Ok(service.count().await?)
+    })
+    .event("users.created", |payload: CreateUserEvent, ctx| async move {
+        let audit = ctx.resolve::<AuditService>()?;
+        audit.record(payload.user_id).await?;
+        Ok(())
+    })
+    .build();
+```
+
+# Dispatch model
+
+Transports can dispatch envelopes into the registry, while application code and tests can
+use `InProcessMicroserviceClient`.
+
+That gives you one core message-handling model with multiple possible edges.
+
+# Context
+
+`MicroserviceContext` exposes:
+
+- the container
+- transport name
+- current pattern
+- transport metadata
+- optional request ID and auth identity when present
+
+# Good fit
+
+Choose this layer when your application wants:
+
+- transport-independent message semantics
+- in-process testing of handlers
+- a bridge between multiple edge protocols and one business workflow

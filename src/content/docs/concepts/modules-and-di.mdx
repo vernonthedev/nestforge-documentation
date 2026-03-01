@@ -1,0 +1,105 @@
+---
+title: Modules and DI
+description: How NestForge modules, providers, exports, scopes, and lifecycle hooks work.
+---
+
+# Modules define application structure
+
+NestForge modules are the main unit of composition. A module groups:
+
+- imports
+- controllers
+- providers
+- exports
+- optional lifecycle hooks
+
+Basic example:
+
+```rust
+#[module(
+    imports = [UsersModule, SettingsModule],
+    controllers = [AppController, HealthController],
+    providers = [load_app_config()?, connect_db()?],
+    exports = [Db, AppConfig]
+)]
+pub struct AppModule;
+```
+
+# Registration order
+
+The framework resolves modules in a deterministic order:
+
+1. visit imported modules
+2. register current module providers
+3. mount current module controllers
+
+That matters because exported providers from imported modules must already exist before
+downstream modules try to resolve them.
+
+# Providers
+
+Providers are the values stored in the DI container. NestForge supports several styles:
+
+- direct values with `Provider::value(...)`
+- singleton factories with `Provider::factory(...)`
+- request-scoped factories with `Provider::request_factory(...)`
+- transient factories with `Provider::transient_factory(...)`
+- async provider construction in dynamic modules
+
+# Choosing provider scope
+
+Use these rules:
+
+- singleton: shared services, configuration, registries, lazy DB handles
+- request-scoped: services that need request context, request ID, or auth identity
+- transient: short-lived helpers that should be recreated on every resolve
+
+Request-scoped providers are especially useful when a service depends on
+`RequestContext`, `RequestId`, or authenticated identity stored in the scoped container.
+
+# Exports
+
+Exports make provider sharing explicit. If a module lists an export that it never
+registered, startup fails instead of silently continuing. That keeps the module graph
+honest and readable.
+
+# Dynamic modules
+
+Dynamic modules cover the runtime-configuration pattern often called `register(...)` in
+NestJS-style frameworks. NestForge uses `ModuleRef::builder(...)` for this.
+
+Typical use cases:
+
+- wrapping remote configuration
+- building auth modules from secrets or config values
+- packaging reusable module bundles for other applications
+
+# Lifecycle hooks
+
+Modules can run explicit lifecycle hooks:
+
+- `on_module_init`
+- `on_application_bootstrap`
+- `on_module_destroy`
+- `on_application_shutdown`
+
+These are plain functions that receive the container. Common uses:
+
+- warm caches
+- start schedules
+- log startup state
+- release resources on shutdown
+
+# Diagnostics
+
+For contributor or debugging work, `collect_module_graph::<AppModule>()` can produce a
+report of:
+
+- module names
+- imports
+- exports
+- controller counts
+- whether a module is global
+
+That is valuable when you are diagnosing missing providers, cycles, or surprising import
+trees.

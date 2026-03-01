@@ -1,0 +1,89 @@
+---
+title: Auth and OpenAPI
+description: Configure authentication, authorization metadata, and generated OpenAPI documentation.
+---
+
+# Authentication primitives
+
+NestForge includes several auth-oriented request tools:
+
+- `AuthUser`
+- `OptionalAuthUser`
+- `BearerToken`
+- `AuthIdentity`
+
+These are lightweight primitives. The framework does not force one auth provider or one
+token format on you.
+
+# Runtime auth configuration
+
+Auth is activated at the app factory level:
+
+```rust
+NestForgeFactory::<AppModule>::create()?
+    .with_auth_resolver(|token, _container| async move {
+        Ok(token.map(|_| nestforge::AuthIdentity::new("demo-user").with_roles(["admin"])))
+    });
+```
+
+Your resolver decides how bearer tokens map into identity. That keeps auth integration
+flexible for:
+
+- JWTs
+- opaque session tokens
+- API keys translated into identities
+- internal service credentials
+
+# Route protection
+
+NestForge offers several protection mechanisms:
+
+- `#[nestforge::authenticated]` for routes that require auth
+- `#[nestforge::roles(...)]` for role-aware enforcement
+- `auth_guard!` and `role_guard!` macros for explicit guard types
+- route, controller, and global guard registration
+
+# OpenAPI metadata
+
+Controllers can carry endpoint documentation directly:
+
+```rust
+#[nestforge::get("/users")]
+#[nestforge::authenticated]
+#[nestforge::roles("admin", "support")]
+#[nestforge::summary("List users")]
+#[nestforge::tag("users")]
+#[nestforge::response(status = 200, description = "Users returned")]
+async fn list() -> nestforge::ApiResult<Vec<UserDto>> {
+    # todo!()
+}
+```
+
+This keeps route behavior and route documentation close together.
+
+# Mount generated docs
+
+To serve generated documentation:
+
+```rust
+use nestforge::{NestForgeFactory, NestForgeFactoryOpenApiExt};
+
+NestForgeFactory::<AppModule>::create()?
+    .with_openapi_docs("My API", "1.0.0")?
+    .listen(3000)
+    .await?;
+```
+
+That exposes:
+
+- `/openapi.json`
+- `/docs`
+
+# Practical pattern
+
+For production apps, a solid default is:
+
+- resolve identity centrally in `with_auth_resolver(...)`
+- use metadata macros on routes for protected endpoints
+- mount generated OpenAPI docs in non-production or behind auth
+- keep role names and auth semantics explicit in controller code

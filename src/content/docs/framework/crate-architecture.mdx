@@ -1,0 +1,99 @@
+---
+title: Crate Architecture
+description: A crate-by-crate map of the NestForge workspace and the role each crate plays.
+---
+
+# Public facade
+
+## `crates/nestforge`
+
+This is the user-facing crate most applications depend on. Its main job is to re-export
+stable public APIs from the internal crates and feature crates.
+
+# Core runtime crates
+
+## `crates/nestforge-core`
+
+Owns:
+
+- container and provider model
+- module graph and lifecycle
+- request extractors
+- validation
+- response helpers
+- route documentation structures
+- guard and interceptor pipeline abstractions
+
+## `crates/nestforge-http`
+
+Owns:
+
+- `NestForgeFactory`
+- HTTP bootstrap and router composition
+- request context middleware
+- request ID handling
+- auth resolver integration
+- middleware consumer execution
+
+## `crates/nestforge-macros`
+
+Owns:
+
+- module macro
+- controller and route macros
+- route metadata macros
+- DTO-related derive and helper macros
+
+# Application support crates
+
+## `crates/nestforge-config`
+
+Typed configuration loading and validation.
+
+## `crates/nestforge-testing`
+
+Testing runtime, provider overrides, and transport-friendly test helpers.
+
+## `crates/nestforge-openapi`
+
+OpenAPI document generation and docs router helpers.
+
+# Transport crates
+
+## `crates/nestforge-graphql`
+
+GraphQL routing and resolver integration.
+
+## `crates/nestforge-grpc`
+
+gRPC factory, context, and bridge helpers for microservices.
+
+## `crates/nestforge-websockets`
+
+Gateway routing and WebSocket context support.
+
+## `crates/nestforge-microservices`
+
+Transport-neutral message and event registry plus in-process client.
+
+## `crates/nestforge-schedule`
+
+Scheduling registry and runtime hooks.
+
+## `crates/nestforge-cache`
+
+Cache policies and cache interceptor support.
+
+# Data crates
+
+These currently include:
+
+- `nestforge-db`
+- `nestforge-orm`
+- `nestforge-data`
+- `nestforge-mongo`
+- `nestforge-redis`
+
+Treat them as layered support crates, not interchangeable duplicates. When contributing,
+keep their responsibilities narrow and avoid leaking backend-specific concerns into the
+public facade without a clear API reason.

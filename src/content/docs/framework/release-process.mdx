@@ -1,0 +1,37 @@
+---
+title: Release Process
+description: How NestForge uses conventional commits and automated release flow.
+---
+
+# Release model
+
+NestForge uses a direct release flow driven by repository automation and conventional
+commits.
+
+# What drives versioning
+
+Commits since the last version tag determine the next semantic version bump. That means
+commit messages are part of the release system, not just project history.
+
+# Practical implications
+
+When you contribute to the framework:
+
+- use conventional commits consistently
+- keep each commit focused enough to describe one change well
+- avoid mixing large unrelated docs, refactors, and fixes into a single commit
+
+# Publishing behavior
+
+According to the current repository README, the release workflow:
+
+- versions changed crates
+- tags releases
+- publishes crates to crates.io in dependency order
+- updates the primary published changelog in `crates/nestforge/CHANGELOG.md`
+
+# Why docs contributors should care
+
+Docs-only changes may not change a crate version, but they still affect release notes and
+repository history quality. Write commit subjects so maintainers can understand the
+change without opening the diff.

@@ -1,0 +1,66 @@
+---
+title: Example API
+description: The route surface exposed by the main example application.
+---
+
+# Base URL
+
+The example app runs by default at:
+
+```text
+http://127.0.0.1:3000
+```
+
+It also applies a global `/api` prefix.
+
+# Root routes
+
+- `GET /api/`
+- `GET /api/health`
+- `GET /api/health/db`
+
+# Users routes
+
+Versioned user routes live under `/api/v1/users`:
+
+- `GET /api/v1/users/`
+- `GET /api/v1/users/count`
+- `GET /api/v1/users/{id}`
+- `GET /api/v1/users/{id}/exists`
+- `POST /api/v1/users/`
+- `PUT /api/v1/users/{id}`
+- `PUT /api/v1/users/{id}/replace`
+- `DELETE /api/v1/users/{id}`
+
+# Settings routes
+
+- `GET /api/v1/settings/runtime`
+- `GET /api/v1/settings/`
+- `GET /api/v1/settings/{id}`
+- `POST /api/v1/settings/`
+- `PUT /api/v1/settings/{id}`
+- `DELETE /api/v1/settings/{id}`
+
+# Versioning demo
+
+- `GET /api/v1/versioning/hello`
+- `GET /api/v2/versioning/hello`
+
+# Docs routes
+
+When OpenAPI docs are mounted, the example also exposes:
+
+- `GET /openapi.json`
+- `GET /docs`
+
+# Error shape
+
+Errors are returned in a consistent JSON structure:
+
+```json
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "..."
+}
+```

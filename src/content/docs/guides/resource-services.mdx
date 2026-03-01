@@ -1,0 +1,67 @@
+---
+title: Resource Services
+description: Use ResourceService for fast CRUD scaffolding and understand when to replace it with a real persistence layer.
+---
+
+# What `ResourceService` is for
+
+`ResourceService<T>` is a generic in-memory CRUD helper. It is useful when you want:
+
+- a fast prototype
+- an example-friendly service layer
+- a clean controller surface before you commit to a database
+
+It is heavily used in tutorial-style flows because it reduces boilerplate while keeping
+the HTTP layer readable.
+
+# Typical setup
+
+```rust
+pub type UsersService = nestforge::ResourceService<UserDto>;
+
+pub fn users_service_seed() -> UsersService {
+    UsersService::with_seed(vec![
+        UserDto {
+            id: 1,
+            name: "Vernon".into(),
+            email: "vernon@example.com".into(),
+        },
+    ])
+}
+```
+
+# Supported operations
+
+The service supports common CRUD-oriented methods such as:
+
+- `all()`
+- `get(id)`
+- `count()`
+- `exists(id)`
+- `create(dto)`
+- `update(id, dto)`
+- `replace(id, dto)`
+- `delete(id)`
+
+# DTO expectations
+
+The entity type needs to fit the store pattern:
+
+- serializable and deserializable
+- implements `Identifiable`
+- stable enough to return through your API or serialize into another DTO
+
+The macro helpers reduce DTO boilerplate:
+
+- `#[nestforge::dto]`
+- `nestforge::impl_identifiable!(Type, id_field)`
+
+# When to move beyond it
+
+`ResourceService` is not a long-term substitute for persistence. Move to the data layer
+crates or your own repository abstraction when you need:
+
+- durable storage
+- complex queries
+- transactional behavior
+- concurrency-aware persistence guarantees

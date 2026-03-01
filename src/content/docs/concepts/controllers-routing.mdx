@@ -1,0 +1,103 @@
+---
+title: Controllers and Routing
+description: How controllers, routes, extractors, validation, serialization, and versioning work in NestForge.
+---
+
+# Controller model
+
+NestForge HTTP endpoints are defined with macros over plain Rust types and methods.
+
+The common pattern is:
+
+```rust
+use nestforge::{controller, routes, Inject};
+
+#[controller("/users")]
+pub struct UsersController;
+
+#[routes]
+impl UsersController {
+    #[nestforge::get("/")]
+    async fn list(service: Inject<UsersService>) -> nestforge::ApiResult<Vec<UserDto>> {
+        service.all().or_bad_request()
+    }
+}
+```
+
+# Route macros
+
+The current route method macros are:
+
+- `#[nestforge::get(...)]`
+- `#[nestforge::post(...)]`
+- `#[nestforge::put(...)]`
+- `#[nestforge::delete(...)]`
+
+These attach route definitions to methods inside a `#[routes]` impl block.
+
+# Extractors
+
+NestForge ships several request extractors:
+
+- `Inject<T>` for provider resolution
+- `Param<T>` and `PipedParam<T, P>` for route parameters
+- `Query<T>` and `PipedQuery<T, P>` for query strings
+- `Body<T>` and `PipedBody<T, P>` for JSON request bodies
+- `ValidatedBody<T>` for JSON bodies that implement `Validate`
+- `Decorated<T>` for custom request decorators
+- `Headers`, `Cookies`, and `RequestId` for common request metadata
+
+# Validation
+
+`ValidatedBody<T>` is the default pattern when you want DTO validation at the edge of
+the handler. A common controller signature looks like:
+
+```rust
+async fn create(body: nestforge::ValidatedBody<CreateUserDto>) -> nestforge::ApiResult<UserDto>
+```
+
+This keeps validation close to route handling instead of scattering it through service
+code.
+
+# Versioning and prefixes
+
+NestForge supports two levels of URL shaping:
+
+- app-level prefixes such as `.with_global_prefix("api")`
+- route-level version metadata such as `#[nestforge::version("1")]`
+
+Together, these produce routes like `/api/v1/users`.
+
+# Response envelopes
+
+If you want a stable response contract, use `ResponseEnvelope<T>`. That is useful when
+you want all success responses to carry common metadata or pagination information.
+
+# Response serialization
+
+If the domain type you return should not be exposed directly, use `Serialized<T, S>` and
+implement `ResponseSerializer<T>`. This is useful for:
+
+- hiding internal fields
+- translating domain models to public DTOs
+- keeping controller return types explicit
+
+# Error handling
+
+HTTP errors are represented by `HttpException`. Controller helpers such as
+`.or_bad_request()?` and `.or_not_found_id("User", id)?` keep route code concise without
+losing readable error semantics.
+
+# Route documentation metadata
+
+The same controller methods can carry documentation metadata used for OpenAPI
+generation:
+
+- `#[nestforge::summary(...)]`
+- `#[nestforge::description(...)]`
+- `#[nestforge::tag(...)]`
+- `#[nestforge::response(...)]`
+- `#[nestforge::authenticated]`
+- `#[nestforge::roles(...)]`
+
+That makes controllers both the routing definition and the source of endpoint metadata.

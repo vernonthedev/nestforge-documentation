@@ -1,0 +1,116 @@
+---
+title: CLI Workflow
+description: A detailed guide to the NestForge CLI, including generators, DB commands, and utility commands.
+---
+
+# CLI command families
+
+The NestForge CLI currently groups its workflow into four areas:
+
+- `new` for scaffolding a fresh app
+- `g` or `generate` for adding code to an existing app
+- `db` for migration-oriented database workflows
+- `docs` and `fmt` for project maintenance
+
+# Scaffold a new app
+
+Base syntax:
+
+```text
+nestforge new <app-name>
+nestforge new <app-name> --transport <http|graphql|grpc|microservices|websockets>
+```
+
+What the transport flag changes:
+
+- `http`: classic controller-first application
+- `graphql`: schema-first bootstrap with GraphiQL support
+- `grpc`: tonic-oriented transport setup with `proto/` and `build.rs`
+- `microservices`: pattern registry plus in-process client example
+- `websockets`: gateway-first bootstrap and `src/ws/`
+
+# Generate application code
+
+Generators are designed to work inside an application folder containing `Cargo.toml`
+and `src/`.
+
+Core generators:
+
+```bash
+nestforge g module users
+nestforge g resource users
+nestforge g controller users
+nestforge g service users
+```
+
+Cross-cutting generators:
+
+```bash
+nestforge g guard auth
+nestforge g decorator correlation_id
+nestforge g filter rewrite_bad_request
+nestforge g middleware audit
+nestforge g interceptor logging
+nestforge g serializer user
+```
+
+Transport-specific generators:
+
+```bash
+nestforge g graphql users
+nestforge g grpc billing
+nestforge g gateway events
+nestforge g microservice users
+```
+
+# Target a feature module
+
+To generate inside a feature boundary instead of at the app root:
+
+```bash
+nestforge g resource users --module users
+```
+
+The CLI will:
+
+- verify the feature module exists
+- write DTO, service, and controller files under `src/users/`
+- patch the module exports, providers, and controller wiring
+
+# Database commands
+
+The CLI includes a lightweight migration workflow.
+
+```bash
+nestforge db init
+nestforge db generate create_users_table
+nestforge db migrate
+nestforge db status
+```
+
+Behavior to know:
+
+- `init` creates `migrations/` and `.nestforge/applied_migrations.txt`
+- `generate` creates a timestamped SQL file
+- `migrate` reads `DATABASE_URL` and applies pending files
+- `status` compares migration files with recorded state and reports drift
+
+# Utility commands
+
+```bash
+nestforge docs
+nestforge fmt
+```
+
+- `docs` creates a `docs/openapi.json` skeleton in the current app
+- `fmt` runs `cargo fmt` in the app root
+
+# Practical advice
+
+Use the CLI to accelerate structure, not to avoid understanding the output. After each
+generation step, inspect the generated code and make sure:
+
+- module wiring is correct
+- feature flags in `Cargo.toml` match the transport or runtime you want
+- `.env` defaults match your local environment
+- generated stubs are replaced with application-specific logic before production use

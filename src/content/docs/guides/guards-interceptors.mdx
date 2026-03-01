@@ -1,0 +1,90 @@
+---
+title: Guards and Interceptors
+description: Use guards, interceptors, and exception filters to shape access control and handler execution.
+---
+
+# Guards
+
+Guards decide whether a request is allowed to continue. They run before handler logic and
+return either:
+
+- `Ok(())` to allow the request
+- `HttpException` to block it
+
+Fast macro form:
+
+```rust
+nestforge::guard!(RequireValidIdGuard, |ctx| {
+    if let Some(last_segment) = ctx.uri.path().rsplit('/').next() {
+        if last_segment == "0" {
+            return Err(nestforge::HttpException::bad_request("id must be greater than 0"));
+        }
+    }
+    Ok(())
+});
+```
+
+# Interceptors
+
+Interceptors wrap handler execution. Use them for:
+
+- timing
+- logging
+- response shaping
+- cross-cutting behavior around a successful or failed handler call
+
+Example:
+
+```rust
+nestforge::interceptor!(LoggingInterceptor, |ctx, req, next| {
+    let started = std::time::Instant::now();
+    let response = (next)(req).await;
+    println!("{} {} - {}ms", ctx.method, ctx.uri, started.elapsed().as_millis());
+    response
+});
+```
+
+# Registration levels
+
+Both guards and interceptors can be attached:
+
+- globally through `NestForgeFactory`
+- at controller level through `#[routes]` metadata
+- at route level through route metadata macros
+
+# Exception filters
+
+Exception filters rewrite `HttpException` values. This is useful when you need:
+
+- consistent public error messages
+- route-specific error mapping
+- centralized translation of framework errors
+
+Example:
+
+```rust
+#[derive(Default)]
+struct RewriteBadRequestFilter;
+
+impl nestforge::ExceptionFilter for RewriteBadRequestFilter {
+    fn catch(
+        &self,
+        exception: nestforge::HttpException,
+        _ctx: &nestforge::RequestContext,
+    ) -> nestforge::HttpException {
+        exception
+    }
+}
+```
+
+# Choosing the right tool
+
+Use this rule of thumb:
+
+- middleware for raw HTTP concerns
+- guards for access and preconditions
+- interceptors for execution wrappers
+- exception filters for public error shaping
+
+Keeping these roles separate makes both the application and the framework easier to
+reason about.

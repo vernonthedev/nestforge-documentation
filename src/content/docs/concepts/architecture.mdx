@@ -1,0 +1,67 @@
+---
+title: Architecture
+description: The high-level mental model behind NestForge and the relationship between its crates and runtimes.
+---
+
+# The mental model
+
+NestForge is easier to understand if you think of it as three layers:
+
+1. `nestforge-core` defines the framework model: modules, dependency injection, request
+   extractors, validation, route documentation, errors, and pipeline abstractions.
+2. `nestforge-http` turns that model into a running Axum application through
+   `NestForgeFactory`.
+3. optional crates integrate other runtime styles such as GraphQL, gRPC, WebSockets,
+   scheduling, cache, and microservices.
+
+# Why the workspace is split this way
+
+This separation makes the framework easier to grow and easier to reason about:
+
+- core behavior stays transport-neutral
+- the HTTP runtime can evolve without forcing every crate to depend on it directly
+- optional transports remain opt-in through Cargo features
+- the public `nestforge` crate becomes a curated facade instead of the implementation home
+
+# Request and runtime flow
+
+For an HTTP request, the important flow is:
+
+1. the app boots through `NestForgeFactory::<AppModule>::create()`
+2. the module graph is resolved and providers/controllers are registered
+3. request context is created, including request ID and scoped container
+4. auth resolution runs if configured
+5. middleware, guards, and interceptors execute
+6. the handler resolves dependencies and returns a response or an `HttpException`
+
+# Module graph first, transport second
+
+A useful design rule in the current codebase is that your module graph defines your
+application shape, while transports expose that shape in different ways.
+
+Examples:
+
+- HTTP controllers map module features to routes
+- GraphQL resolvers can resolve providers from the same container
+- gRPC services can resolve providers through `GrpcContext`
+- WebSocket gateways can resolve providers through `WebSocketContext`
+- microservice pattern handlers can resolve providers through `MicroserviceContext`
+
+This is what makes NestForge feel consistent across multiple runtime styles.
+
+# Re-exports are part of the architecture
+
+The public `crates/nestforge/src/lib.rs` file is important architecture, not just
+convenience. It re-exports:
+
+- core traits and types
+- macros
+- the HTTP factory
+- feature-gated transport helpers
+- utility macros such as `guard!`, `interceptor!`, `middleware!`, and `request_decorator!`
+
+When you add framework functionality, you need to decide whether it belongs:
+
+- only in an implementation crate
+- in a dedicated feature crate
+- or in the public `nestforge` facade as part of the supported user API

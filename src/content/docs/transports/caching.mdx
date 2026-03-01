@@ -1,0 +1,50 @@
+---
+title: Caching
+description: Use cache policies and cache interceptors to add response caching to NestForge applications.
+---
+
+# Feature activation
+
+```toml
+nestforge = { version = "1", features = ["cache", "redis"] }
+```
+
+# Cache model
+
+Cache support is built around:
+
+- `CacheStore`
+- `CachePolicy`
+- `CacheInterceptor`
+
+That design makes caching part of the request pipeline instead of a hidden controller
+behavior.
+
+# Define a policy
+
+```rust
+#[derive(Default, Clone)]
+struct UsersCachePolicy;
+
+impl nestforge::CachePolicy for UsersCachePolicy {
+    type Store = nestforge::InMemoryRedisStore;
+}
+```
+
+# Register the interceptor
+
+```rust
+NestForgeFactory::<AppModule>::create()?
+    .use_interceptor::<nestforge::CacheInterceptor<UsersCachePolicy>>();
+```
+
+# Default behavior
+
+The built-in defaults are conservative:
+
+- only `GET` requests are cached
+- request URI is used as the cache key
+- only successful `200 OK` responses are stored
+
+Override policy methods when your application needs custom cache keys, TTL behavior, or
+cacheability rules.

@@ -1,0 +1,61 @@
+---
+title: Contributing
+description: Contribution expectations for working inside the NestForge workspace.
+---
+
+# Baseline expectations
+
+NestForge expects contributors to keep changes scoped, documented, and validated. The
+current repository guidance emphasizes:
+
+- small, focused changes
+- tests with behavior changes
+- docs updates for public API or CLI changes
+- conventional commits for accurate release notes
+
+# Local workflow
+
+From the repository root, the important commands are:
+
+```bash
+cargo check
+cargo build --workspace
+cargo test --workspace
+cargo fmt --all
+cargo clippy --workspace --all-targets -- -D warnings
+```
+
+# Commit format
+
+Use Conventional Commits such as:
+
+- `feat:`
+- `fix:`
+- `docs:`
+- `refactor:`
+- `chore:`
+
+Scopes are encouraged when they improve clarity:
+
+- `feat(core): add request extractor`
+- `fix(cli): support nested module generation`
+
+# Documentation rule
+
+If you change:
+
+- public API behavior
+- CLI behavior
+- generated app structure
+- example behavior
+
+then update docs and examples in the same workstream.
+
+# Good contributor habits
+
+Before opening a PR:
+
+- confirm the code lives in the correct crate
+- verify examples still reflect the intended user flow
+- keep public re-exports intentional
+- avoid unrelated refactors in the same commit series

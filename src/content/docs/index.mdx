@@ -1,40 +1,55 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
-template: splash # Remove or comment out this line to display the site sidebar on this page.
+title: NestForge Documentation
+description: Detailed documentation for application developers using NestForge and contributors building the framework itself.
+template: splash
 hero:
-  tagline: Congrats on setting up a new Starlight project!
+  tagline: A detailed guide to the NestJS-inspired Rust framework, its transports, CLI, examples, and internal architecture.
   image:
     file: ../../assets/houston.webp
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Start Building
+      link: /getting-started/quick-start/
       icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
-      variant: minimal
+    - text: Explore Internals
+      link: /framework/crate-architecture/
+      icon: right-arrow
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-## Next steps
+## Choose your path
 
 <CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
-	</Card>
-	<Card title="Change page layout" icon="document">
-		Delete `template: splash` in `src/content/docs/index.mdx` to display a
-		sidebar on this page.
-	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
-	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
-	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
-	</Card>
+  <Card title="Application developers" icon="open-book">
+    Start with the getting-started and concepts sections if you are building an API,
+    service, gateway, or internal platform on top of NestForge.
+  </Card>
+  <Card title="Framework contributors" icon="seti:rust">
+    Use the framework internals section if you need to understand crate ownership,
+    public API boundaries, release flow, and contribution expectations.
+  </Card>
+  <Card title="Transport-first readers" icon="rocket">
+    Jump directly to GraphQL, gRPC, WebSockets, or microservices if your team is
+    evaluating NestForge for a specific runtime model.
+  </Card>
+  <Card title="Example-driven learning" icon="pencil">
+    The examples section maps the workspace examples to the concepts they demonstrate
+    so you can cross-reference code and docs quickly.
+  </Card>
 </CardGrid>
+
+## What this site covers
+
+This documentation is built directly around the current `nestforge/` workspace:
+
+- the public `nestforge` crate and its re-exports
+- the supporting runtime crates such as `nestforge-http`, `nestforge-config`, `nestforge-graphql`, and `nestforge-grpc`
+- the CLI in `crates/nestforge-cli`
+- the example applications under `examples/`
+- the contributor workflow described in `CONTRIBUTING.md`
+
+The goal is to serve two different audiences without forcing them through the same
+reading order:
+
+- application teams who need to ship services with NestForge
+- framework contributors who need to extend, test, or release the workspace safely

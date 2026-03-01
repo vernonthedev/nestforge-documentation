@@ -1,0 +1,69 @@
+---
+title: Hello NestForge
+description: A walkthrough of the main example application and what each part demonstrates.
+---
+
+# Example location
+
+The main HTTP reference application lives at:
+
+```text
+examples/hello-nestforge
+```
+
+# What this example demonstrates
+
+This example is the best single entry point into the current framework because it shows:
+
+- root module wiring in `src/app_module.rs`
+- bootstrap flow in `src/main.rs`
+- feature modules for `users`, `settings`, and `versioning`
+- configuration loading and validation
+- global prefix and OpenAPI mounting
+- guards and interceptors
+- DTO validation
+- route versioning
+- response serialization
+
+# Boot flow
+
+The runtime sequence in the example is:
+
+1. `main.rs` creates the app with `NestForgeFactory::<AppModule>::create()`
+2. the app sets a global `/api` prefix
+3. generated docs are mounted through `with_openapi_docs(...)`
+4. a global guard and interceptor are attached
+5. the server listens on port `3000`
+
+# `AppModule`
+
+`src/app_module.rs` is the center of the example. It:
+
+- imports feature modules
+- registers root controllers
+- creates app configuration through `ConfigModule::for_root`
+- creates the database provider
+- exports shared providers
+
+# Feature modules
+
+## Users
+
+The `users` feature demonstrates CRUD routes, DTOs, validation, and service injection.
+
+## Settings
+
+The `settings` feature demonstrates a similar structure plus runtime config access.
+
+## Versioning
+
+The `versioning` feature demonstrates version-specific routes such as:
+
+- `/api/v1/versioning/hello`
+- `/api/v2/versioning/hello`
+
+# Why this example matters
+
+If you are unsure how to structure a real NestForge app, this example is the current
+best-practice baseline because it combines multiple framework concepts in one runnable
+project.

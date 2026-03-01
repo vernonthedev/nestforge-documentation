@@ -1,0 +1,69 @@
+---
+title: Macros
+description: A reference guide to the macros that define modules, routes, metadata, DTO helpers, and lightweight pipeline components.
+---
+
+# Why macros are central in NestForge
+
+Macros are how NestForge keeps application code concise while still exposing explicit
+Rust types. They are the main developer-facing layer for:
+
+- modules
+- controllers
+- route metadata
+- DTO helpers
+- short-form guard, interceptor, middleware, and request decorator definitions
+
+# Module macros
+
+`#[module(...)]` defines:
+
+- imports
+- controllers
+- providers
+- exports
+- lifecycle hooks
+
+This macro is responsible for generating the module definition the runtime consumes.
+
+# Controller macros
+
+Main controller-related macros:
+
+- `#[controller("/base")]`
+- `#[routes]`
+- `#[nestforge::get(...)]`
+- `#[nestforge::post(...)]`
+- `#[nestforge::put(...)]`
+- `#[nestforge::delete(...)]`
+
+`#[routes]` can also hold controller-level defaults for guards, interceptors, exception
+filters, auth requirements, roles, and tags.
+
+# Metadata macros
+
+These shape route behavior and docs:
+
+- `#[nestforge::version("1")]`
+- `#[nestforge::use_guard(MyGuard)]`
+- `#[nestforge::use_interceptor(MyInterceptor)]`
+- `#[nestforge::use_exception_filter(MyFilter)]`
+- `#[nestforge::authenticated]`
+- `#[nestforge::roles("admin")]`
+- `#[nestforge::summary(...)]`
+- `#[nestforge::description(...)]`
+- `#[nestforge::tag(...)]`
+- `#[nestforge::response(...)]`
+
+# Convenience macros
+
+The public crate also exports utility macros:
+
+- `nestforge::guard!(Name)`
+- `nestforge::interceptor!(Name)`
+- `nestforge::middleware!(Name)`
+- `nestforge::request_decorator!(Name => Output, |ctx, parts| { ... })`
+- `nestforge::impl_identifiable!(Type, field)`
+
+These are especially useful in smaller applications and examples where defining a full
+manual type would add more noise than clarity.

@@ -1,0 +1,46 @@
+---
+title: Scheduling
+description: Register and run scheduled jobs through module lifecycle hooks.
+---
+
+# Feature activation
+
+```toml
+nestforge = { version = "1", features = ["schedule"] }
+```
+
+# Core types
+
+Scheduling support is built around:
+
+- `ScheduleRegistry`
+- `ScheduleRegistryBuilder`
+- `start_schedules`
+- `shutdown_schedules`
+
+# Registration pattern
+
+The standard approach is to register a `ScheduleRegistry` provider and start it during
+application bootstrap:
+
+```rust
+#[module(
+    providers = [build_schedule_registry()?],
+    on_application_bootstrap = [nestforge::start_schedules],
+    on_application_shutdown = [nestforge::shutdown_schedules]
+)]
+pub struct AppModule;
+```
+
+# Job types
+
+The current registry supports:
+
+- repeated jobs with `every(...)`
+- one-shot delayed jobs with `after(...)`
+- named variants with `every_named(...)` and `after_named(...)`
+
+# Practical use
+
+Scheduling belongs in modules when the jobs are part of application behavior, not as
+hidden global threads. This keeps lifecycle and shutdown behavior explicit.

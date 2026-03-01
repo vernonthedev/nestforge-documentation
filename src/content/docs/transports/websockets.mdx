@@ -1,0 +1,64 @@
+---
+title: WebSockets
+description: Add WebSocket gateways to a NestForge app and resolve providers through WebSocket context.
+---
+
+# Feature activation
+
+```toml
+nestforge = { version = "1", features = ["websockets"] }
+```
+
+# Gateway model
+
+WebSocket support is built around `WebSocketGateway` and `WebSocketContext`.
+
+```rust
+use nestforge::{
+    Message, NestForgeFactory, NestForgeFactoryWebSocketExt, WebSocket, WebSocketContext,
+    WebSocketGateway,
+};
+
+struct EventsGateway;
+
+impl WebSocketGateway for EventsGateway {
+    fn on_connect(
+        &self,
+        ctx: WebSocketContext,
+        mut socket: WebSocket,
+    ) -> core::pin::Pin<Box<dyn core::future::Future<Output = ()> + Send>> {
+        Box::pin(async move {
+            if let Some(request_id) = ctx.request_id() {
+                let _ = socket
+                    .send(Message::Text(format!("connected:{}", request_id.value()).into()))
+                    .await;
+            }
+        })
+    }
+}
+```
+
+# Mount the gateway
+
+```rust
+NestForgeFactory::<AppModule>::create()?
+    .with_websocket_gateway(EventsGateway)
+    .listen(3000)
+    .await?;
+```
+
+Default path:
+
+- `/ws`
+
+# Access to providers
+
+`WebSocketContext` exposes the framework container, request data, optional auth identity,
+and request ID. That means a gateway can resolve the same application services already
+used by HTTP handlers or GraphQL resolvers.
+
+# WebSockets plus microservices
+
+If `microservices` is also enabled, gateways can forward frames into a
+`MicroserviceRegistry`. That is useful for event-driven or command-style websocket
+protocols that map cleanly to pattern handlers.
