@@ -9,6 +9,7 @@ export default defineConfig({
       title: 'NestForge Docs',
       description:
         'Detailed documentation for building applications with NestForge and contributing to the framework itself.',
+      disable404Route: true,
       customCss: ['./src/styles/starlight-overrides.css'],
       logo: {
         src: './src/assets/logo.svg',
