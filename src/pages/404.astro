@@ -1,5 +1,7 @@
 ---
 import '../styles/not-found.css';
+import faviconSrc from '../assets/favicon.ico';
+import logoSrc from '../assets/logo.svg?url';
 ---
 
 <!doctype html>
@@ -25,13 +27,14 @@ import '../styles/not-found.css';
         document.documentElement.dataset.theme = theme;
       })();
     </script>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href={faviconSrc} type="image/x-icon" />
+    <link rel="shortcut icon" href={faviconSrc} type="image/x-icon" />
   </head>
   <body class="nf404-body">
     <main class="nf404-shell">
       <div class="nf404-card">
         <a href="/" class="nf404-brand" aria-label="NestForge home">
-          <img src="/logo.svg" alt="NestForge" />
+          <img src={logoSrc} alt="NestForge" />
           <span>NestForge</span>
         </a>
 

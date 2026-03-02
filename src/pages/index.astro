@@ -1,10 +1,12 @@
 ---
 import '../styles/home.css';
+import faviconSrc from '../assets/favicon.ico';
+import logoSrc from '../assets/logo.svg?url';
 ---
 
 <!doctype html>
 <html lang="en">
-  <head>
+  <>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>NestForge Docs</title>
@@ -25,13 +27,14 @@ import '../styles/home.css';
         document.documentElement.dataset.theme = theme;
       })();
     </script>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href={faviconSrc} type="image/x-icon" />
+    <link rel="shortcut icon" href={faviconSrc} type="image/x-icon" />
   </head>
   <body class="home-body">
     <header class="home-header">
       <div class="home-container home-header-inner">
         <a href="/" class="home-brand" aria-label="NestForge home">
-          <img src="/logo.svg" alt="NestForge" />
+          <img src={logoSrc} alt="NestForge" />
           <div class="home-brand-copy">
             <span class="home-brand-name">NestForge</span>
             <span class="home-brand-subtitle">Framework docs</span>
@@ -162,7 +165,7 @@ import '../styles/home.css';
       <div class="home-container home-footer-inner">
         <div class="home-footer-brand">
           <a href="/" class="home-brand home-brand-footer" aria-label="NestForge home">
-            <img src="/logo.svg" alt="NestForge" />
+            <img src={logoSrc} alt="NestForge" />
             <div class="home-brand-copy">
               <span class="home-brand-name">NestForge</span>
               <span class="home-brand-subtitle">Framework docs</span>

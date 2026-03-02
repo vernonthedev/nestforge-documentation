@@ -15,7 +15,7 @@ export default defineConfig({
         src: './src/assets/logo.svg',
         alt: 'NestForge',
       },
-      favicon: '/favicon.svg',
+      favicon: './src/assets/favicon.ico',
       social: [
         {
           icon: 'github',
