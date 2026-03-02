@@ -8,7 +8,7 @@ export default defineConfig({
     starlight({
       title: 'NestForge Docs',
       description:
-        'Detailed documentation for building applications with NestForge and contributing to the framework itself.',
+        'Documentation for building applications with NestForge, with a separate section for framework contributors.',
       disable404Route: true,
       customCss: ['./src/styles/starlight-overrides.css'],
       logo: {
@@ -31,12 +31,12 @@ export default defineConfig({
               link: '/getting-started/quick-start/',
             },
             {
-              label: 'Framework Internals',
-              link: '/framework/crate-architecture/',
+              label: 'Application Guides',
+              link: '/guides/middleware/',
             },
           ],
           footerText:
-            'NestForge documentation for application teams and framework contributors.',
+            'NestForge docs for application developers, with separate contributor documentation for framework work.',
         }),
       ],
       sidebar: [

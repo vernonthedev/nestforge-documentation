@@ -1,62 +1,41 @@
 ---
 title: Installation
-description: Prerequisites, workspace setup, and the fastest ways to run NestForge locally.
+description: Install the NestForge CLI, create an application, and run it locally.
 ---
+
+# What this page is for
+
+This page is for application developers using NestForge to create and run a service.
+
+If you want to work on the NestForge framework repository itself, use the framework
+developer setup in the contributing docs instead.
 
 # Prerequisites
 
-To work with the current NestForge workspace you need:
+To create and run a NestForge app you need:
 
 - a stable Rust toolchain
 - `cargo`
 - `git`
 
-Depending on which example or feature you use, you may also need:
-
-- `protoc` for gRPC code generation in gRPC-first projects
-- a reachable database if you are testing database-backed application code
-
-# Clone and validate the workspace
-
-From a clean machine, the minimum setup is:
-
-```bash
-git clone https://github.com/vernonthedev/nestforge.git
-cd nestforge
-cargo check --workspace
-```
-
-That verifies all crates and examples can be type-checked together.
-
-# Run the example applications
-
-The workspace includes several examples that demonstrate the main runtime styles.
-
-```bash
-cargo run -p hello-nestforge
-cargo run -p hello-nestforge-graphql
-cargo run -p hello-nestforge-grpc
-cargo run -p hello-nestforge-microservices
-cargo run -p hello-nestforge-websockets
-```
-
-Typical defaults:
-
-- HTTP example: `http://127.0.0.1:3000`
-- gRPC example: `127.0.0.1:50051`
-- WebSocket default route: `/ws`
-- GraphQL default route: `/graphql`
-
 # Install the CLI
 
-The CLI lives in `crates/nestforge-cli` and can be installed directly from the
-workspace:
+Install the CLI from Cargo:
+
+```bash
+cargo install nestforge-cli
+```
+
+If you are developing against a local checkout of the framework, you can install the
+CLI from the repository workspace instead:
 
 ```bash
 cargo install --path crates/nestforge-cli
 ```
 
-After that you can scaffold a new project:
+# Create a project
+
+After the CLI is installed, scaffold a new project:
 
 ```bash
 nestforge new demo-api
@@ -64,9 +43,21 @@ cd demo-api
 cargo run
 ```
 
-# Understand feature activation
+# Run the app
 
-NestForge is modular at the Cargo level. You only enable the feature sets your app
+The generated app starts with the normal Rust workflow:
+
+```bash
+cargo run
+```
+
+Typical local default for an HTTP service:
+
+- `http://127.0.0.1:3000`
+
+# Add the features you need
+
+NestForge is modular at the Cargo level. Enable only the feature sets your application
 needs. Common examples:
 
 ```toml
@@ -75,17 +66,12 @@ nestforge = { version = "1", features = ["graphql"] }
 nestforge = { version = "1", features = ["grpc", "microservices"] }
 ```
 
-This matters because many public types are re-exported conditionally from the root
-`nestforge` crate.
+Depending on your stack, you may also need:
 
-# Recommended local verification
+- `protoc` for gRPC code generation
+- a reachable database for database-backed application code
 
-If you are evaluating the framework, run at least:
+# Next step
 
-```bash
-cargo test --workspace
-cargo fmt --all --check
-cargo clippy --workspace --all-targets -- -D warnings
-```
-
-That matches the contribution expectations used by the repository itself.
+Continue with [CLI Workflow](/getting-started/cli-workflow/) or go straight to
+[Quick Start](/getting-started/quick-start/).

@@ -15,6 +15,22 @@ current repository guidance emphasizes:
 
 # Local workflow
 
+If you are working on the NestForge framework repository itself, start by cloning and
+validating the workspace:
+
+```bash
+git clone https://github.com/vernonthedev/nestforge.git
+cd nestforge
+cargo check --workspace
+```
+
+That verifies the workspace and examples type-check together from a clean machine.
+
+Depending on the area you are changing, you may also need:
+
+- `protoc` for gRPC-related work
+- a reachable database for database-backed examples or tests
+
 From the repository root, the important commands are:
 
 ```bash
