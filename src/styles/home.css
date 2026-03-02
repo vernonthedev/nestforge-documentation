@@ -5,7 +5,7 @@
   --home-bg-soft: #101a2c;
   --home-panel: #111d31;
   --home-panel-soft: #16243a;
-  --home-header-surface: rgb(12 18 31 / 0.92);
+  --home-header-surface: rgb(12 18 31 / 0.98);
   --home-text: #edf3fb;
   --home-text-soft: #a6b4ca;
   --home-accent: #e15620;
@@ -30,7 +30,7 @@ html[data-theme="light"] {
   --home-bg-soft: #eee6da;
   --home-panel: #fbf7f1;
   --home-panel-soft: #f1e8dc;
-  --home-header-surface: rgb(251 246 240 / 0.94);
+  --home-header-surface: rgb(251 246 240 / 0.98);
   --home-text: #1f2430;
   --home-text-soft: #6a6055;
   --home-shadow: 0 24px 70px rgb(74 48 18 / 0.12);
@@ -136,7 +136,6 @@ body.home-body::-webkit-scrollbar-corner {
   z-index: 10;
   padding-top: 1rem;
   background: transparent;
-  backdrop-filter: none;
 }
 
 .home-header-inner {
