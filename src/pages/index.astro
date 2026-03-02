@@ -12,6 +12,19 @@ import '../styles/home.css';
       name="description"
       content="Documentation for building applications with NestForge and contributing to the framework itself."
     />
+    <script is:inline>
+      (() => {
+        const key = 'nestforge-home-theme';
+        const stored = localStorage.getItem(key);
+        const theme =
+          stored === 'light' || stored === 'dark'
+            ? stored
+            : window.matchMedia('(prefers-color-scheme: light)').matches
+              ? 'light'
+              : 'dark';
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body class="home-body">
@@ -32,6 +45,18 @@ import '../styles/home.css';
         </nav>
 
         <div class="home-header-actions">
+          <button
+            type="button"
+            class="home-theme-switch"
+            id="home-theme-switch"
+            role="switch"
+            aria-label="Toggle color theme"
+            aria-checked="false"
+          >
+            <span class="home-theme-switch-track">
+              <span class="home-theme-switch-thumb"></span>
+            </span>
+          </button>
           <a href="https://github.com/vernonthedev/nestforge" class="home-header-link">GitHub</a>
           <a href="/getting-started/overview/" class="home-header-cta">Open Docs</a>
         </div>
@@ -173,5 +198,41 @@ import '../styles/home.css';
         </div>
       </div>
     </footer>
+    <script is:inline>
+      (() => {
+        const key = 'nestforge-home-theme';
+        const root = document.documentElement;
+        const switchEl = document.getElementById('home-theme-switch');
+        const media = window.matchMedia('(prefers-color-scheme: light)');
+
+        const setTheme = (theme) => {
+          root.dataset.theme = theme;
+          if (switchEl) {
+            switchEl.setAttribute('aria-checked', String(theme === 'light'));
+            switchEl.dataset.theme = theme;
+          }
+        };
+
+        const getStoredTheme = () => {
+          const stored = localStorage.getItem(key);
+          if (stored === 'light' || stored === 'dark') return stored;
+          return null;
+        };
+
+        const getSystemTheme = () => (media.matches ? 'light' : 'dark');
+
+        setTheme(getStoredTheme() ?? getSystemTheme());
+
+        switchEl?.addEventListener('click', () => {
+          const next = root.dataset.theme === 'light' ? 'dark' : 'light';
+          localStorage.setItem(key, next);
+          setTheme(next);
+        });
+
+        media.addEventListener('change', () => {
+          if (!getStoredTheme()) setTheme(getSystemTheme());
+        });
+      })();
+    </script>
   </body>
 </html>
