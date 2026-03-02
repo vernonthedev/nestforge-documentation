@@ -1,49 +1,54 @@
-# Starlight Starter Kit: Basics
+# NestForge Documentation
 
-[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
+This repository contains the Astro + Starlight site for the NestForge documentation. It is written for two audiences:
 
+- application teams building APIs and services with NestForge
+- framework contributors working inside the `nestforge/` workspace
+
+The published site covers framework concepts, transport guides, runnable examples, CLI workflow, and internal architecture.
+
+## Documentation Areas
+
+Author content lives in `src/content/docs/`:
+
+- `getting-started/` for installation, quick start, and CLI usage
+- `concepts/` for modules, DI, routing, configuration, and request flow
+- `guides/` for middleware, auth, testing, macros, and data-layer topics
+- `transports/` for GraphQL, gRPC, WebSockets, microservices, scheduling, and caching
+- `examples/` for example app walkthroughs
+- `framework/` for crate architecture, public API boundaries, contribution flow, and release process
+
+Navigation is configured in `astro.config.mjs`. Static assets live in `public/`, and MDX-linked images should go in `src/assets/`.
+
+## Local Development
+
+Install dependencies and run the docs locally from the repository root:
+
+```bash
+yarn install
+yarn dev
 ```
-yarn create astro@latest -- --template starlight
+
+Useful commands:
+
+- `yarn dev` starts the site at `http://localhost:4321`
+- `yarn build` creates a production build in `dist/`
+- `yarn preview` serves the built site locally
+- `yarn astro check` validates Astro content and configuration changes
+
+## Writing and Updating Docs
+
+Each page in `src/content/docs/` should use `.md` or `.mdx` and start with frontmatter:
+
+```md
+---
+title: Architecture
+description: The high-level mental model behind NestForge.
+---
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Use lowercase kebab-case file names so routes stay predictable, such as `guides/resource-services.mdx`. When adding or moving pages, update the Starlight sidebar in `astro.config.mjs`.
 
-## 🚀 Project Structure
+## Contribution Notes
 
-Inside of your Astro + Starlight project, you'll see the following folders and files:
-
-```
-.
-├── public/
-├── src/
-│   ├── assets/
-│   ├── content/
-│   │   └── docs/
-│   └── content.config.ts
-├── astro.config.mjs
-├── package.json
-└── tsconfig.json
-```
-
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
-
-Images can be added to `src/assets/` and embedded in Markdown with a relative link.
-
-Static assets, like favicons, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `yarn install`             | Installs dependencies                            |
-| `yarn dev`             | Starts local dev server at `localhost:4321`      |
-| `yarn build`           | Build your production site to `./dist/`          |
-| `yarn preview`         | Preview your build locally, before deploying     |
-| `yarn astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `yarn astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+Before opening a PR, run `yarn build` and `yarn astro check`. Verify links, code fences, and asset references in local preview. Keep content aligned with the current NestForge workspace and prefer updating an existing page over creating overlapping docs.
