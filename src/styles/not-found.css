@@ -2,12 +2,36 @@
 
 :root {
   --nf404-bg: #07101c;
+  --nf404-bg-soft: #091321;
+  --nf404-radial-top: rgb(225 86 32 / 0.14);
+  --nf404-radial-bottom: rgb(255 255 255 / 0.06);
   --nf404-panel: #101b2c;
   --nf404-panel-soft: #152238;
   --nf404-text: #edf3fb;
   --nf404-text-soft: #9fb0c9;
   --nf404-accent: #e15620;
   --nf404-warm: #f2c790;
+  --nf404-secondary: rgb(255 255 255 / 0.07);
+  --nf404-link-bg: rgb(255 255 255 / 0.05);
+  --nf404-link-bg-hover: rgb(255 255 255 / 0.08);
+  --nf404-shadow: 0 32px 90px rgb(0 0 0 / 0.28);
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --nf404-bg: #f6f0e7;
+  --nf404-bg-soft: #eee6da;
+  --nf404-radial-top: rgb(225 86 32 / 0.12);
+  --nf404-radial-bottom: rgb(53 42 31 / 0.06);
+  --nf404-panel: #fbf7f1;
+  --nf404-panel-soft: #f0e7dc;
+  --nf404-text: #1f2430;
+  --nf404-text-soft: #6a6055;
+  --nf404-warm: #c77b34;
+  --nf404-secondary: rgb(31 36 48 / 0.06);
+  --nf404-link-bg: rgb(31 36 48 / 0.05);
+  --nf404-link-bg-hover: rgb(31 36 48 / 0.08);
+  --nf404-shadow: 0 24px 70px rgb(74 48 18 / 0.12);
 }
 
 *,
@@ -17,10 +41,11 @@
 }
 
 html {
+  color-scheme: dark;
   background:
-    radial-gradient(circle at top center, rgb(225 86 32 / 0.14), transparent 22rem),
-    radial-gradient(circle at bottom left, rgb(255 255 255 / 0.06), transparent 20rem),
-    linear-gradient(180deg, #07101c 0%, #091321 100%);
+    radial-gradient(circle at top center, var(--nf404-radial-top), transparent 22rem),
+    radial-gradient(circle at bottom left, var(--nf404-radial-bottom), transparent 20rem),
+    linear-gradient(180deg, var(--nf404-bg) 0%, var(--nf404-bg-soft) 100%);
 }
 
 .nf404-body {
@@ -53,7 +78,7 @@ html {
   padding: clamp(1.75rem, 5vw, 3rem);
   border-radius: 2rem;
   background: linear-gradient(180deg, var(--nf404-panel), var(--nf404-panel-soft));
-  box-shadow: 0 32px 90px rgb(0 0 0 / 0.28);
+  box-shadow: var(--nf404-shadow);
 }
 
 .nf404-brand {
@@ -121,7 +146,7 @@ html {
 }
 
 .nf404-button-secondary {
-  background: rgb(255 255 255 / 0.07);
+  background: var(--nf404-secondary);
 }
 
 .nf404-links {
@@ -134,7 +159,7 @@ html {
 .nf404-links a {
   padding: 0.95rem 1rem;
   border-radius: 1rem;
-  background: rgb(255 255 255 / 0.05);
+  background: var(--nf404-link-bg);
   color: var(--nf404-text-soft);
   transition:
     transform 160ms ease,
@@ -144,7 +169,7 @@ html {
 
 .nf404-links a:hover {
   transform: translateY(-2px);
-  background: rgb(255 255 255 / 0.08);
+  background: var(--nf404-link-bg-hover);
   color: var(--nf404-text);
 }
 
