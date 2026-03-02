@@ -29,7 +29,7 @@ Author content lives in `src/content/docs/`:
 - `examples/` for example app walkthroughs
 - `framework/` for crate architecture, public API boundaries, contribution flow, and release process
 
-Navigation is configured in `astro.config.mjs`. Static assets live in `public/`, and MDX-linked images should go in `src/assets/`.
+Navigation is configured in `astro.config.mjs`. Static assets for this site are imported from `src/assets/`.
 
 ## Local Development
 
@@ -46,6 +46,7 @@ Useful commands:
 - `yarn build` creates a production build in `dist/`
 - `yarn preview` serves the built site locally
 - `yarn astro check` validates Astro content and configuration changes
+- `yarn release:dry-run` previews the next semantic-release result without publishing
 
 ## Writing and Updating Docs
 
@@ -63,3 +64,17 @@ Use lowercase kebab-case file names so routes stay predictable, such as `guides/
 ## Contribution Notes
 
 Before opening a PR, run `yarn build` and `yarn astro check`. Verify links, code fences, and asset references in local preview. Keep content aligned with the current NestForge workspace and prefer updating an existing page over creating overlapping docs.
+
+## Releases
+
+This repo uses semantic-release on `main`.
+
+- tags use the format `vX.Y.Z`
+- GitHub releases are generated automatically from conventional commits
+- `CHANGELOG.md` and `package.json` are updated during release commits
+
+Release behavior for conventional commits:
+
+- `feat:` triggers a minor release
+- `fix:`, `docs:`, `refactor:`, `style:`, and `build:` trigger a patch release
+- `BREAKING CHANGE:` or `type!:` triggers a major release

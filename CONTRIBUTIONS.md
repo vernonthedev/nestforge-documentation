@@ -62,3 +62,20 @@ Also confirm:
 ## Pull Request Expectations
 
 Use conventional commits such as `docs: update grpc guide for 1.1 behavior`. In the PR, link the related framework change, commit, issue, or release. If the docs intentionally lag the framework, state why and list the follow-up required to catch up.
+
+## Release Automation
+
+This repository uses semantic-release on the `main` branch.
+
+Relevant release mappings:
+
+- `feat:` -> minor
+- `fix:` -> patch
+- `docs:` -> patch
+- `refactor:` -> patch
+- `style:` -> patch
+- `build:` -> patch
+- `BREAKING CHANGE:` or `type!:` -> major
+
+The release workflow generates GitHub releases, updates `CHANGELOG.md`, and commits the
+new `package.json` version back to the repository.
