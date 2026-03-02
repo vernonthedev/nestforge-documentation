@@ -2,4 +2,38 @@
   html[data-has-sidebar] .content-panel > .sl-container {
     max-width: 78rem;
   }
+
+  html[data-has-sidebar] .aside .sidebar,
+  html[data-has-sidebar] .aside .container-sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(225 86 32 / 0.68) rgb(255 255 255 / 0.06);
+  }
+
+  html[data-has-sidebar] .aside .sidebar::-webkit-scrollbar,
+  html[data-has-sidebar] .aside .container-sidebar::-webkit-scrollbar {
+    width: 0.72rem;
+  }
+
+  html[data-has-sidebar] .aside .sidebar::-webkit-scrollbar-track,
+  html[data-has-sidebar] .aside .container-sidebar::-webkit-scrollbar-track {
+    margin-block: 0.6rem;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.08));
+  }
+
+  html[data-has-sidebar] .aside .sidebar::-webkit-scrollbar-thumb,
+  html[data-has-sidebar] .aside .container-sidebar::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background:
+      linear-gradient(180deg, rgb(255 179 142 / 0.95), rgb(225 86 32 / 0.92)) padding-box,
+      linear-gradient(180deg, transparent, transparent) border-box;
+  }
+
+  html[data-has-sidebar] .aside .sidebar::-webkit-scrollbar-thumb:hover,
+  html[data-has-sidebar] .aside .container-sidebar::-webkit-scrollbar-thumb:hover {
+    background:
+      linear-gradient(180deg, rgb(255 195 165 / 0.98), rgb(241 112 63 / 0.96)) padding-box,
+      linear-gradient(180deg, transparent, transparent) border-box;
+  }
 }
