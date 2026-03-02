@@ -271,13 +271,6 @@ body.home-body {
   padding: 1rem 0 4rem;
 }
 
-.explore-panel {
-  display: grid;
-  gap: 1.5rem;
-  padding: clamp(1.4rem, 4vw, 2rem);
-  border-radius: 1.75rem;
-}
-
 .explore-head {
   display: grid;
   gap: 0.65rem;
@@ -291,29 +284,99 @@ body.home-body {
   line-height: 1.03;
 }
 
-.explore-grid {
+.explore-layout {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: 1rem;
+  margin-top: 1.5rem;
 }
 
-.explore-grid a {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 4.1rem;
-  padding: 0.95rem 1rem;
-  border-radius: 1rem;
-  background: rgb(255 255 255 / 0.04);
-  text-align: center;
+.explore-feature,
+.explore-group {
+  background: linear-gradient(180deg, rgb(17 29 49 / 0.94), rgb(13 22 37 / 0.98));
+  box-shadow: var(--home-shadow);
+}
+
+.explore-feature {
+  display: grid;
+  gap: 0.8rem;
+  align-content: start;
+  padding: 1.5rem;
+  border-radius: 1.6rem;
   transition:
     transform 160ms ease,
     background-color 160ms ease;
 }
 
+.explore-feature:hover,
+.explore-group a:hover {
+  transform: translateY(-2px);
+}
+
+.explore-feature-label,
+.explore-group-label {
+  color: var(--home-accent);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.explore-feature strong {
+  font-family: "Fraunces", serif;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.explore-feature p {
+  max-width: 24rem;
+  margin: 0;
+  color: var(--home-text-soft);
+  line-height: 1.75;
+}
+
+.explore-groups {
+  display: grid;
+  gap: 1rem;
+}
+
+.explore-group {
+  display: grid;
+  gap: 0.55rem;
+  align-content: start;
+  padding: 1.2rem;
+  border-radius: 1.35rem;
+}
+
+.explore-group a {
+  display: flex;
+  align-items: center;
+  min-height: 3.4rem;
+  padding: 0.9rem 0.95rem;
+  border-radius: 0.95rem;
+  background: rgb(255 255 255 / 0.04);
+  color: var(--home-text);
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease;
+}
+
+.explore-group a:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
 @media (min-width: 52rem) {
   .paths-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .explore-layout {
+    grid-template-columns: minmax(16rem, 0.72fr) minmax(0, 1.28fr);
+  }
+
+  .explore-groups {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -332,7 +395,7 @@ body.home-body {
     justify-content: space-between;
   }
 
-  .explore-grid {
+  .explore-groups {
     grid-template-columns: 1fr;
   }
 }
@@ -340,7 +403,8 @@ body.home-body {
 @media (prefers-reduced-motion: reduce) {
   .home-nav a,
   .path-card,
-  .explore-grid a {
+  .explore-feature,
+  .explore-group a {
     transition: none;
   }
 }

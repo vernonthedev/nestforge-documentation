@@ -78,22 +78,43 @@ import '../styles/home.css';
             <h2>Start from the part of NestForge you need right now.</h2>
           </div>
 
-          <div class="explore-grid">
-            <a href="/getting-started/installation/">Installation</a>
-            <a href="/getting-started/cli-workflow/">CLI Workflow</a>
-            <a href="/concepts/architecture/">Architecture</a>
-            <a href="/concepts/request-pipeline/">Request Pipeline</a>
-            <a href="/guides/auth-openapi/">Auth and OpenAPI</a>
-            <a href="/guides/data-layer/">Data Layer</a>
-            <a href="/guides/testing/">Testing</a>
-            <a href="/transports/graphql/">GraphQL</a>
-            <a href="/transports/grpc/">gRPC</a>
-            <a href="/transports/websockets/">WebSockets</a>
-            <a href="/transports/microservices/">Microservices</a>
-            <a href="/examples/hello-nestforge/">Example App</a>
-            <a href="/framework/workspace-structure/">Workspace Structure</a>
-            <a href="/framework/public-api-surface/">Public API Surface</a>
-            <a href="/framework/contributing/">Contributing</a>
+          <div class="explore-layout">
+            <a href="/getting-started/quick-start/" class="explore-feature">
+              <span class="explore-feature-label">Start here</span>
+              <strong>Quick Start</strong>
+              <p>Spin up a NestForge project, see the first run path, and move into the docs with context.</p>
+            </a>
+
+            <div class="explore-groups">
+              <article class="explore-group">
+                <span class="explore-group-label">Build</span>
+                <a href="/getting-started/installation/">Installation</a>
+                <a href="/getting-started/cli-workflow/">CLI Workflow</a>
+                <a href="/concepts/architecture/">Architecture</a>
+                <a href="/guides/testing/">Testing</a>
+                <a href="/examples/hello-nestforge/">Example App</a>
+              </article>
+
+              <article class="explore-group">
+                <span class="explore-group-label">Runtime</span>
+                <a href="/concepts/request-pipeline/">Request Pipeline</a>
+                <a href="/guides/auth-openapi/">Auth and OpenAPI</a>
+                <a href="/guides/data-layer/">Data Layer</a>
+                <a href="/transports/graphql/">GraphQL</a>
+                <a href="/transports/grpc/">gRPC</a>
+                <a href="/transports/websockets/">WebSockets</a>
+                <a href="/transports/microservices/">Microservices</a>
+              </article>
+
+              <article class="explore-group">
+                <span class="explore-group-label">Framework</span>
+                <a href="/framework/workspace-structure/">Workspace Structure</a>
+                <a href="/framework/crate-architecture/">Crate Architecture</a>
+                <a href="/framework/public-api-surface/">Public API Surface</a>
+                <a href="/framework/macro-routing-internals/">Macro Internals</a>
+                <a href="/framework/contributing/">Contributing</a>
+              </article>
+            </div>
           </div>
         </div>
       </section>
