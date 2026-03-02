@@ -56,18 +56,29 @@ import '../styles/home.css';
       </section>
 
       <section class="paths">
-        <div class="home-container paths-grid">
-          <a href="/getting-started/overview/" class="path-card">
-            <span class="path-label">Build applications</span>
-            <strong>Start with setup, concepts, guides, transports, and examples.</strong>
-            <p>Use this path when you are building an HTTP API, GraphQL service, gRPC interface, WebSocket gateway, or microservice on top of NestForge.</p>
-          </a>
+        <div class="home-container paths-layout">
+          <div class="paths-intro">
+            <p class="eyebrow">Choose your lane</p>
+            <h2>The docs split cleanly between building on NestForge and evolving NestForge itself.</h2>
+          </div>
 
-          <a href="/framework/crate-architecture/" class="path-card">
-            <span class="path-label">Work on the framework</span>
-            <strong>Read workspace structure, public API boundaries, testing, and releases.</strong>
-            <p>Use this path when you need to understand crate ownership, macro internals, contributor expectations, or how framework changes move through review.</p>
-          </a>
+          <div class="paths-stack">
+            <a href="/getting-started/overview/" class="path-band">
+              <div class="path-band-meta">
+                <span class="path-label">Build applications</span>
+                <strong>Ship services with the runtime, guides, transports, and examples.</strong>
+              </div>
+              <p>Start here for installation, request flow, auth, data access, testing, GraphQL, gRPC, WebSockets, and microservices.</p>
+            </a>
+
+            <a href="/framework/crate-architecture/" class="path-band path-band-alt">
+              <div class="path-band-meta">
+                <span class="path-label">Work on the framework</span>
+                <strong>Navigate the workspace through crate ownership, API boundaries, and release flow.</strong>
+              </div>
+              <p>Use this lane for macro internals, workspace structure, contribution rules, framework quality, and release mechanics.</p>
+            </a>
+          </div>
         </div>
       </section>
 
