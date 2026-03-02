@@ -1,0 +1,5 @@
+@layer starlight.user {
+  html[data-has-sidebar] .content-panel > .sl-container {
+    max-width: 78rem;
+  }
+}

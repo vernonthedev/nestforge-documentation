@@ -1,0 +1,102 @@
+---
+import '../styles/home.css';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NestForge Docs</title>
+    <meta
+      name="description"
+      content="Documentation for building applications with NestForge and contributing to the framework itself."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="home-body">
+    <header class="home-header">
+      <div class="home-container home-header-inner">
+        <a href="/" class="home-brand" aria-label="NestForge home">
+          <img src="/logo.svg" alt="NestForge" />
+          <div class="home-brand-copy">
+            <span class="home-brand-name">NestForge</span>
+            <span class="home-brand-subtitle">Rust framework docs</span>
+          </div>
+        </a>
+
+        <nav class="home-nav" aria-label="Primary">
+          <a href="/getting-started/quick-start/">Quick Start</a>
+          <a href="/concepts/architecture/">Architecture</a>
+          <a href="/framework/crate-architecture/">Internals</a>
+        </nav>
+
+        <div class="home-header-actions">
+          <a href="https://github.com/vernonthedev/nestforge" class="home-header-link">GitHub</a>
+          <a href="/getting-started/overview/" class="home-header-cta">Open Docs</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="home-container hero-inner">
+          <p class="eyebrow">NestForge documentation</p>
+          <h1>Build NestForge services without guessing the runtime or the workspace.</h1>
+          <p class="hero-copy">
+            Documentation for application teams shipping APIs and for contributors working
+            inside the framework: installation, CLI workflow, core concepts, transport
+            guides, examples, crate architecture, and release process.
+          </p>
+          <div class="hero-actions">
+            <a href="/getting-started/quick-start/" class="button button-primary">Quick Start</a>
+            <a href="/framework/crate-architecture/" class="button button-secondary">Crate Architecture</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="paths">
+        <div class="home-container paths-grid">
+          <a href="/getting-started/overview/" class="path-card">
+            <span class="path-label">Build applications</span>
+            <strong>Start with setup, concepts, guides, transports, and examples.</strong>
+            <p>Use this path when you are building an HTTP API, GraphQL service, gRPC interface, WebSocket gateway, or microservice on top of NestForge.</p>
+          </a>
+
+          <a href="/framework/crate-architecture/" class="path-card">
+            <span class="path-label">Work on the framework</span>
+            <strong>Read workspace structure, public API boundaries, testing, and releases.</strong>
+            <p>Use this path when you need to understand crate ownership, macro internals, contributor expectations, or how framework changes move through review.</p>
+          </a>
+        </div>
+      </section>
+
+      <section class="explore">
+        <div class="home-container">
+          <div class="explore-head">
+            <p class="eyebrow">Jump directly</p>
+            <h2>Start from the part of NestForge you need right now.</h2>
+          </div>
+
+          <div class="explore-grid">
+            <a href="/getting-started/installation/">Installation</a>
+            <a href="/getting-started/cli-workflow/">CLI Workflow</a>
+            <a href="/concepts/architecture/">Architecture</a>
+            <a href="/concepts/request-pipeline/">Request Pipeline</a>
+            <a href="/guides/auth-openapi/">Auth and OpenAPI</a>
+            <a href="/guides/data-layer/">Data Layer</a>
+            <a href="/guides/testing/">Testing</a>
+            <a href="/transports/graphql/">GraphQL</a>
+            <a href="/transports/grpc/">gRPC</a>
+            <a href="/transports/websockets/">WebSockets</a>
+            <a href="/transports/microservices/">Microservices</a>
+            <a href="/examples/hello-nestforge/">Example App</a>
+            <a href="/framework/workspace-structure/">Workspace Structure</a>
+            <a href="/framework/public-api-surface/">Public API Surface</a>
+            <a href="/framework/contributing/">Contributing</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
