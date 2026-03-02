@@ -1,0 +1,56 @@
+---
+title: Hello NestForge Microservices
+description: What the microservices example includes and how it demonstrates pattern dispatch without a network transport.
+---
+
+# Example purpose
+
+This example demonstrates NestForge's transport-neutral microservice layer without
+requiring HTTP, gRPC, or WebSockets at the edge.
+
+# Files included
+
+The example currently includes:
+
+- `src/main.rs`
+- `src/app_module.rs`
+- `src/app_config.rs`
+- `src/microservices/mod.rs`
+- `src/microservices/patterns.rs`
+
+# What each file does
+
+## `src/main.rs`
+
+Creates a testing module with `TestFactory::<AppModule>`, resolves the pattern registry,
+constructs an in-process microservice client, sends a message, emits an event, prints the
+result, and shuts the module down.
+
+This is important because it demonstrates that the microservice layer is not tied to a
+specific external server.
+
+## `src/app_module.rs`
+
+Registers:
+
+- `AppConfig`
+- `AppPatterns`
+- `EventCounter`
+
+and exports them for the microservice runtime.
+
+## `src/microservices/patterns.rs`
+
+Defines:
+
+- `GreetingPayload`
+- `EventCounter`
+- the `app.greet` message pattern
+- the `app.bump` event pattern
+
+# What users learn from this example
+
+- how to define message and event patterns
+- how handlers resolve providers from `MicroserviceContext`
+- how to test microservice workflows in-process
+- how stateful side effects such as event counters can still use DI-managed providers

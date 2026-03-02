@@ -1,0 +1,64 @@
+---
+title: Hello NestForge gRPC
+description: What the gRPC-first example includes, how it maps tonic services to NestForge providers, and how to read the project.
+---
+
+# Example purpose
+
+This example demonstrates how NestForge can provide module wiring and dependency
+injection while `tonic` remains the concrete gRPC transport boundary.
+
+# Files included
+
+The example currently includes:
+
+- `src/main.rs`
+- `src/app_module.rs`
+- `src/app_config.rs`
+- `src/grpc/mod.rs`
+- `src/grpc/patterns.rs`
+- `src/grpc/service.rs`
+- `src/grpc/proto/mod.rs`
+- `src/grpc/proto/hello.rs`
+- `proto/greeter.proto`
+
+# What each file does
+
+## `src/main.rs`
+
+Creates `NestForgeGrpcFactory::<AppModule>`, binds to `127.0.0.1:50051`, and mounts the
+generated tonic `GreeterServer`.
+
+## `src/app_module.rs`
+
+Registers application config and a `GrpcPatterns` provider, then exports both.
+
+## `src/grpc/patterns.rs`
+
+Builds a `MicroserviceRegistry` with the `hello.say` message pattern. This is a key
+design detail: the example uses the microservice pattern layer as business logic behind
+the gRPC transport.
+
+## `src/grpc/service.rs`
+
+Implements the tonic-generated `Greeter` trait. It validates the request, resolves the
+pattern registry from `GrpcContext`, dispatches the request through
+`dispatch_grpc_message(...)`, and maps the payload back into a gRPC response.
+
+## `proto/greeter.proto`
+
+Defines the public transport contract.
+
+# Important current-state note
+
+In this workspace snapshot, the example already includes generated bindings under
+`src/grpc/proto/` and does not currently include a local `build.rs` file. That means the
+docs should be read against the checked-in example as it exists now, not against an older
+generic tonic template.
+
+# What users learn from this example
+
+- how NestForge DI works in a gRPC-first app
+- how to keep transport code thin
+- how to bridge gRPC and transport-neutral microservice patterns
+- how config providers remain available inside the service layer

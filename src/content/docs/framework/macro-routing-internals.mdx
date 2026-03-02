@@ -1,0 +1,50 @@
+---
+title: Macro and Routing Internals
+description: How the macro layer and the routing layer relate, and what contributors should preserve when extending them.
+---
+
+# Macro layer responsibilities
+
+`nestforge-macros` is responsible for turning declarative user code into framework
+definitions the runtime can consume.
+
+Examples:
+
+- `#[module(...)]` becomes module registration metadata
+- `#[controller(...)]` and `#[routes]` become controller and route definitions
+- route metadata macros attach auth, versioning, and documentation information
+
+# Routing layer responsibilities
+
+The runtime side of routing lives in the core and HTTP crates:
+
+- `RouteBuilder` assembles route definitions
+- module initialization collects controller routers
+- `NestForgeFactory` merges those routers into the app
+- pipeline behavior is layered around the routes after they are mounted
+
+# Why the boundary matters
+
+Keep this split clean:
+
+- macros should describe behavior
+- runtime crates should execute behavior
+
+Avoid pushing runtime logic into proc-macro code when it can live in normal Rust crates.
+That keeps behavior easier to test and easier to evolve.
+
+# Safe extension rules
+
+When adding a new route-level macro or metadata field:
+
+1. define the user-facing syntax clearly
+2. make sure the generated metadata is explicit
+3. update the runtime pieces that consume the metadata
+4. add tests for both macro behavior and runtime behavior
+5. document the new capability in user docs
+
+# Documentation metadata is part of routing
+
+One subtle but important pattern in NestForge is that route documentation metadata is
+collected alongside route behavior. OpenAPI generation depends on that metadata remaining
+stable and accurately attached at controller and method level.

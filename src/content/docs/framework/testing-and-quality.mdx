@@ -1,0 +1,58 @@
+---
+title: Testing and Quality
+description: How the framework validates behavior and what contributors should verify before merging changes.
+---
+
+# Quality model
+
+NestForge uses a mix of:
+
+- workspace builds
+- unit and integration tests
+- example applications
+- formatting and linting
+
+to protect framework quality.
+
+# What contributors should run
+
+At minimum:
+
+```bash
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+```
+
+Often also:
+
+```bash
+cargo check --workspace
+cargo fmt --all
+```
+
+# Where behavior is tested
+
+Important framework behavior is tested under `crates/nestforge/tests/`, including:
+
+- auth extractors
+- request decorators
+- response envelopes and serializers
+- cache interceptors
+- route documentation behavior
+- GraphQL routing
+- microservice registry behavior
+
+# Why examples matter for quality
+
+The example applications are also smoke tests for the public developer experience. When
+you change a public feature, a passing unit test is not enough if the example app or the
+docs become misleading.
+
+# Practical contributor checklist
+
+Before you consider a change complete:
+
+- tests pass
+- examples still compile or still accurately demonstrate the feature
+- docs match the current code, not an older intended design
+- conventional commit messages reflect the actual change

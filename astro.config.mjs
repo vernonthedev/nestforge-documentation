@@ -79,6 +79,10 @@ export default defineConfig({
           label: 'Examples',
           items: [
             { label: 'Hello NestForge', slug: 'examples/hello-nestforge' },
+            { label: 'GraphQL Example', slug: 'examples/hello-nestforge-graphql' },
+            { label: 'gRPC Example', slug: 'examples/hello-nestforge-grpc' },
+            { label: 'WebSocket Example', slug: 'examples/hello-nestforge-websockets' },
+            { label: 'Microservices Example', slug: 'examples/hello-nestforge-microservices' },
             { label: 'Example API', slug: 'examples/example-api' },
           ],
         },
@@ -87,6 +91,9 @@ export default defineConfig({
           items: [
             { label: 'Workspace Structure', slug: 'framework/workspace-structure' },
             { label: 'Crate Architecture', slug: 'framework/crate-architecture' },
+            { label: 'Public API Surface', slug: 'framework/public-api-surface' },
+            { label: 'Macro and Routing Internals', slug: 'framework/macro-routing-internals' },
+            { label: 'Testing and Quality', slug: 'framework/testing-and-quality' },
             { label: 'Contributing', slug: 'framework/contributing' },
             { label: 'Release Process', slug: 'framework/release-process' },
           ],

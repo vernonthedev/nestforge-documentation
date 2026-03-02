@@ -1,0 +1,55 @@
+---
+title: Hello NestForge WebSockets
+description: What the WebSocket-first example includes and how it combines gateway behavior with microservice patterns.
+---
+
+# Example purpose
+
+This example shows a gateway-first application that uses NestForge's WebSocket support
+while keeping provider resolution and config loading inside the framework module model.
+
+# Files included
+
+The example currently includes:
+
+- `src/main.rs`
+- `src/app_module.rs`
+- `src/app_config.rs`
+- `src/ws/mod.rs`
+- `src/ws/events_gateway.rs`
+- `src/ws/patterns.rs`
+
+# What each file does
+
+## `src/main.rs`
+
+Bootstraps an HTTP server and mounts a WebSocket gateway on the default `/ws` route. It
+listens on port `3002`.
+
+## `src/app_module.rs`
+
+Registers and exports the app config plus a `WsPatterns` registry provider.
+
+## `src/ws/events_gateway.rs`
+
+Defines the `EventsGateway` that:
+
+- sends an initial connection message
+- resolves `AppConfig`
+- optionally resolves `WsPatterns`
+- loops over incoming frames
+- delegates supported frames to `handle_websocket_microservice_message(...)`
+
+## `src/ws/patterns.rs`
+
+Defines transport-neutral patterns such as:
+
+- `app.info`
+- `app.ping`
+
+# What users learn from this example
+
+- how gateways receive `WebSocketContext`
+- how to resolve providers from the gateway
+- how to mix direct WebSocket behavior with microservice-pattern dispatch
+- how to expose a lightweight event-driven interface without a full broker

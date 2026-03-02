@@ -1,0 +1,71 @@
+---
+title: Hello NestForge GraphQL
+description: What the GraphQL-first example includes, how it boots, and what users should study first.
+---
+
+# Example purpose
+
+This example shows the smallest GraphQL-first application in the workspace while still
+using the NestForge module and config model.
+
+# Files included
+
+The example currently includes:
+
+- `src/main.rs`
+- `src/app_module.rs`
+- `src/app_config.rs`
+- `src/graphql/mod.rs`
+- `src/graphql/schema.rs`
+
+# What each file does
+
+## `src/main.rs`
+
+Bootstraps the app through `NestForgeFactory::<AppModule>::create()`, resolves
+`AppConfig`, builds the GraphQL schema, and mounts:
+
+- `/graphql`
+- GraphiQL at `/`
+
+It listens on port `3001`.
+
+## `src/app_module.rs`
+
+Registers config as a provider and exports it for downstream use. There are no HTTP
+controllers because GraphQL is the primary transport.
+
+## `src/app_config.rs`
+
+Implements `FromEnv` and provides the default app name for the example.
+
+## `src/graphql/schema.rs`
+
+Defines:
+
+- `QueryRoot`
+- `MutationRoot`
+- `User` and `CreateUserInput`
+- an in-memory `UserStore`
+- `build_schema(app_name)`
+
+# What users learn from this example
+
+This example teaches:
+
+- how to mount GraphQL without traditional controllers
+- how to feed app configuration into schema construction
+- how to use an in-memory store for resolver examples
+- how to separate module wiring from schema logic
+
+# What is intentionally not included
+
+This example is deliberately small. It does not try to demonstrate:
+
+- advanced auth
+- custom GraphQL context extraction from NestForge providers
+- database-backed resolvers
+- multi-module GraphQL composition
+
+Use it as a transport bootstrap reference, then move to a larger application structure as
+your schema grows.

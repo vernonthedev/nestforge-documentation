@@ -1,0 +1,43 @@
+---
+title: Public API Surface
+description: How the public nestforge crate is assembled and what contributors should treat as supported user API.
+---
+
+# Why this matters
+
+In this workspace, `crates/nestforge/src/lib.rs` is the contract users see first. It is
+not just a convenience barrel file. It defines what the framework presents as its public
+surface.
+
+# What the public crate exports
+
+The public crate currently re-exports:
+
+- core module, container, request, response, validation, and pipeline types
+- the HTTP `NestForgeFactory`
+- macros from `nestforge-macros`
+- utility macros such as `guard!`, `auth_guard!`, `role_guard!`, `interceptor!`,
+  `middleware!`, and `request_decorator!`
+- feature-gated support crates such as config, GraphQL, gRPC, WebSockets, scheduling,
+  testing, cache, data, Mongo, Redis, and ORM support
+
+# Contributor rule
+
+When adding or changing functionality, decide explicitly:
+
+- should this remain internal to one crate
+- should it be available only behind a Cargo feature
+- should it be re-exported from `nestforge`
+
+Do not re-export new items by default. Re-export them only when they are part of the
+user-facing framework story and you are prepared to support them as public API.
+
+# A good review question
+
+For any change to `crates/nestforge/src/lib.rs`, ask:
+
+- does this make the public API clearer
+- does this expose too much implementation detail
+- will application developers reasonably depend on this symbol
+
+That discipline keeps the facade useful instead of noisy.
