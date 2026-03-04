@@ -1,0 +1,258 @@
+---
+title: Build Your First Feature
+description: A step-by-step guide to adding a users feature with a module, DTOs, service, routes, and application wiring.
+---
+
+# Goal
+
+This walkthrough shows the exact path a new NestForge user usually needs:
+
+1. create a feature module
+2. add DTOs
+3. add a service
+4. add routes
+5. import the module into the application
+6. run the app and verify the route surface
+
+The example feature is `users`, because it matches the maintained example application.
+
+# Step 1: generate the feature
+
+From your app root:
+
+```bash
+nestforge g module users
+nestforge g resource users --module users
+```
+
+If you prefer to create the feature manually, the target structure is:
+
+```text
+src/
+  users/
+    controllers/
+    dto/
+    services/
+    mod.rs
+```
+
+# Step 2: define the DTOs
+
+Start with one DTO for the stored or returned shape:
+
+```rust
+#[nestforge::dto]
+pub struct UserDto {
+    pub id: u64,
+    pub name: String,
+    pub email: String,
+}
+
+nestforge::impl_identifiable!(UserDto, id);
+```
+
+Then add request DTOs:
+
+```rust
+#[nestforge::dto]
+pub struct CreateUserDto {
+    #[validate(required)]
+    pub name: String,
+    #[validate(required, email)]
+    pub email: String,
+}
+
+#[nestforge::dto]
+pub struct UpdateUserDto {
+    pub name: Option<String>,
+    #[validate(email)]
+    pub email: Option<String>,
+}
+```
+
+Use this pattern consistently:
+
+- `UserDto` for returned or stored data
+- `CreateUserDto` for required create input
+- `UpdateUserDto` for partial updates
+
+# Step 3: define the service
+
+For a first feature, `ResourceService<T>` is the easiest service layer:
+
+```rust
+use nestforge::{ResourceError, ResourceService};
+
+use crate::users::dto::{CreateUserDto, UpdateUserDto, UserDto};
+
+pub type UsersService = ResourceService<UserDto>;
+
+pub fn users_service_seed() -> UsersService {
+    ResourceService::with_seed(vec![
+        UserDto {
+            id: 1,
+            name: "Vernon".to_string(),
+            email: "vernon@example.com".to_string(),
+        },
+    ])
+}
+
+pub fn create_user(service: &UsersService, dto: CreateUserDto) -> Result<UserDto, ResourceError> {
+    service.create(dto)
+}
+
+pub fn update_user(
+    service: &UsersService,
+    id: u64,
+    dto: UpdateUserDto,
+) -> Result<Option<UserDto>, ResourceError> {
+    service.update(id, dto)
+}
+```
+
+This gives you a working CRUD-style provider before you commit to a database.
+
+# Step 4: expose routes in a controller
+
+Now add the HTTP layer:
+
+```rust
+use axum::Json;
+use nestforge::{
+    controller, routes, ApiResult, Inject, Param, ResultHttpExt, ValidatedBody,
+};
+
+use crate::users::{
+    dto::{CreateUserDto, UpdateUserDto, UserDto},
+    services::{UsersService, create_user, update_user},
+};
+
+#[controller("/users")]
+pub struct UsersController;
+
+#[routes]
+impl UsersController {
+    #[nestforge::post("/")]
+    #[nestforge::version("1")]
+    async fn create(
+        users: Inject<UsersService>,
+        body: ValidatedBody<CreateUserDto>,
+    ) -> ApiResult<UserDto> {
+        let user = create_user(users.as_ref(), body.value()).or_bad_request()?;
+        Ok(Json(user))
+    }
+
+    #[nestforge::put("/{id}")]
+    #[nestforge::version("1")]
+    async fn update(
+        id: Param<u64>,
+        users: Inject<UsersService>,
+        body: ValidatedBody<UpdateUserDto>,
+    ) -> ApiResult<UserDto> {
+        let id = id.value();
+        let updated = update_user(users.as_ref(), id, body.value())
+            .or_bad_request()?
+            .or_not_found_id("User", id)?;
+        Ok(Json(updated))
+    }
+}
+```
+
+At this point the feature has a real request path:
+
+- request body enters through `ValidatedBody<T>`
+- service resolves through `Inject<UsersService>`
+- controller maps service errors to HTTP errors
+
+# Step 5: wire the feature module
+
+The feature module should register the controller and provider:
+
+```rust
+pub mod controllers;
+pub mod dto;
+pub mod services;
+
+use nestforge::module;
+
+use self::controllers::UsersController;
+use self::services::{UsersService, users_service_seed};
+
+#[module(
+    imports = [],
+    controllers = [UsersController],
+    providers = [users_service_seed()],
+    exports = [UsersService]
+)]
+pub struct UsersModule;
+```
+
+# Step 6: import it into the app
+
+Finally, add the feature to `AppModule`:
+
+```rust
+#[module(
+    imports = [UsersModule, SettingsModule, VersioningModule],
+    controllers = [AppController, HealthController],
+    providers = [
+        load_app_config()?,
+        connect_db()?
+    ],
+    exports = [Db, AppConfig]
+)]
+pub struct AppModule;
+```
+
+Without this import, the users feature does not become part of the running application.
+
+# Step 7: run and verify
+
+Start the app:
+
+```bash
+cargo run
+```
+
+If your bootstrap includes:
+
+```rust
+NestForgeFactory::<AppModule>::create()?
+    .with_global_prefix("api")
+    .with_openapi_docs("My API", "1.0.0")?
+    .listen(3000)
+    .await?;
+```
+
+and your users controller uses `#[nestforge::version("1")]`, your routes will appear
+under paths such as:
+
+- `GET /api/v1/users`
+- `POST /api/v1/users`
+- `PUT /api/v1/users/{id}`
+
+# What new users usually miss
+
+These are the common onboarding mistakes:
+
+- creating the feature files but forgetting to import the module into `AppModule`
+- defining DTOs but not using `ValidatedBody<T>` in the controller
+- creating a service type but not registering it in `providers`
+- exporting a service from a feature without actually registering it
+- expecting routes to appear without accounting for global prefix and version metadata
+
+# Where to go next
+
+After this first feature works, the usual next steps are:
+
+- replace `ResourceService<T>` with a data-layer-backed provider
+- add guards and interceptors
+- add OpenAPI metadata to routes
+- add tests with `TestFactory::<AppModule>`
+
+For deeper reference material, continue with:
+
+- [Feature Modules](/getting-started/feature-modules/)
+- [DTOs, Services, and Routes](/getting-started/dtos-services-routes/)
+- [Resource Services](/guides/resource-services/)
+- [Controllers and Routing](/concepts/controllers-routing/)

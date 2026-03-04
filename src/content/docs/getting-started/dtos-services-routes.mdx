@@ -1,0 +1,177 @@
+---
+title: DTOs, Services, and Routes
+description: Understand the normal flow from request DTO to service call to HTTP response in a NestForge feature.
+---
+
+# The beginner mental model
+
+For most HTTP features in NestForge, the request flow is:
+
+1. a controller route receives the request
+2. the route validates and extracts input through DTOs and extractors
+3. the controller calls an injected service
+4. the service returns a DTO or domain value
+5. the controller returns the HTTP response
+
+If a new user understands that sequence, the rest of the framework becomes much easier
+to navigate.
+
+# DTOs define the input and output shapes
+
+The users example has separate DTOs for read, create, and update operations.
+
+## Read DTO
+
+```rust
+#[nestforge::dto]
+pub struct UserDto {
+    pub id: u64,
+    pub name: String,
+    pub email: String,
+}
+
+nestforge::impl_identifiable!(UserDto, id);
+```
+
+This is the shape stored by `ResourceService<UserDto>` and returned to the client.
+
+## Create DTO
+
+```rust
+#[nestforge::dto]
+pub struct CreateUserDto {
+    #[validate(required)]
+    pub name: String,
+    #[validate(required, email)]
+    pub email: String,
+}
+```
+
+Use create DTOs for required fields and validation rules that must pass before the
+service is called.
+
+## Update DTO
+
+```rust
+#[nestforge::dto]
+pub struct UpdateUserDto {
+    pub name: Option<String>,
+    #[validate(email)]
+    pub email: Option<String>,
+}
+```
+
+Use update DTOs when partial updates should be allowed.
+
+# Services hold the feature behavior
+
+The users example uses an in-memory resource service:
+
+```rust
+pub type UsersService = ResourceService<UserDto>;
+```
+
+It is registered with seed data:
+
+```rust
+pub fn users_service_seed() -> UsersService {
+    ResourceService::with_seed(vec![
+        UserDto {
+            id: 1,
+            name: "Vernon".to_string(),
+            email: "vernon@example.com".to_string(),
+        },
+        UserDto {
+            id: 2,
+            name: "Sam".to_string(),
+            email: "sam@example.com".to_string(),
+        },
+    ])
+}
+```
+
+Then small service helpers wrap the CRUD operations:
+
+```rust
+pub fn create_user(service: &UsersService, dto: CreateUserDto) -> Result<UserDto, ResourceError> {
+    service.create(dto)
+}
+
+pub fn update_user(
+    service: &UsersService,
+    id: u64,
+    dto: UpdateUserDto,
+) -> Result<Option<UserDto>, ResourceError> {
+    service.update(id, dto)
+}
+```
+
+This keeps controllers thin and keeps data behavior in one place.
+
+# Controllers expose the routes
+
+The controller is where route metadata, validation, and provider injection meet:
+
+```rust
+#[controller("/users")]
+pub struct UsersController;
+
+#[routes]
+impl UsersController {
+    #[nestforge::post("/")]
+    #[nestforge::version("1")]
+    async fn create(
+        users: Inject<UsersService>,
+        body: ValidatedBody<CreateUserDto>,
+    ) -> ApiResult<UserDto> {
+        let user = create_user(users.as_ref(), body.value()).or_bad_request()?;
+        Ok(Json(user))
+    }
+}
+```
+
+Important parts of that handler:
+
+- `#[controller("/users")]` sets the base path
+- `#[nestforge::post("/")]` declares the HTTP method and route
+- `Inject<UsersService>` resolves the provider from the DI container
+- `ValidatedBody<CreateUserDto>` validates the request body
+- `.or_bad_request()?` maps a service error into an HTTP error
+
+# How the full route path is produced
+
+If the app uses:
+
+```rust
+.with_global_prefix("api")
+```
+
+and the handler uses:
+
+```rust
+#[nestforge::version("1")]
+#[controller("/users")]
+#[nestforge::post("/")]
+```
+
+the final route becomes:
+
+```text
+/api/v1/users
+```
+
+# A practical rule for new users
+
+When deciding where code belongs:
+
+- put request shape and validation in DTOs
+- put CRUD or business behavior in services
+- put HTTP mapping and framework metadata in controllers
+- put registration and visibility rules in modules
+
+That separation is the main thing that keeps a NestForge app readable.
+
+# What to read next
+
+If you want the full end-to-end sequence, continue with
+[Build Your First Feature](/getting-started/build-your-first-feature/).

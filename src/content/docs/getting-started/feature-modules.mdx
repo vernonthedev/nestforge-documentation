@@ -1,0 +1,139 @@
+---
+title: Feature Modules
+description: Create a feature module in NestForge and understand how its DTOs, services, controllers, and exports fit together.
+---
+
+# What a feature module contains
+
+In NestForge, a feature module is the unit you add when your application gains a new
+area such as `users`, `settings`, or `billing`.
+
+A typical feature module contains:
+
+- DTOs
+- a service or provider layer
+- one or more controllers
+- the module declaration that wires those pieces together
+
+The common folder layout is:
+
+```text
+src/
+  users/
+    controllers/
+    dto/
+    services/
+    mod.rs
+```
+
+# Generate the skeleton
+
+The CLI can create the basic structure for you:
+
+```bash
+nestforge g module users
+nestforge g resource users --module users
+```
+
+That is the fastest path for a new app because it creates the folder layout and patches
+the module wiring for you.
+
+# What the module file looks like
+
+In the main example application, the users feature module is:
+
+```rust
+pub mod controllers;
+pub mod dto;
+pub mod services;
+
+use nestforge::module;
+
+use self::controllers::UsersController;
+use self::services::{UsersService, users_service_seed};
+
+#[module(
+    imports = [],
+    controllers = [UsersController],
+    providers = [users_service_seed()],
+    exports = [UsersService]
+)]
+pub struct UsersModule;
+```
+
+This file does four jobs:
+
+- declares the feature submodules
+- registers the controller that exposes routes
+- registers the provider that backs the feature
+- exports the service so other modules can reuse it
+
+# How to think about each section
+
+## `imports`
+
+Use `imports` when this feature depends on providers exported by another module.
+
+Example cases:
+
+- `UsersModule` imports `AuthModule`
+- `BillingModule` imports `UsersModule`
+- `SettingsModule` imports `ConfigModule`
+
+## `controllers`
+
+Controllers define the HTTP route surface for the feature. If there is no controller
+listed here, the feature has no mounted HTTP endpoints.
+
+## `providers`
+
+Providers are the values resolved through `Inject<T>`. For beginner-friendly flows,
+this is often a seeded `ResourceService<T>`. Later this can be replaced by a database
+repository, domain service, or request-scoped provider.
+
+## `exports`
+
+Exports are what other modules can use. If you want another feature to inject
+`UsersService`, you need to export it here.
+
+# Add the feature to the application
+
+Creating a feature module is not enough. The application root module still needs to
+import it:
+
+```rust
+#[module(
+    imports = [UsersModule, SettingsModule, VersioningModule],
+    controllers = [AppController, HealthController],
+    providers = [
+        load_app_config()?,
+        connect_db()?
+    ],
+    exports = [Db, AppConfig]
+)]
+pub struct AppModule;
+```
+
+If the feature module is missing from `AppModule`, its controllers and providers are not
+part of the app.
+
+# Recommended build order
+
+When adding a new feature manually, use this order:
+
+1. create the folder and `mod.rs`
+2. add DTOs
+3. add the service/provider
+4. add the controller
+5. register controller and provider in the feature module
+6. import the feature module into `AppModule`
+
+That order keeps compile errors understandable because the dependency chain becomes
+visible one layer at a time.
+
+# What to read next
+
+After the module exists, the next step is learning how the DTO, service, and controller
+fit together in one feature flow. Continue with
+[DTOs, Services, and Routes](/getting-started/dtos-services-routes/) or jump straight to
+[Build Your First Feature](/getting-started/build-your-first-feature/).
