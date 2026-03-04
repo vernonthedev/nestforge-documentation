@@ -1,0 +1,69 @@
+---
+title: Caching Workflow
+description: A step-by-step workflow for adding response caching through cache policy and interceptor registration.
+---
+
+# Goal
+
+Use this flow when you want predictable response caching:
+
+1. enable caching features
+2. define a cache policy
+3. register the cache interceptor
+4. run the app
+5. verify cache behavior on real routes
+
+# Step 1: enable the features
+
+```toml
+nestforge = { version = "1", features = ["cache", "redis"] }
+```
+
+# Step 2: define a policy
+
+Start with a small policy:
+
+```rust
+#[derive(Default, Clone)]
+struct UsersCachePolicy;
+
+impl nestforge::CachePolicy for UsersCachePolicy {
+    type Store = nestforge::InMemoryRedisStore;
+}
+```
+
+The policy controls what gets cached and how cache keys and TTL rules are derived.
+
+# Step 3: register the interceptor
+
+Attach the interceptor at bootstrap:
+
+```rust
+NestForgeFactory::<AppModule>::create()?
+    .use_interceptor::<nestforge::CacheInterceptor<UsersCachePolicy>>();
+```
+
+That makes caching part of the request pipeline instead of a hidden behavior inside the
+controller.
+
+# Step 4: verify default behavior
+
+The built-in defaults are conservative. First confirm that:
+
+1. `GET` routes are cacheable
+2. non-`GET` routes are not cached
+3. the request URI becomes the cache key
+4. only `200 OK` responses are stored
+
+# Step 5: customize only when needed
+
+Once the default behavior is confirmed, customize the policy for:
+
+- custom keys
+- custom TTL
+- cache invalidation semantics
+- route-specific rules
+
+# What to read next
+
+For the reference page, see [Caching](/transports/caching/).

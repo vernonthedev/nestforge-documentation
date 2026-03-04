@@ -1,0 +1,148 @@
+---
+title: Testing Workflow
+description: A step-by-step workflow for building NestForge tests around modules, HTTP routes, GraphQL, gRPC, and microservice handlers.
+---
+
+# Goal
+
+This guide turns the testing helpers into a practical workflow instead of a reference.
+
+Use this sequence when you want to test a NestForge app:
+
+1. build a testing module
+2. override any providers that should differ in tests
+3. pick the transport surface you want to test
+4. make assertions
+5. shut the module down if lifecycle hooks matter
+
+# Step 1: build the testing module
+
+The normal entry point is `TestFactory::<AppModule>`:
+
+```rust
+let module = nestforge::TestFactory::<AppModule>::create()
+    .override_provider(AppConfig {
+        app_name: "test".to_string(),
+        log_level: "debug".to_string(),
+    })
+    .build()?;
+```
+
+This gives you a full module runtime with the NestForge container and controller graph.
+
+# Step 2: resolve providers directly
+
+Before testing a route or transport edge, verify the container state when needed:
+
+```rust
+let config = module.resolve::<AppConfig>()?;
+```
+
+This is useful for checking that provider overrides were applied before request handling
+or message dispatch starts.
+
+# Step 3: choose the surface to test
+
+## HTTP workflow
+
+If you want to test controller routes, use `http_router()`:
+
+```rust
+let response = module
+    .http_router()
+    .oneshot(
+        axum::http::Request::builder()
+            .uri("/health")
+            .body(axum::body::Body::empty())?,
+    )
+    .await?;
+```
+
+Use this when you want to verify:
+
+- route matching
+- request validation
+- controller behavior
+- response status and body
+
+## GraphQL workflow
+
+If your app exposes GraphQL, mount the schema into the testing module:
+
+```rust
+let app = module.graphql_router(schema);
+```
+
+Use this when you want to verify:
+
+- resolver behavior
+- schema wiring
+- provider resolution from GraphQL context
+
+## gRPC workflow
+
+If you need DI-backed transport logic without running a server, use:
+
+```rust
+let ctx = module.grpc_context();
+```
+
+This is useful for testing service behavior that depends on `GrpcContext`.
+
+## Microservice workflow
+
+To test pattern handlers directly:
+
+```rust
+let ctx = module.microservice_context("test", "users.count");
+```
+
+Or create an in-process client against a registry:
+
+```rust
+let client = module.microservice_client(registry.clone(), "test");
+```
+
+Use this when you want to verify:
+
+- pattern dispatch
+- event handling
+- transport metadata
+- provider resolution from `MicroserviceContext`
+
+# Step 4: prefer the smallest useful scope
+
+Use this rule:
+
+- test the provider directly when only business logic matters
+- test `http_router()` when route behavior matters
+- test GraphQL router when schema integration matters
+- test `grpc_context()` when gRPC service code depends on DI
+- test microservice context or client when pattern dispatch matters
+
+That keeps tests fast and makes failures easier to localize.
+
+# Step 5: shut down cleanly
+
+If your module uses lifecycle hooks, finish with:
+
+```rust
+module.shutdown()?;
+```
+
+That runs destroy and shutdown hooks inside the testing runtime.
+
+# Common testing sequence
+
+For most apps, a practical order is:
+
+1. provider tests
+2. HTTP route tests
+3. GraphQL or transport-specific tests
+4. in-process microservice tests
+
+That order catches logic bugs before you spend time debugging transport behavior.
+
+# What to read next
+
+For the API reference version of these helpers, see [Testing](/guides/testing/).

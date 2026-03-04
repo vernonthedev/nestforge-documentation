@@ -1,0 +1,92 @@
+---
+title: GraphQL Workflow
+description: A step-by-step workflow for adding GraphQL to a NestForge application and verifying the integration.
+---
+
+# Goal
+
+Use this workflow when you want to add GraphQL to a NestForge app without guessing how
+the schema, module container, and runtime fit together.
+
+# Step 1: enable the feature
+
+```toml
+nestforge = { version = "1", features = ["graphql"] }
+```
+
+# Step 2: build the schema
+
+NestForge uses `async-graphql`, so the first task is defining the schema root:
+
+```rust
+use nestforge::async_graphql::{EmptyMutation, EmptySubscription, Object, Schema};
+
+struct QueryRoot;
+
+#[Object]
+impl QueryRoot {
+    async fn health(&self) -> &str {
+        "ok"
+    }
+}
+
+let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription).finish();
+```
+
+# Step 3: bootstrap the app with GraphQL
+
+Attach the schema to the NestForge HTTP runtime:
+
+```rust
+use nestforge::{NestForgeFactory, NestForgeFactoryGraphQlExt};
+
+NestForgeFactory::<AppModule>::create()?
+    .with_graphql(schema)
+    .listen(3000)
+    .await?;
+```
+
+The default mounted routes are:
+
+- `/graphql`
+- `/graphiql`
+
+# Step 4: resolve providers from resolver context
+
+When a resolver needs application state, resolve it from the NestForge container:
+
+```rust
+use nestforge::{async_graphql::Context, resolve_graphql};
+
+async fn app_name(&self, ctx: &Context<'_>) -> String {
+    let config = resolve_graphql::<AppConfig>(ctx).expect("app config should exist");
+    config.app_name.clone()
+}
+```
+
+This is the key integration point: GraphQL remains schema-driven, but still uses the
+same provider model as the rest of the app.
+
+# Step 5: test the schema through the testing module
+
+Build the testing module, then mount the schema in test:
+
+```rust
+let module = nestforge::TestFactory::<AppModule>::create().build()?;
+let app = module.graphql_router(schema);
+```
+
+That is the shortest path for verifying resolvers against real container state.
+
+# What to verify
+
+When GraphQL is first added, check these in order:
+
+1. schema compiles
+2. `/graphql` responds
+3. resolvers can access required providers
+4. provider overrides work in tests
+
+# What to read next
+
+For the reference view of the GraphQL API, see [GraphQL](/transports/graphql/).

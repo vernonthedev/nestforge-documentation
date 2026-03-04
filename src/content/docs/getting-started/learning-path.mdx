@@ -1,0 +1,81 @@
+---
+title: Learning Path
+description: The recommended order for learning NestForge without getting lost in reference material too early.
+---
+
+# Recommended order
+
+If you are new to NestForge, follow the docs in this order:
+
+1. [Installation](/getting-started/installation/)
+2. [Quick Start](/getting-started/quick-start/)
+3. [Feature Modules](/getting-started/feature-modules/)
+4. [DTOs, Services, and Routes](/getting-started/dtos-services-routes/)
+5. [Build Your First Feature](/getting-started/build-your-first-feature/)
+6. one workflow that matches your runtime:
+   `Testing`, `GraphQL`, `gRPC`, `WebSockets`, `Microservices`, `Auth/OpenAPI`, `Scheduling`, or `Caching`
+7. examples
+8. concepts and reference pages later
+
+# Why this order works
+
+New users usually get lost when they read the framework in reference order. NestForge is
+easier to understand when you first learn:
+
+- how a feature is structured
+- how the module wires it into the app
+- how a transport is bootstrapped
+- how to test the result
+
+After that, the concept and reference pages become much more useful.
+
+# Suggested tracks
+
+## HTTP-first application
+
+Read these in order:
+
+1. [Quick Start](/getting-started/quick-start/)
+2. [Build Your First Feature](/getting-started/build-your-first-feature/)
+3. [Testing Workflow](/guides/testing-workflow/)
+4. [Auth and OpenAPI Workflow](/guides/auth-openapi-workflow/)
+
+## GraphQL-first application
+
+Read these in order:
+
+1. [Quick Start](/getting-started/quick-start/)
+2. [Feature Modules](/getting-started/feature-modules/)
+3. [GraphQL Workflow](/transports/graphql-workflow/)
+4. [Testing Workflow](/guides/testing-workflow/)
+
+## gRPC-first application
+
+Read these in order:
+
+1. [Quick Start](/getting-started/quick-start/)
+2. [Feature Modules](/getting-started/feature-modules/)
+3. [gRPC Workflow](/transports/grpc-workflow/)
+4. [Microservices Workflow](/transports/microservices-workflow/)
+5. [Testing Workflow](/guides/testing-workflow/)
+
+## Event-driven or socket-first application
+
+Read these in order:
+
+1. [Quick Start](/getting-started/quick-start/)
+2. [WebSockets Workflow](/transports/websockets-workflow/)
+3. [Microservices Workflow](/transports/microservices-workflow/)
+4. [Testing Workflow](/guides/testing-workflow/)
+
+# When to read the reference pages
+
+Read the reference pages after you already have a working mental model. They are best
+for:
+
+- checking syntax
+- understanding available APIs
+- comparing options
+- debugging specific framework behavior
+
+They are not the best first stop for onboarding.

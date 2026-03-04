@@ -1,0 +1,69 @@
+---
+title: Scheduling Workflow
+description: A step-by-step workflow for registering scheduled jobs through module providers and lifecycle hooks.
+---
+
+# Goal
+
+Use this flow when your application needs repeated or delayed background jobs:
+
+1. enable scheduling
+2. build the schedule registry
+3. register it as a provider
+4. start schedules on bootstrap
+5. stop schedules on shutdown
+
+# Step 1: enable the feature
+
+```toml
+nestforge = { version = "1", features = ["schedule"] }
+```
+
+# Step 2: build the schedule registry
+
+The registry is where jobs are declared. Use it to define repeated or delayed work.
+
+Typical jobs are:
+
+- cleanup tasks
+- sync jobs
+- notification dispatch
+- metrics refresh
+
+# Step 3: register the registry in the module
+
+The core module pattern is:
+
+```rust
+#[module(
+    providers = [build_schedule_registry()?],
+    on_application_bootstrap = [nestforge::start_schedules],
+    on_application_shutdown = [nestforge::shutdown_schedules]
+)]
+pub struct AppModule;
+```
+
+This is the important design rule: schedules belong to the module lifecycle, not to
+hidden background threads started somewhere else.
+
+# Step 4: start on bootstrap
+
+Use `start_schedules` during application bootstrap so jobs begin after the module graph
+and providers are ready.
+
+# Step 5: stop on shutdown
+
+Use `shutdown_schedules` during application shutdown so jobs stop cleanly with the rest
+of the application.
+
+# What to verify
+
+When adding scheduling for the first time, verify:
+
+1. the registry is registered successfully
+2. jobs begin after app bootstrap
+3. shutdown stops running schedules cleanly
+
+# What to read next
+
+For the reference page, see [Scheduling](/transports/scheduling/).

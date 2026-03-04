@@ -1,0 +1,122 @@
+---
+title: Microservices Workflow
+description: A step-by-step workflow for defining a MicroserviceRegistry, dispatching messages and events, and testing the handlers in-process.
+---
+
+# Goal
+
+This is the practical flow for the microservices example:
+
+1. define a registry
+2. register the registry and supporting providers in the module
+3. build an in-process client
+4. send a message
+5. emit an event
+6. verify the results
+
+# Step 1: define the pattern registry
+
+The central object is `MicroserviceRegistry`:
+
+```rust
+registry: nestforge::MicroserviceRegistry::builder()
+    .message("app.greet", |payload: GreetingPayload, ctx| async move {
+        let config = ctx.resolve::<crate::app_config::AppConfig>()?;
+        Ok(serde_json::json!({
+            "message": format!("Hello, {}! Welcome to {}.", payload.name, config.app_name),
+            "transport": ctx.transport(),
+        }))
+    })
+    .event("app.bump", |_payload: (), ctx| async move {
+        let counter = ctx.resolve::<EventCounter>()?;
+        counter.0.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        Ok(())
+    })
+    .build()
+```
+
+That gives you one place to define message handlers and event handlers.
+
+# Step 2: register the supporting providers
+
+The registry usually depends on other providers such as config, counters, services, or
+repositories. Register those in your module before you try to dispatch patterns.
+
+The important mental model is:
+
+- the registry defines handlers
+- the container provides the dependencies
+- `MicroserviceContext` connects the two
+
+# Step 3: build the testing module
+
+The maintained example uses the testing runtime instead of a network transport:
+
+```rust
+let module = TestFactory::<AppModule>::create().build()?;
+```
+
+This is the recommended starting point because it lets you verify the handler behavior
+before introducing gRPC, WebSockets, or a broker adapter.
+
+# Step 4: create an in-process client
+
+Resolve the registry, then build the client:
+
+```rust
+let patterns = module.resolve::<AppPatterns>()?;
+let client = module.microservice_client_with_metadata(
+    patterns.registry().clone(),
+    "example-cli",
+    TransportMetadata::new().insert("example", "hello-nestforge-microservices"),
+);
+```
+
+The transport name and metadata are available inside the handler context.
+
+# Step 5: send a message
+
+For request-response behavior:
+
+```rust
+let greeting: serde_json::Value = client
+    .send(
+        "app.greet",
+        GreetingPayload {
+            name: "John Doe".to_string(),
+        },
+    )
+    .await?;
+```
+
+Use messages when the caller expects a returned payload.
+
+# Step 6: emit an event
+
+For fire-and-forget behavior:
+
+```rust
+client.emit("app.bump", ()).await?;
+```
+
+Use events when the caller only needs side effects.
+
+# Step 7: verify state
+
+The example resolves a shared counter after the event:
+
+```rust
+let counter = module.resolve::<EventCounter>()?;
+```
+
+This is the normal pattern for verifying that an event handler changed application state.
+
+# Why this workflow matters
+
+This is the cleanest place for new users to understand transport-neutral application
+logic. Once the registry behaves correctly in-process, it becomes much easier to reuse
+the same behavior behind gRPC or WebSockets.
+
+# What to read next
+
+For the reference overview, see [Microservices](/transports/microservices/).

@@ -1,0 +1,103 @@
+---
+title: WebSockets Workflow
+description: A step-by-step workflow for adding a WebSocket gateway to NestForge and forwarding frames into microservice patterns.
+---
+
+# Goal
+
+Use this flow when you want a working WebSocket-first feature:
+
+1. define gateway behavior
+2. register any providers or pattern registries
+3. mount the gateway
+4. connect a client
+5. exchange frames
+
+# Step 1: define the gateway
+
+The maintained example uses `WebSocketGateway`:
+
+```rust
+pub struct EventsGateway;
+
+impl WebSocketGateway for EventsGateway {
+    fn on_connect(
+        &self,
+        ctx: WebSocketContext,
+        mut socket: WebSocket,
+    ) -> core::pin::Pin<Box<dyn core::future::Future<Output = ()> + Send>> {
+        Box::pin(async move {
+            // gateway logic
+        })
+    }
+}
+```
+
+This is the transport boundary for connection setup, incoming frames, and outgoing
+messages.
+
+# Step 2: resolve providers from the socket context
+
+Inside `on_connect`, the gateway can resolve application providers:
+
+```rust
+let app_name = ctx
+    .resolve::<AppConfig>()
+    .map(|config| config.app_name.clone())
+    .unwrap_or_else(|_| "NestForge WebSockets".to_string());
+```
+
+That means the gateway can share the same module state as HTTP or GraphQL code.
+
+# Step 3: forward frames into microservice patterns
+
+The example also resolves `WsPatterns` and delegates frames into a registry:
+
+```rust
+match handle_websocket_microservice_message(&ctx, patterns.registry(), message).await {
+    Ok(Some(response)) => {
+        let _ = socket.send(response).await;
+    }
+    Ok(None) => {}
+    Err(err) => {
+        let _ = socket
+            .send(Message::Text(format!("error:{err}").into()))
+            .await;
+    }
+}
+```
+
+This is the main workflow when you want WebSockets at the edge but transport-neutral
+business logic underneath.
+
+# Step 4: mount the gateway
+
+Bootstrap the application with:
+
+```rust
+NestForgeFactory::<AppModule>::create()?
+    .with_websocket_gateway(EventsGateway)
+    .listen(3002)
+    .await?;
+```
+
+The default route is:
+
+- `/ws`
+
+# Step 5: verify the connection flow
+
+When the example client connects, the gateway immediately sends a text frame describing
+the expected message format. That is a useful pattern for first-time users because it
+documents the protocol at the point of connection.
+
+The first things to verify are:
+
+1. the socket upgrades successfully
+2. the connect message is sent
+3. a valid JSON frame reaches the registry
+4. a response frame returns to the client
+
+# What to read next
+
+For the reference version of this transport, see [WebSockets](/transports/websockets/).

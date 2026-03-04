@@ -27,12 +27,12 @@ export default defineConfig({
         starlightThemeSix({
           navLinks: [
             {
-              label: 'Quick Start',
-              link: '/getting-started/quick-start/',
+              label: 'Learning Path',
+              link: '/getting-started/learning-path/',
             },
             {
-              label: 'Application Guides',
-              link: '/guides/middleware/',
+              label: 'Workflows',
+              link: '/guides/testing-workflow/',
             },
           ],
           footerText:
@@ -43,6 +43,7 @@ export default defineConfig({
         {
           label: 'Start Here',
           items: [
+            { label: 'Learning Path', slug: 'getting-started/learning-path' },
             { label: 'Overview', slug: 'getting-started/overview' },
             { label: 'Installation', slug: 'getting-started/installation' },
             { label: 'Quick Start', slug: 'getting-started/quick-start' },
@@ -50,6 +51,30 @@ export default defineConfig({
             { label: 'DTOs, Services, and Routes', slug: 'getting-started/dtos-services-routes' },
             { label: 'Build Your First Feature', slug: 'getting-started/build-your-first-feature' },
             { label: 'CLI Workflow', slug: 'getting-started/cli-workflow' },
+          ],
+        },
+        {
+          label: 'Guided Workflows',
+          items: [
+            { label: 'Auth and OpenAPI Workflow', slug: 'guides/auth-openapi-workflow' },
+            { label: 'Testing Workflow', slug: 'guides/testing-workflow' },
+            { label: 'GraphQL Workflow', slug: 'transports/graphql-workflow' },
+            { label: 'gRPC Workflow', slug: 'transports/grpc-workflow' },
+            { label: 'Microservices Workflow', slug: 'transports/microservices-workflow' },
+            { label: 'WebSockets Workflow', slug: 'transports/websockets-workflow' },
+            { label: 'Scheduling Workflow', slug: 'transports/scheduling-workflow' },
+            { label: 'Caching Workflow', slug: 'transports/caching-workflow' },
+          ],
+        },
+        {
+          label: 'Examples',
+          items: [
+            { label: 'Hello NestForge', slug: 'examples/hello-nestforge' },
+            { label: 'GraphQL Example', slug: 'examples/hello-nestforge-graphql' },
+            { label: 'gRPC Example', slug: 'examples/hello-nestforge-grpc' },
+            { label: 'WebSocket Example', slug: 'examples/hello-nestforge-websockets' },
+            { label: 'Microservices Example', slug: 'examples/hello-nestforge-microservices' },
+            { label: 'Example API', slug: 'examples/example-api' },
           ],
         },
         {
@@ -63,7 +88,7 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Application Guides',
+          label: 'Reference',
           items: [
             { label: 'Middleware', slug: 'guides/middleware' },
             { label: 'Guards and Interceptors', slug: 'guides/guards-interceptors' },
@@ -72,28 +97,12 @@ export default defineConfig({
             { label: 'Resource Services', slug: 'guides/resource-services' },
             { label: 'Macros', slug: 'guides/macros' },
             { label: 'Data Layer', slug: 'guides/data-layer' },
-          ],
-        },
-        {
-          label: 'Transports and Runtime',
-          items: [
             { label: 'GraphQL', slug: 'transports/graphql' },
             { label: 'gRPC', slug: 'transports/grpc' },
-            { label: 'WebSockets', slug: 'transports/websockets' },
             { label: 'Microservices', slug: 'transports/microservices' },
+            { label: 'WebSockets', slug: 'transports/websockets' },
             { label: 'Scheduling', slug: 'transports/scheduling' },
             { label: 'Caching', slug: 'transports/caching' },
-          ],
-        },
-        {
-          label: 'Examples',
-          items: [
-            { label: 'Hello NestForge', slug: 'examples/hello-nestforge' },
-            { label: 'GraphQL Example', slug: 'examples/hello-nestforge-graphql' },
-            { label: 'gRPC Example', slug: 'examples/hello-nestforge-grpc' },
-            { label: 'WebSocket Example', slug: 'examples/hello-nestforge-websockets' },
-            { label: 'Microservices Example', slug: 'examples/hello-nestforge-microservices' },
-            { label: 'Example API', slug: 'examples/example-api' },
           ],
         },
         {

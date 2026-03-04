@@ -1,0 +1,131 @@
+---
+title: gRPC Workflow
+description: A step-by-step workflow for building a NestForge gRPC service with tonic, module providers, and optional microservice pattern dispatch.
+---
+
+# Goal
+
+This is the practical flow behind the maintained gRPC example:
+
+1. define the protobuf contract
+2. register app providers in `AppModule`
+3. implement the tonic service
+4. bootstrap with `NestForgeGrpcFactory`
+5. run and verify the service
+
+# Step 1: define the protobuf contract
+
+The gRPC example starts with a normal tonic layout:
+
+```text
+proto/
+  greeter.proto
+src/
+  grpc/
+    proto/
+    service.rs
+```
+
+Your contract lives in `proto/*.proto`, and generated bindings are loaded through
+`tonic::include_proto!(...)`.
+
+# Step 2: register providers in the module
+
+The maintained example exports configuration and a pattern registry:
+
+```rust
+#[module(
+    imports = [],
+    controllers = [],
+    providers = [load_app_config()?, load_grpc_patterns()?],
+    exports = [AppConfig, GrpcPatterns]
+)]
+pub struct AppModule;
+```
+
+This matters because the gRPC transport itself is not where your application state
+should live. The service resolves those providers through `GrpcContext`.
+
+# Step 3: implement the tonic service
+
+The gRPC service stores `GrpcContext`:
+
+```rust
+#[derive(Clone)]
+pub struct GreeterGrpcService {
+    ctx: GrpcContext,
+}
+
+impl GreeterGrpcService {
+    pub fn new(ctx: GrpcContext) -> Self {
+        Self { ctx }
+    }
+}
+```
+
+Then each RPC handler can resolve providers from the NestForge container. In the example
+the handler delegates into a microservice pattern registry:
+
+```rust
+let patterns = self.ctx.resolve::<GrpcPatterns>()?;
+let payload = dispatch_grpc_message(
+    &self.ctx,
+    patterns.registry(),
+    "hello.say",
+    name,
+    TransportMetadata::new().insert("service", "greeter"),
+)
+.await?;
+```
+
+This is the main design pattern to understand:
+
+- tonic is the network edge
+- NestForge DI provides application dependencies
+- optional microservice patterns provide transport-neutral business logic
+
+# Step 4: bootstrap with `NestForgeGrpcFactory`
+
+The example bootstrap is:
+
+```rust
+NestForgeGrpcFactory::<AppModule>::create()?
+    .with_addr("127.0.0.1:50051")
+    .listen_with(|ctx, addr| async move {
+        nestforge::tonic::transport::Server::builder()
+            .add_service(GreeterServer::new(GreeterGrpcService::new(ctx)))
+            .serve(addr)
+            .await
+    })
+    .await?;
+```
+
+That is the workflow to follow for new services:
+
+1. create the NestForge gRPC factory
+2. choose the address
+3. construct the tonic server inside `listen_with(...)`
+4. inject the provided `GrpcContext` into the service
+
+# Step 5: run and verify
+
+Before running, make sure:
+
+- the `grpc` feature is enabled
+- protobuf generation is wired through your build
+- `protoc` is available in your environment
+
+Then start the app and verify:
+
+1. the server binds on `127.0.0.1:50051`
+2. the RPC handler resolves config or other providers
+3. the response payload matches the protobuf contract
+
+# Good first extension
+
+Once the basic service works, the next useful step is moving business behavior into a
+`MicroserviceRegistry` so multiple transports can reuse it.
+
+# What to read next
+
+For the reference overview, see [gRPC](/transports/grpc/).

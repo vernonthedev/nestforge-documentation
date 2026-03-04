@@ -1,0 +1,88 @@
+---
+title: Auth and OpenAPI Workflow
+description: A step-by-step workflow for adding authentication, protecting routes, and serving generated OpenAPI docs.
+---
+
+# Goal
+
+Use this flow when you want to make a NestForge API usable and understandable:
+
+1. resolve auth identity centrally
+2. protect routes with explicit metadata
+3. attach OpenAPI metadata to the same routes
+4. mount generated docs
+5. verify the protected and documented endpoints
+
+# Step 1: add the auth resolver
+
+Authentication starts at bootstrap:
+
+```rust
+NestForgeFactory::<AppModule>::create()?
+    .with_auth_resolver(|token, _container| async move {
+        Ok(token.map(|_| nestforge::AuthIdentity::new("demo-user").with_roles(["admin"])))
+    });
+```
+
+This is where bearer tokens become `AuthIdentity`.
+
+# Step 2: protect routes explicitly
+
+Use route metadata to make protection visible in controller code:
+
+```rust
+#[nestforge::get("/users")]
+#[nestforge::authenticated]
+#[nestforge::roles("admin", "support")]
+async fn list() -> nestforge::ApiResult<Vec<UserDto>> {
+    # todo!()
+}
+```
+
+This is easier for new users to understand than hiding auth semantics inside unrelated
+code paths.
+
+# Step 3: add OpenAPI route metadata
+
+Keep the endpoint documentation in the same route:
+
+```rust
+#[nestforge::summary("List users")]
+#[nestforge::tag("users")]
+#[nestforge::response(status = 200, description = "Users returned")]
+```
+
+The practical workflow is:
+
+- protect the route
+- describe the route
+- keep both concerns in one place
+
+# Step 4: mount the generated docs
+
+```rust
+use nestforge::{NestForgeFactory, NestForgeFactoryOpenApiExt};
+
+NestForgeFactory::<AppModule>::create()?
+    .with_openapi_docs("My API", "1.0.0")?
+    .listen(3000)
+    .await?;
+```
+
+That exposes:
+
+- `/openapi.json`
+- `/docs`
+
+# Step 5: verify the result
+
+Check these in order:
+
+1. unauthenticated requests fail where expected
+2. authenticated requests resolve identity correctly
+3. protected routes appear in generated docs
+4. summaries, tags, and responses render correctly
+
+# What to read next
+
+For the reference version, see [Auth and OpenAPI](/guides/auth-openapi/).
