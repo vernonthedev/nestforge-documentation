@@ -1,11 +1,11 @@
 ---
-title: Database Workflow
+title: SQL Database Workflow
 description: A step-by-step workflow for moving a NestForge app from ResourceService to a SQL-backed provider with migrations and Db wiring.
 ---
 
 # Goal
 
-This is the missing bridge between prototype code and a real application database.
+This is the missing bridge between prototype code and a real SQL-backed application.
 
 Use this sequence:
 
@@ -38,6 +38,13 @@ DATABASE_URL=postgres://postgres:postgres@localhost/my_app
 ```
 
 The CLI reads this value when running migrations.
+
+The SQL layer is not Postgres-only. You can also construct `DbConfig` directly with
+other supported SQL URLs:
+
+```rust
+DbConfig::new("mysql://root:password@localhost/my_app")
+```
 
 # Step 3: generate a migration
 

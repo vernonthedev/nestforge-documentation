@@ -1,20 +1,35 @@
 ---
 title: Database Setup
-description: Set up a local SQL database for a NestForge app, configure DATABASE_URL, and understand the default DbConfig pattern.
+description: Set up SQL, Mongo-style, and Redis-style data backends in NestForge and choose the right starting point for your application.
 ---
 
 # Goal
 
-Use this page when you are moving from example-only development to a real SQL-backed app.
+Use this page when you are moving from example-only development to a real data-backed
+app.
 
 The practical setup path is:
 
-1. choose a local database
-2. set `DATABASE_URL`
-3. initialize migrations
-4. connect the app through `Db` and `DbConfig`
+1. choose the backend type
+2. configure the matching provider
+3. wire it into the module
+4. continue into the matching workflow
 
-# Step 1: choose a local database
+# Choose the backend type
+
+NestForge currently exposes these main setup paths:
+
+- SQL through `Db` and `DbConfig`
+- document-style repositories through `InMemoryMongoRepo<T>` and `MongoConfig`
+- cache or key-value style storage through `InMemoryRedisStore` and `RedisConfig`
+
+The important distinction is:
+
+- SQL currently has the strongest end-to-end workflow, including CLI migrations
+- Mongo and Redis currently expose configuration and in-memory adapter surfaces in the
+  workspace, but not the same migration-oriented app workflow as SQL
+
+# SQL setup
 
 The current NestForge examples assume local Postgres first.
 
@@ -24,13 +39,21 @@ The common local development pattern is:
 postgres://postgres:postgres@localhost/<database>
 ```
 
-The framework also exposes a convenience helper for that shape:
+That is only a convenience default, not the only SQL path.
+
+The framework exposes:
 
 ```rust
 DbConfig::postgres_local("postgres")
+DbConfig::new("mysql://root:password@localhost/my_app")
+DbConfig::new("postgres://postgres:postgres@localhost/my_app")
 ```
 
-# Step 2: set `DATABASE_URL`
+Because `Db` is built on `sqlx::Any`, the SQL layer is URL-driven. Postgres has a helper
+because it is the default local example setup, but the setup model is broader than
+Postgres alone.
+
+## Set `DATABASE_URL`
 
 Put the connection string in your app environment:
 
@@ -40,7 +63,7 @@ DATABASE_URL=postgres://postgres:postgres@localhost/my_app
 
 This is required for the CLI migration flow.
 
-# Step 3: initialize migrations
+## Initialize migrations
 
 From the app root:
 
@@ -53,7 +76,7 @@ That creates:
 - `migrations/`
 - `.nestforge/applied_migrations.txt`
 
-# Step 4: wire the DB provider into the module
+## Wire the SQL provider into the module
 
 The main HTTP example uses this pattern:
 
@@ -80,12 +103,69 @@ Then the provider is registered in `AppModule`:
 pub struct AppModule;
 ```
 
-# Why `connect_lazy(...)` is a good default
+## Named SQL connections
+
+If your app uses more than one SQL database, the framework also exposes:
+
+```rust
+Db::connect_many(...)
+Db::connect_many_lazy(...)
+```
+
+This is the current path for applications that want one primary SQL connection plus
+named connections such as analytics or reporting databases.
+
+## Why `connect_lazy(...)` is a good default
 
 `Db::connect_lazy(...)` is a practical default for application startup because it keeps
 bootstrap simple while still giving the application a real DB provider to resolve later.
 
+# Mongo-style setup
+
+The workspace currently exposes:
+
+```rust
+nestforge::MongoConfig
+nestforge::InMemoryMongoRepo<T>
+```
+
+Example setup shape:
+
+```rust
+let config = nestforge::MongoConfig::new(
+    "mongodb://localhost:27017",
+    "my_app",
+);
+
+let repo = nestforge::InMemoryMongoRepo::<UserDocument>::new();
+```
+
+This is best understood today as a document-repository surface in the framework
+workspace, with an in-memory adapter available for application structure and testing.
+
+# Redis-style setup
+
+The workspace currently exposes:
+
+```rust
+nestforge::RedisConfig
+nestforge::InMemoryRedisStore
+```
+
+Example setup shape:
+
+```rust
+let config = nestforge::RedisConfig::new("redis://127.0.0.1:6379");
+let store = nestforge::InMemoryRedisStore::default();
+```
+
+This is most often used through cache policies and cache interceptors, though the store
+surface can also support key-value style behavior in application code.
+
 # What to read next
 
-After the environment is ready, continue with
-[Database Workflow](/guides/database-workflow/).
+Continue with the workflow that matches the backend:
+
+- [SQL Database Workflow](/guides/database-workflow/)
+- [Mongo Workflow](/guides/mongo-workflow/)
+- [Redis Workflow](/guides/redis-workflow/)

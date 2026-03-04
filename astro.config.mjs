@@ -57,7 +57,9 @@ export default defineConfig({
         {
           label: 'Guided Workflows',
           items: [
-            { label: 'Database Workflow', slug: 'guides/database-workflow' },
+            { label: 'SQL Database Workflow', slug: 'guides/database-workflow' },
+            { label: 'Mongo Workflow', slug: 'guides/mongo-workflow' },
+            { label: 'Redis Workflow', slug: 'guides/redis-workflow' },
             { label: 'Auth and OpenAPI Workflow', slug: 'guides/auth-openapi-workflow' },
             { label: 'Testing Workflow', slug: 'guides/testing-workflow' },
             { label: 'GraphQL Workflow', slug: 'transports/graphql-workflow' },

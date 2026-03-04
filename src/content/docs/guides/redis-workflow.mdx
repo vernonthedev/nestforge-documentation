@@ -1,0 +1,86 @@
+---
+title: Redis Workflow
+description: A practical workflow for using RedisConfig and InMemoryRedisStore in NestForge for cache-oriented and key-value application behavior.
+---
+
+# Goal
+
+Use this workflow when your application needs:
+
+- response caching
+- simple key-value storage
+- a store abstraction behind cache policy logic
+
+The current workspace support is centered on:
+
+- `RedisConfig`
+- `InMemoryRedisStore`
+- `CacheStore` abstractions from `nestforge-data`
+
+# Current support boundary
+
+Be explicit about the current state:
+
+- the workspace exposes Redis-style configuration and an in-memory store adapter
+- the clearest end-to-end workflow today is caching, not a full standalone Redis app
+  transport
+- this path is best when Redis semantics support caching or simple store behavior
+
+# Step 1: configure the backend shape
+
+The workspace exposes:
+
+```rust
+let config = nestforge::RedisConfig::new("redis://127.0.0.1:6379");
+```
+
+# Step 2: start with the in-memory store
+
+The current concrete adapter is:
+
+```rust
+let store = nestforge::InMemoryRedisStore::default();
+```
+
+This is the easiest way to test cache or key-value behavior inside a module without
+depending on an external Redis instance.
+
+# Step 3: use it through a cache policy when the goal is response caching
+
+That is the normal NestForge pattern:
+
+```rust
+#[derive(Default, Clone)]
+struct UsersCachePolicy;
+
+impl nestforge::CachePolicy for UsersCachePolicy {
+    type Store = nestforge::InMemoryRedisStore;
+}
+```
+
+# Step 4: register the cache interceptor
+
+Attach the policy through the cache interceptor:
+
+```rust
+NestForgeFactory::<AppModule>::create()?
+    .use_interceptor::<nestforge::CacheInterceptor<UsersCachePolicy>>();
+```
+
+# Step 5: verify the store behavior
+
+At minimum, verify:
+
+1. keys can be written
+2. keys can be read
+3. keys can be deleted
+4. cache policy behavior matches your route expectations
+
+# Important current limitation
+
+`InMemoryRedisStore` does not currently support TTL behavior. If `ttl_seconds` is set,
+the in-memory adapter returns an error instead of simulating expiry.
+
+# What to read next
+
+For the cache-first implementation path, see [Caching Workflow](/transports/caching-workflow/).

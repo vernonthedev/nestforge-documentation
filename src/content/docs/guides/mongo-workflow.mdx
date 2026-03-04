@@ -1,0 +1,94 @@
+---
+title: Mongo Workflow
+description: A practical workflow for structuring a NestForge document-style feature with MongoConfig and InMemoryMongoRepo while keeping module boundaries clean.
+---
+
+# Goal
+
+Use this workflow when your application fits a document-style repository model better
+than the current SQL flow.
+
+The current workspace support is centered on:
+
+- `MongoConfig`
+- `InMemoryMongoRepo<T>`
+- `DocumentRepo<T>` abstractions from `nestforge-data`
+
+# Current support boundary
+
+Be explicit about the current state:
+
+- the workspace exposes Mongo configuration and an in-memory document repo adapter
+- it does not currently expose the same CLI migration workflow that SQL has
+- this path is best for document-style application structure and testable repository
+  boundaries
+
+# Step 1: define the document type
+
+Start with the feature document you want the repository to manage.
+
+Typical examples:
+
+- `UserDocument`
+- `SessionDocument`
+- `AuditLogDocument`
+
+# Step 2: configure the backend shape
+
+The workspace exposes:
+
+```rust
+let config = nestforge::MongoConfig::new(
+    "mongodb://localhost:27017",
+    "my_app",
+);
+```
+
+That config represents the document-store connection shape your application expects.
+
+# Step 3: start with an in-memory document repo
+
+The current concrete adapter in the workspace is:
+
+```rust
+let repo = nestforge::InMemoryMongoRepo::<UserDocument>::new();
+```
+
+This is useful for:
+
+- feature development
+- tests
+- repository API design
+- onboarding without a live external dependency
+
+# Step 4: register the repo in the module
+
+The practical module pattern is:
+
+1. register the repo as a provider
+2. export it if another feature needs it
+3. inject it into the service layer instead of wiring persistence into the controller
+
+# Step 5: build the service around `DocumentRepo`
+
+Keep the service layer responsible for operations such as:
+
+- find all documents
+- find one by id
+- insert
+- update
+- delete
+
+That keeps the controller shape stable even if the concrete backend changes later.
+
+# Step 6: test the feature through the in-memory repo
+
+This is the cleanest current path:
+
+1. build the module with `InMemoryMongoRepo<T>`
+2. run service and controller tests
+3. verify the document-oriented feature flow before introducing a live backend adapter
+
+# What to read next
+
+For the backend overview, see [Data Layer](/guides/data-layer/).
