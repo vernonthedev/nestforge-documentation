@@ -1,3 +1,12 @@
+## [1.1.0](https://github.com/vernonthedev/nestforge-documentation/compare/v1.0.0...v1.1.0) (2026-03-04)
+
+### Features
+
+* added more db configurations ([7b29613](https://github.com/vernonthedev/nestforge-documentation/commit/7b2961347064d7b7838c77d6c10f150d44927b25))
+* Added postgres db workflows ([185d060](https://github.com/vernonthedev/nestforge-documentation/commit/185d060d6357138797166d024b30a59884f3c90e))
+* completed db examples workflow update ([56fb5ad](https://github.com/vernonthedev/nestforge-documentation/commit/56fb5ad9c94654eee646dbb303fb84eed2e117a2))
+* updated entire application workflow to have the first time user setup as first ([9048f54](https://github.com/vernonthedev/nestforge-documentation/commit/9048f5497cdfefd8338018cf26f198d5427cc008))
+
 ## 1.0.0 (2026-03-02)
 
 ### Features

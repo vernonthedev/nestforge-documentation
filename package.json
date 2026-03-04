@@ -2,7 +2,7 @@
   "name": "nestforge-documentation",
   "private": true,
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "NestForge Documentation",
   "author": "vernonthedev",
   "license": "MIT",
