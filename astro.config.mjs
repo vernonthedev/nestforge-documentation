@@ -50,12 +50,14 @@ export default defineConfig({
             { label: 'Feature Modules', slug: 'getting-started/feature-modules' },
             { label: 'DTOs, Services, and Routes', slug: 'getting-started/dtos-services-routes' },
             { label: 'Build Your First Feature', slug: 'getting-started/build-your-first-feature' },
+            { label: 'Database Setup', slug: 'getting-started/database-setup' },
             { label: 'CLI Workflow', slug: 'getting-started/cli-workflow' },
           ],
         },
         {
           label: 'Guided Workflows',
           items: [
+            { label: 'Database Workflow', slug: 'guides/database-workflow' },
             { label: 'Auth and OpenAPI Workflow', slug: 'guides/auth-openapi-workflow' },
             { label: 'Testing Workflow', slug: 'guides/testing-workflow' },
             { label: 'GraphQL Workflow', slug: 'transports/graphql-workflow' },
@@ -70,6 +72,7 @@ export default defineConfig({
           label: 'Examples',
           items: [
             { label: 'Hello NestForge', slug: 'examples/hello-nestforge' },
+            { label: 'Database-Backed Users Feature', slug: 'examples/database-backed-users-feature' },
             { label: 'GraphQL Example', slug: 'examples/hello-nestforge-graphql' },
             { label: 'gRPC Example', slug: 'examples/hello-nestforge-grpc' },
             { label: 'WebSocket Example', slug: 'examples/hello-nestforge-websockets' },
@@ -94,9 +97,9 @@ export default defineConfig({
             { label: 'Guards and Interceptors', slug: 'guides/guards-interceptors' },
             { label: 'Auth and OpenAPI', slug: 'guides/auth-openapi' },
             { label: 'Testing', slug: 'guides/testing' },
+            { label: 'Data Layer', slug: 'guides/data-layer' },
             { label: 'Resource Services', slug: 'guides/resource-services' },
             { label: 'Macros', slug: 'guides/macros' },
-            { label: 'Data Layer', slug: 'guides/data-layer' },
             { label: 'GraphQL', slug: 'transports/graphql' },
             { label: 'gRPC', slug: 'transports/grpc' },
             { label: 'Microservices', slug: 'transports/microservices' },

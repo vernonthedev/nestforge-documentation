@@ -1,0 +1,89 @@
+---
+title: Database-Backed Users Feature
+description: A concrete implementation pattern for replacing ResourceService with a Db-backed users provider while keeping module and controller structure stable.
+---
+
+# Purpose
+
+This page is the concrete database example that bridges the gap between the in-memory
+`users` feature and a SQL-backed application.
+
+Use it when you want to keep the normal NestForge structure:
+
+- DTOs stay in `src/users/dto/`
+- controllers stay in `src/users/controllers/`
+- module wiring stays in `src/users/mod.rs`
+- the service implementation changes from in-memory storage to `Db`
+
+# Implementation flow
+
+## 1. Register `Db` in the root module
+
+```rust
+use nestforge::{Db, DbConfig};
+
+fn connect_db() -> anyhow::Result<Db> {
+    Ok(Db::connect_lazy(DbConfig::postgres_local("my_app"))?)
+}
+```
+
+Then export it from `AppModule`.
+
+## 2. Keep DTOs stable
+
+Do not rewrite the request and response contracts just because the persistence layer is
+changing.
+
+## 3. Replace `ResourceService` with a DB-backed service
+
+```rust
+#[derive(Clone)]
+pub struct UsersService {
+    db: Db,
+}
+```
+
+Then implement query functions with `db.fetch_all(...)`, `db.execute(...)`, or a
+transaction.
+
+## 4. Register the service in `UsersModule`
+
+Resolve `Db` from the container and construct `UsersService` from it.
+
+## 5. Keep the controller surface stable
+
+The controller should still expose the same routes and DTOs, so only the provider logic
+changes.
+
+## 6. Add and run migrations
+
+```bash
+nestforge db init
+nestforge db generate create_users_table
+nestforge db migrate
+```
+
+Example first migration:
+
+```sql
+CREATE TABLE users (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE
+);
+```
+
+# What to verify
+
+1. `Db` resolves from the app container
+2. migrations apply cleanly
+3. the service reads rows from `users`
+4. the existing users routes still behave correctly
+
+# Why this example matters
+
+This is the normal migration path most teams need:
+
+- prototype with `ResourceService`
+- keep the module/controller shape
+- move persistence into SQL

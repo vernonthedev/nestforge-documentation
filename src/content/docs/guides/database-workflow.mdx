@@ -1,0 +1,164 @@
+---
+title: Database Workflow
+description: A step-by-step workflow for moving a NestForge app from ResourceService to a SQL-backed provider with migrations and Db wiring.
+---
+
+# Goal
+
+This is the missing bridge between prototype code and a real application database.
+
+Use this sequence:
+
+1. initialize migrations
+2. set `DATABASE_URL`
+3. create and apply schema changes
+4. register `Db` in the root module
+5. replace `ResourceService` with a DB-backed provider
+6. test the new persistence path
+
+# Step 1: initialize migrations
+
+From the application root:
+
+```bash
+nestforge db init
+```
+
+This creates the migration workspace:
+
+- `migrations/`
+- `.nestforge/applied_migrations.txt`
+
+# Step 2: configure the database URL
+
+Set your local connection string before running migration commands:
+
+```env
+DATABASE_URL=postgres://postgres:postgres@localhost/my_app
+```
+
+The CLI reads this value when running migrations.
+
+# Step 3: generate a migration
+
+Create the next migration file:
+
+```bash
+nestforge db generate create_users_table
+```
+
+That creates a timestamped SQL file in `migrations/`.
+
+A typical first migration might create a `users` table:
+
+```sql
+CREATE TABLE users (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE
+);
+```
+
+# Step 4: apply migrations
+
+Run:
+
+```bash
+nestforge db migrate
+nestforge db status
+```
+
+Use `status` to check whether migrations are:
+
+- applied
+- pending
+- drifted
+
+# Step 5: register the `Db` provider
+
+Your root module should expose a reusable DB connection:
+
+```rust
+use nestforge::{Db, DbConfig};
+
+fn connect_db() -> anyhow::Result<Db> {
+    Ok(Db::connect_lazy(DbConfig::postgres_local("postgres"))?)
+}
+
+#[module(
+    imports = [UsersModule],
+    controllers = [AppController],
+    providers = [connect_db()?],
+    exports = [Db]
+)]
+pub struct AppModule;
+```
+
+Exporting `Db` lets feature modules or services resolve it through the container.
+
+# Step 6: replace `ResourceService` with a DB-backed provider
+
+Your prototype might start with:
+
+```rust
+pub type UsersService = ResourceService<UserDto>;
+```
+
+The next step is usually a provider that takes `Db` and runs SQL queries.
+
+The low-level `Db` API supports common operations such as:
+
+```rust
+db.execute("DELETE FROM users").await?;
+let users: Vec<UserRow> = db.fetch_all("SELECT id, name, email FROM users").await?;
+```
+
+And for transactional work:
+
+```rust
+let mut tx = db.begin().await?;
+tx.execute("UPDATE users SET name = 'John Doe' WHERE id = 1").await?;
+tx.commit().await?;
+```
+
+Use this stage to move persistence out of in-memory storage and into explicit DB-backed
+service functions.
+
+# Step 7: keep the controller layer stable
+
+When swapping persistence layers, try not to rewrite the route surface at the same time.
+The cleaner migration path is:
+
+1. keep DTOs stable
+2. keep controller routes stable
+3. replace the provider implementation behind them
+
+That keeps regressions smaller and easier to debug.
+
+# Step 8: choose the abstraction level
+
+Use these rules:
+
+- stay with raw `Db` when the app is still small
+- move to `nestforge-orm` when repository-style abstractions improve maintainability
+- use `nestforge-data` only when broader data abstractions are actually needed
+
+That is why the data-layer crates are documented later as reference material, not as the
+first onboarding path.
+
+# Step 9: test the DB-backed feature
+
+After the service is DB-backed, verify:
+
+1. migrations apply cleanly
+2. the module resolves `Db`
+3. the feature service can read and write rows
+4. the existing controller routes still behave correctly
+
+At that point the application has crossed from prototype storage into real persistence.
+
+# What to read next
+
+For environment setup, see [Database Setup](/getting-started/database-setup/).
+
+For the crate overview, see [Data Layer](/guides/data-layer/).

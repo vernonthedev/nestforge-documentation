@@ -11,6 +11,16 @@ The main HTTP reference application lives at:
 examples/hello-nestforge
 ```
 
+# Run the example
+
+From the repository root:
+
+```bash
+cargo run -p hello-nestforge
+```
+
+The app listens on port `3000`.
+
 # What this example demonstrates
 
 This example is the best single entry point into the current framework because it shows:
@@ -24,6 +34,16 @@ This example is the best single entry point into the current framework because i
 - DTO validation
 - route versioning
 - response serialization
+
+# Recommended reading order
+
+Read the example in this order:
+
+1. `src/app_module.rs`
+2. `src/users/`
+3. `src/settings/`
+4. `src/versioning/`
+5. `src/main.rs`
 
 # Boot flow
 
@@ -67,3 +87,12 @@ The `versioning` feature demonstrates version-specific routes such as:
 If you are unsure how to structure a real NestForge app, this example is the current
 best-practice baseline because it combines multiple framework concepts in one runnable
 project.
+
+# What to verify
+
+When running the example, verify:
+
+1. the app boots with the global `/api` prefix
+2. the users feature exposes CRUD routes
+3. versioned routes appear under `/api/v1/...`
+4. OpenAPI docs are mounted successfully

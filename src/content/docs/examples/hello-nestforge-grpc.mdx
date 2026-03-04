@@ -3,6 +3,22 @@ title: Hello NestForge gRPC
 description: What the gRPC-first example includes, how it maps tonic services to NestForge providers, and how to read the project.
 ---
 
+# Run the example
+
+Example location:
+
+```text
+examples/hello-nestforge-grpc
+```
+
+Run it from the repository root:
+
+```bash
+cargo run -p hello-nestforge-grpc
+```
+
+The service listens on `127.0.0.1:50051`.
+
 # Example purpose
 
 This example demonstrates how NestForge can provide module wiring and dependency
@@ -21,6 +37,16 @@ The example currently includes:
 - `src/grpc/proto/mod.rs`
 - `src/grpc/proto/hello.rs`
 - `proto/greeter.proto`
+
+# Recommended reading order
+
+Read the example in this order:
+
+1. `proto/greeter.proto`
+2. `src/app_module.rs`
+3. `src/grpc/patterns.rs`
+4. `src/grpc/service.rs`
+5. `src/main.rs`
 
 # What each file does
 
@@ -62,3 +88,12 @@ generic tonic template.
 - how to keep transport code thin
 - how to bridge gRPC and transport-neutral microservice patterns
 - how config providers remain available inside the service layer
+
+# What to verify
+
+When running the example, verify:
+
+1. the contract is defined in `proto/greeter.proto`
+2. `GrpcPatterns` resolves through `GrpcContext`
+3. the service dispatches into `hello.say`
+4. the tonic server is mounted by `NestForgeGrpcFactory`

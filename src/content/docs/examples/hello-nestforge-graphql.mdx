@@ -3,6 +3,25 @@ title: Hello NestForge GraphQL
 description: What the GraphQL-first example includes, how it boots, and what users should study first.
 ---
 
+# Run the example
+
+Example location:
+
+```text
+examples/hello-nestforge-graphql
+```
+
+Run it from the repository root:
+
+```bash
+cargo run -p hello-nestforge-graphql
+```
+
+The example exposes:
+
+- GraphiQL at `http://127.0.0.1:3001/`
+- GraphQL at `http://127.0.0.1:3001/graphql`
+
 # Example purpose
 
 This example shows the smallest GraphQL-first application in the workspace while still
@@ -17,6 +36,14 @@ The example currently includes:
 - `src/app_config.rs`
 - `src/graphql/mod.rs`
 - `src/graphql/schema.rs`
+
+# Recommended reading order
+
+Read the example in this order:
+
+1. `src/app_module.rs`
+2. `src/graphql/schema.rs`
+3. `src/main.rs`
 
 # What each file does
 
@@ -69,3 +96,12 @@ This example is deliberately small. It does not try to demonstrate:
 
 Use it as a transport bootstrap reference, then move to a larger application structure as
 your schema grows.
+
+# What to verify
+
+When running the example, verify:
+
+1. the schema is built with app config injected into it
+2. `/` serves GraphiQL
+3. `/graphql` serves the API
+4. seeded users can be queried and created

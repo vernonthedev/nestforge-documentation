@@ -1,0 +1,91 @@
+---
+title: Database Setup
+description: Set up a local SQL database for a NestForge app, configure DATABASE_URL, and understand the default DbConfig pattern.
+---
+
+# Goal
+
+Use this page when you are moving from example-only development to a real SQL-backed app.
+
+The practical setup path is:
+
+1. choose a local database
+2. set `DATABASE_URL`
+3. initialize migrations
+4. connect the app through `Db` and `DbConfig`
+
+# Step 1: choose a local database
+
+The current NestForge examples assume local Postgres first.
+
+The common local development pattern is:
+
+```text
+postgres://postgres:postgres@localhost/<database>
+```
+
+The framework also exposes a convenience helper for that shape:
+
+```rust
+DbConfig::postgres_local("postgres")
+```
+
+# Step 2: set `DATABASE_URL`
+
+Put the connection string in your app environment:
+
+```env
+DATABASE_URL=postgres://postgres:postgres@localhost/my_app
+```
+
+This is required for the CLI migration flow.
+
+# Step 3: initialize migrations
+
+From the app root:
+
+```bash
+nestforge db init
+```
+
+That creates:
+
+- `migrations/`
+- `.nestforge/applied_migrations.txt`
+
+# Step 4: wire the DB provider into the module
+
+The main HTTP example uses this pattern:
+
+```rust
+use nestforge::{Db, DbConfig};
+
+fn connect_db() -> anyhow::Result<Db> {
+    Ok(Db::connect_lazy(DbConfig::postgres_local("postgres"))?)
+}
+```
+
+Then the provider is registered in `AppModule`:
+
+```rust
+#[module(
+    imports = [UsersModule, SettingsModule, VersioningModule],
+    controllers = [AppController, HealthController],
+    providers = [
+        load_app_config()?,
+        connect_db()?
+    ],
+    exports = [Db, AppConfig]
+)]
+pub struct AppModule;
+```
+
+# Why `connect_lazy(...)` is a good default
+
+`Db::connect_lazy(...)` is a practical default for application startup because it keeps
+bootstrap simple while still giving the application a real DB provider to resolve later.
+
+# What to read next
+
+After the environment is ready, continue with
+[Database Workflow](/guides/database-workflow/).

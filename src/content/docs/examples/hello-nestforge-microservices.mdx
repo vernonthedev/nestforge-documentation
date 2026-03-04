@@ -3,6 +3,20 @@ title: Hello NestForge Microservices
 description: What the microservices example includes and how it demonstrates pattern dispatch without a network transport.
 ---
 
+# Run the example
+
+Example location:
+
+```text
+examples/hello-nestforge-microservices
+```
+
+Run it from the repository root:
+
+```bash
+cargo run -p hello-nestforge-microservices
+```
+
 # Example purpose
 
 This example demonstrates NestForge's transport-neutral microservice layer without
@@ -17,6 +31,14 @@ The example currently includes:
 - `src/app_config.rs`
 - `src/microservices/mod.rs`
 - `src/microservices/patterns.rs`
+
+# Recommended reading order
+
+Read the example in this order:
+
+1. `src/app_module.rs`
+2. `src/microservices/patterns.rs`
+3. `src/main.rs`
 
 # What each file does
 
@@ -54,3 +76,12 @@ Defines:
 - how handlers resolve providers from `MicroserviceContext`
 - how to test microservice workflows in-process
 - how stateful side effects such as event counters can still use DI-managed providers
+
+# What to verify
+
+When the example runs, verify:
+
+1. the testing module builds successfully
+2. `app.greet` returns a JSON payload
+3. `app.bump` updates the event counter
+4. the module shuts down cleanly
