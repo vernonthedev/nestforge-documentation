@@ -1,0 +1,270 @@
+---
+title: Redis-Style Cache Feature
+description: A full file-by-file example for route caching and direct store usage with RedisConfig and InMemoryRedisStore.
+---
+
+# Goal
+
+This is the concrete Redis-style feature workflow that was missing.
+
+It shows:
+
+- where the cache policy lives
+- where the controller lives
+- how the store is registered
+- how the app uses the cache interceptor
+- where direct key-value store usage belongs
+
+# Project shape
+
+```text
+src/
+  app_module.rs
+  main.rs
+  users/
+    cache/
+      mod.rs
+      users_cache_policy.rs
+    controllers/
+      mod.rs
+      users_controller.rs
+    dto/
+      mod.rs
+      user_dto.rs
+    services/
+      mod.rs
+      users_service.rs
+    mod.rs
+```
+
+# Step 1: create the cache policy file
+
+Create `src/users/cache/users_cache_policy.rs`:
+
+```rust
+#[derive(Default, Clone)]
+pub struct UsersCachePolicy;
+
+impl nestforge::CachePolicy for UsersCachePolicy {
+    type Store = nestforge::InMemoryRedisStore;
+}
+```
+
+Create `src/users/cache/mod.rs`:
+
+```rust
+pub mod users_cache_policy;
+
+pub use users_cache_policy::UsersCachePolicy;
+```
+
+# Step 2: create the DTO and service
+
+Create `src/users/dto/user_dto.rs`:
+
+```rust
+#[nestforge::dto]
+pub struct UserDto {
+    pub id: u64,
+    pub name: String,
+    pub email: String,
+}
+```
+
+Create `src/users/dto/mod.rs`:
+
+```rust
+pub mod user_dto;
+
+pub use user_dto::UserDto;
+```
+
+Create `src/users/services/users_service.rs`:
+
+```rust
+use crate::users::dto::UserDto;
+
+#[derive(Clone)]
+pub struct UsersService;
+
+pub fn list_users(_service: &UsersService) -> Vec<UserDto> {
+    vec![
+        UserDto {
+            id: 1,
+            name: "John Doe".to_string(),
+            email: "john.doe@example.com".to_string(),
+        },
+    ]
+}
+```
+
+Create `src/users/services/mod.rs`:
+
+```rust
+pub mod users_service;
+
+pub use users_service::{UsersService, list_users};
+```
+
+# Step 3: create the controller
+
+Create `src/users/controllers/users_controller.rs`:
+
+```rust
+use axum::Json;
+use nestforge::{controller, routes, ApiResult, Inject, List};
+
+use crate::users::{
+    dto::UserDto,
+    services::{UsersService, list_users},
+};
+
+#[controller("/users")]
+pub struct UsersController;
+
+#[routes]
+impl UsersController {
+    #[nestforge::get("/")]
+    #[nestforge::version("1")]
+    async fn list(users: Inject<UsersService>) -> ApiResult<List<UserDto>> {
+        Ok(Json(list_users(users.as_ref())))
+    }
+}
+```
+
+Create `src/users/controllers/mod.rs`:
+
+```rust
+pub mod users_controller;
+
+pub use users_controller::UsersController;
+```
+
+# Step 4: wire the feature module
+
+Create `src/users/mod.rs`:
+
+```rust
+pub mod cache;
+pub mod controllers;
+pub mod dto;
+pub mod services;
+
+use nestforge::{
+    register_provider, Container, ControllerDefinition, InMemoryRedisStore, Provider, RedisConfig,
+};
+
+use self::{controllers::UsersController, services::UsersService};
+
+fn register_redis_store(container: &Container) -> anyhow::Result<()> {
+    register_provider(container, Provider::value(InMemoryRedisStore::default()))?;
+    Ok(())
+}
+
+fn register_redis_config(container: &Container) -> anyhow::Result<()> {
+    register_provider(
+        container,
+        Provider::value(RedisConfig::new("redis://127.0.0.1:6379")),
+    )?;
+    Ok(())
+}
+
+fn register_users_service(container: &Container) -> anyhow::Result<()> {
+    register_provider(container, Provider::value(UsersService))?;
+    Ok(())
+}
+
+pub struct UsersModule;
+
+impl nestforge::ModuleDefinition for UsersModule {
+    fn register(container: &Container) -> anyhow::Result<()> {
+        register_redis_config(container)?;
+        register_redis_store(container)?;
+        register_users_service(container)
+    }
+
+    fn controllers() -> Vec<axum::Router<Container>> {
+        vec![<UsersController as ControllerDefinition>::router()]
+    }
+}
+```
+
+# Step 5: wire the root module
+
+Create `src/app_module.rs`:
+
+```rust
+use nestforge::Container;
+
+use crate::users::UsersModule;
+
+pub struct AppModule;
+
+impl nestforge::ModuleDefinition for AppModule {
+    fn register(container: &Container) -> anyhow::Result<()> {
+        UsersModule::register(container)
+    }
+
+    fn controllers() -> Vec<axum::Router<Container>> {
+        UsersModule::controllers()
+    }
+}
+```
+
+# Step 6: attach the cache interceptor in bootstrap
+
+Create `src/main.rs`:
+
+```rust
+mod app_module;
+mod users;
+
+use app_module::AppModule;
+use nestforge::{CacheInterceptor, NestForgeFactory, NestForgeFactoryOpenApiExt};
+use users::cache::UsersCachePolicy;
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    NestForgeFactory::<AppModule>::create()?
+        .with_global_prefix("api")
+        .use_interceptor::<CacheInterceptor<UsersCachePolicy>>()
+        .with_openapi_docs("Cache Example API", "1.0.0")?
+        .listen(3000)
+        .await
+}
+```
+
+# Step 7: direct store usage
+
+If you need key-value behavior outside route caching, put that in a service, not in the
+controller.
+
+Example service-side usage:
+
+```rust
+use nestforge::InMemoryRedisStore;
+use nestforge_data::CacheStore;
+
+pub async fn remember_users(store: &InMemoryRedisStore, payload: &str) -> anyhow::Result<()> {
+    store.set("users:list", payload, None).await?;
+    Ok(())
+}
+
+pub async fn read_users(store: &InMemoryRedisStore) -> anyhow::Result<Option<String>> {
+    Ok(store.get("users:list").await?)
+}
+```
+
+# Step 8: verify the feature
+
+After it runs, verify:
+
+1. the route is mounted at `GET /api/v1/users`
+2. repeated `GET` requests are cacheable
+3. the `InMemoryRedisStore` provider resolves
+4. direct store writes and reads work without TTL
+
+# Important current limitation
+
+`InMemoryRedisStore` does not simulate TTL expiry. If you pass a TTL value, the in-memory
+adapter returns an error.

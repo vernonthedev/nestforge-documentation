@@ -17,6 +17,31 @@ The current workspace support is centered on:
 - `InMemoryRedisStore`
 - `CacheStore` abstractions from `nestforge-data`
 
+If you want a concrete feature-level example, read
+[Redis-Style Cache Feature](/examples/redis-cache-feature/).
+
+# Target structure
+
+```text
+src/
+  app_module.rs
+  main.rs
+  users/
+    cache/
+      mod.rs
+      users_cache_policy.rs
+    controllers/
+      mod.rs
+      users_controller.rs
+    dto/
+      mod.rs
+      user_dto.rs
+    services/
+      mod.rs
+      users_service.rs
+    mod.rs
+```
+
 # Current support boundary
 
 Be explicit about the current state:
@@ -26,55 +51,143 @@ Be explicit about the current state:
   transport
 - this path is best when Redis semantics support caching or simple store behavior
 
-# Step 1: configure the backend shape
+# Build order
 
-The workspace exposes:
+Read or implement the feature in this order:
 
-```rust
-let config = nestforge::RedisConfig::new("redis://127.0.0.1:6379");
-```
+1. create `src/users/cache/users_cache_policy.rs`
+2. create `src/users/services/users_service.rs`
+3. create `src/users/controllers/users_controller.rs`
+4. wire `src/users/mod.rs`
+5. wire `src/app_module.rs`
+6. attach the cache interceptor in `src/main.rs`
 
-# Step 2: start with the in-memory store
+# File placement
 
-The current concrete adapter is:
+The exact file layout is documented in
+[Redis-Style Cache Feature](/examples/redis-cache-feature/).
 
-```rust
-let store = nestforge::InMemoryRedisStore::default();
-```
+# Practical rule
 
-This is the easiest way to test cache or key-value behavior inside a module without
-depending on an external Redis instance.
+For the current workspace state, the most reliable path is:
 
-# Step 3: use it through a cache policy when the goal is response caching
+1. use `RedisConfig` as configuration only
+2. use `InMemoryRedisStore` as the concrete provider
+3. keep cache behavior in the interceptor and policy
+4. keep controllers free of cache-specific logic
 
-That is the normal NestForge pattern:
+# Exact code shape
+
+Use this in `src/users/cache/users_cache_policy.rs`:
 
 ```rust
 #[derive(Default, Clone)]
-struct UsersCachePolicy;
+pub struct UsersCachePolicy;
 
 impl nestforge::CachePolicy for UsersCachePolicy {
     type Store = nestforge::InMemoryRedisStore;
 }
 ```
 
-# Step 4: register the cache interceptor
-
-Attach the policy through the cache interceptor:
+Use this in `src/users/mod.rs`:
 
 ```rust
-NestForgeFactory::<AppModule>::create()?
-    .use_interceptor::<nestforge::CacheInterceptor<UsersCachePolicy>>();
+pub mod cache;
+pub mod controllers;
+pub mod dto;
+pub mod services;
+
+use nestforge::{
+    register_provider, Container, ControllerDefinition, InMemoryRedisStore, Provider, RedisConfig,
+};
+
+use self::{controllers::UsersController, services::UsersService};
+
+pub struct UsersModule;
+
+impl nestforge::ModuleDefinition for UsersModule {
+    fn register(container: &Container) -> anyhow::Result<()> {
+        register_provider(
+            container,
+            Provider::value(RedisConfig::new("redis://127.0.0.1:6379")),
+        )?;
+        register_provider(container, Provider::value(InMemoryRedisStore::default()))?;
+        register_provider(container, Provider::value(UsersService))?;
+        Ok(())
+    }
+
+    fn controllers() -> Vec<axum::Router<Container>> {
+        vec![<UsersController as ControllerDefinition>::router()]
+    }
+}
 ```
 
-# Step 5: verify the store behavior
+Use this in `src/users/controllers/users_controller.rs`:
 
-At minimum, verify:
+```rust
+use axum::Json;
+use nestforge::{controller, routes, ApiResult, Inject, List};
 
-1. keys can be written
-2. keys can be read
-3. keys can be deleted
-4. cache policy behavior matches your route expectations
+use crate::users::{
+    dto::UserDto,
+    services::{UsersService, list_users},
+};
+
+#[controller("/users")]
+pub struct UsersController;
+
+#[routes]
+impl UsersController {
+    #[nestforge::get("/")]
+    #[nestforge::version("1")]
+    async fn list(users: Inject<UsersService>) -> ApiResult<List<UserDto>> {
+        Ok(Json(list_users(users.as_ref())))
+    }
+}
+```
+
+Attach the interceptor in `src/main.rs`:
+
+```rust
+mod app_module;
+mod users;
+
+use app_module::AppModule;
+use nestforge::{CacheInterceptor, NestForgeFactory};
+use users::cache::UsersCachePolicy;
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    NestForgeFactory::<AppModule>::create()?
+        .with_global_prefix("api")
+        .use_interceptor::<CacheInterceptor<UsersCachePolicy>>()
+        .listen(3000)
+        .await
+}
+```
+
+Direct store usage belongs in a service:
+
+```rust
+use nestforge::InMemoryRedisStore;
+use nestforge_data::CacheStore;
+
+pub async fn remember_users(store: &InMemoryRedisStore, payload: &str) -> anyhow::Result<()> {
+    store.set("users:list", payload, None).await?;
+    Ok(())
+}
+
+pub async fn read_users(store: &InMemoryRedisStore) -> anyhow::Result<Option<String>> {
+    Ok(store.get("users:list").await?)
+}
+```
+
+# What to verify
+
+1. the store provider resolves from the container
+2. repeated `GET` requests are cached
+3. direct key-value store operations work in a service
+4. the controller stays cache-agnostic
 
 # Important current limitation
 

@@ -1,69 +1,67 @@
 ---
 title: Database-Backed Users Feature
-description: A concrete implementation pattern for replacing ResourceService with a Db-backed users provider while keeping module and controller structure stable.
+description: A full DB-first users feature example with migration, module registration, DTOs, service code, controller code, and a testing path.
 ---
 
-# Purpose
+# Goal
 
-This page is the concrete database example that bridges the gap between the in-memory
-`users` feature and a SQL-backed application.
+This page gives the complete shape that was missing from the SQL docs.
 
-Use it when you want to keep the normal NestForge structure:
+It is a DB-first example, not a `ResourceService` example.
 
-- DTOs stay in `src/users/dto/`
-- controllers stay in `src/users/controllers/`
-- module wiring stays in `src/users/mod.rs`
-- the service implementation changes from in-memory storage to `Db`
+The feature you build is:
 
-# Implementation flow
+- SQL-backed from the beginning
+- mounted under `/api/v1/users`
+- structured like a normal NestForge feature
+- explicit about every file involved
 
-## 1. Register `Db` in the root module
+# Project shape
 
-```rust
-use nestforge::{Db, DbConfig};
-
-fn connect_db() -> anyhow::Result<Db> {
-    Ok(Db::connect_lazy(DbConfig::postgres_local("my_app"))?)
-}
+```text
+src/
+  app_module.rs
+  main.rs
+  users/
+    controllers/
+      mod.rs
+      users_controller.rs
+    dto/
+      mod.rs
+      create_user_dto.rs
+      update_user_dto.rs
+      user_dto.rs
+    services/
+      mod.rs
+      users_service.rs
+    mod.rs
+migrations/
+  20260304_create_users_table.sql
 ```
 
-Then export it from `AppModule`.
+# Step 1: add the SQL dependencies
 
-## 2. Keep DTOs stable
+You need NestForge plus `sqlx` derive support for row mapping:
 
-Do not rewrite the request and response contracts just because the persistence layer is
-changing.
-
-## 3. Replace `ResourceService` with a DB-backed service
-
-```rust
-#[derive(Clone)]
-pub struct UsersService {
-    db: Db,
-}
+```toml
+[dependencies]
+nestforge = { version = "1", features = ["config", "testing"] }
+sqlx = { version = "0.8", default-features = false, features = ["macros"] }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+anyhow = "1"
 ```
 
-Then implement query functions with `db.fetch_all(...)`, `db.execute(...)`, or a
-transaction.
+# Step 2: create the migration
 
-## 4. Register the service in `UsersModule`
-
-Resolve `Db` from the container and construct `UsersService` from it.
-
-## 5. Keep the controller surface stable
-
-The controller should still expose the same routes and DTOs, so only the provider logic
-changes.
-
-## 6. Add and run migrations
+Initialize the migration workspace:
 
 ```bash
 nestforge db init
 nestforge db generate create_users_table
-nestforge db migrate
 ```
 
-Example first migration:
+Example migration file:
 
 ```sql
 CREATE TABLE users (
@@ -73,17 +71,416 @@ CREATE TABLE users (
 );
 ```
 
+Then apply it:
+
+```bash
+nestforge db migrate
+nestforge db status
+```
+
+# Step 3: wire `Db` into the root module
+
+Create [app_module.rs](/C:/Users/editing/Desktop/coding/nestforge-documentation/src/content/docs/examples/database-backed-users-feature.mdx) with this shape:
+
+```rust
+use nestforge::{module, Db, DbConfig};
+
+use crate::users::UsersModule;
+
+fn connect_db() -> anyhow::Result<Db> {
+    Ok(Db::connect_lazy(DbConfig::new(
+        "postgres://postgres:postgres@localhost/my_app",
+    ))?)
+}
+
+#[module(
+    imports = [UsersModule],
+    controllers = [],
+    providers = [connect_db()?],
+    exports = [Db]
+)]
+pub struct AppModule;
+```
+
+This is the key rule for DB-first apps:
+
+- the root module owns the DB connection
+- feature modules consume it
+
+# Step 4: create the DTOs
+
+Create `src/users/dto/user_dto.rs`:
+
+```rust
+#[nestforge::dto]
+pub struct UserDto {
+    pub id: u64,
+    pub name: String,
+    pub email: String,
+}
+```
+
+Create `src/users/dto/create_user_dto.rs`:
+
+```rust
+#[nestforge::dto]
+pub struct CreateUserDto {
+    #[validate(required)]
+    pub name: String,
+    #[validate(required, email)]
+    pub email: String,
+}
+```
+
+Create `src/users/dto/update_user_dto.rs`:
+
+```rust
+#[nestforge::dto]
+pub struct UpdateUserDto {
+    pub name: Option<String>,
+    #[validate(email)]
+    pub email: Option<String>,
+}
+```
+
+Create `src/users/dto/mod.rs`:
+
+```rust
+pub mod create_user_dto;
+pub mod update_user_dto;
+pub mod user_dto;
+
+pub use create_user_dto::CreateUserDto;
+pub use update_user_dto::UpdateUserDto;
+pub use user_dto::UserDto;
+```
+
+# Step 5: build the SQL service
+
+Create `src/users/services/users_service.rs`:
+
+```rust
+use nestforge::Db;
+
+use crate::users::dto::{CreateUserDto, UpdateUserDto, UserDto};
+
+#[derive(Clone)]
+pub struct UsersService {
+    db: Db,
+}
+
+#[derive(sqlx::FromRow)]
+struct UserRow {
+    id: i64,
+    name: String,
+    email: String,
+}
+
+impl From<UserRow> for UserDto {
+    fn from(row: UserRow) -> Self {
+        Self {
+            id: row.id as u64,
+            name: row.name,
+            email: row.email,
+        }
+    }
+}
+
+impl UsersService {
+    pub fn new(db: Db) -> Self {
+        Self { db }
+    }
+}
+
+pub async fn list_users(service: &UsersService) -> anyhow::Result<Vec<UserDto>> {
+    let rows: Vec<UserRow> = service
+        .db
+        .fetch_all("SELECT id, name, email FROM users ORDER BY id")
+        .await?;
+
+    Ok(rows.into_iter().map(UserDto::from).collect())
+}
+
+pub async fn get_user(service: &UsersService, id: u64) -> anyhow::Result<Option<UserDto>> {
+    let rows: Vec<UserRow> = service
+        .db
+        .fetch_all(&format!(
+            "SELECT id, name, email FROM users WHERE id = {}",
+            id
+        ))
+        .await?;
+
+    Ok(rows.into_iter().next().map(UserDto::from))
+}
+
+pub async fn create_user(service: &UsersService, dto: CreateUserDto) -> anyhow::Result<UserDto> {
+    service.db.execute(&format!(
+        "INSERT INTO users (name, email) VALUES ('{}', '{}')",
+        dto.name.replace('\'', "''"),
+        dto.email.replace('\'', "''"),
+    )).await?;
+
+    let rows: Vec<UserRow> = service
+        .db
+        .fetch_all("SELECT id, name, email FROM users ORDER BY id DESC LIMIT 1")
+        .await?;
+
+    let row = rows
+        .into_iter()
+        .next()
+        .ok_or_else(|| anyhow::anyhow!("insert succeeded but no row was returned"))?;
+
+    Ok(UserDto::from(row))
+}
+
+pub async fn update_user(
+    service: &UsersService,
+    id: u64,
+    dto: UpdateUserDto,
+) -> anyhow::Result<Option<UserDto>> {
+    if let Some(name) = dto.name {
+        service
+            .db
+            .execute(&format!(
+                "UPDATE users SET name = '{}' WHERE id = {}",
+                name.replace('\'', "''"),
+                id
+            ))
+            .await?;
+    }
+
+    if let Some(email) = dto.email {
+        service
+            .db
+            .execute(&format!(
+                "UPDATE users SET email = '{}' WHERE id = {}",
+                email.replace('\'', "''"),
+                id
+            ))
+            .await?;
+    }
+
+    get_user(service, id).await
+}
+
+pub async fn delete_user(service: &UsersService, id: u64) -> anyhow::Result<Option<UserDto>> {
+    let existing = get_user(service, id).await?;
+    if existing.is_some() {
+        service
+            .db
+            .execute(&format!("DELETE FROM users WHERE id = {}", id))
+            .await?;
+    }
+    Ok(existing)
+}
+```
+
+Create `src/users/services/mod.rs`:
+
+```rust
+pub mod users_service;
+
+pub use users_service::{
+    UsersService, create_user, delete_user, get_user, list_users, update_user,
+};
+```
+
+Important note:
+
+- this example is intentionally explicit so the full file context is visible
+- in production code, prefer parameterized queries instead of string formatting
+
+# Step 6: register the service in the feature module
+
+Create `src/users/mod.rs`:
+
+```rust
+pub mod controllers;
+pub mod dto;
+pub mod services;
+
+use nestforge::{module, register_provider, Container, ControllerDefinition, Db, Provider};
+
+use self::controllers::UsersController;
+use self::services::UsersService;
+
+fn register_users_service(container: &Container) -> anyhow::Result<()> {
+    register_provider(
+        container,
+        Provider::factory(|c| {
+            let db = c.resolve::<Db>()?;
+            Ok(UsersService::new(db))
+        }),
+    )?;
+    Ok(())
+}
+
+pub struct UsersModule;
+
+impl nestforge::ModuleDefinition for UsersModule {
+    fn register(container: &Container) -> anyhow::Result<()> {
+        register_users_service(container)
+    }
+
+    fn controllers() -> Vec<axum::Router<Container>> {
+        vec![<UsersController as ControllerDefinition>::router()]
+    }
+}
+```
+
+This is why the earlier docs felt unclear: the missing piece was the actual provider
+registration shape for a DB-backed service. The service is not a type alias anymore. It
+is a real provider built from `Db`.
+
+# Step 7: create the controller
+
+Create `src/users/controllers/users_controller.rs`:
+
+```rust
+use axum::Json;
+use nestforge::{
+    controller, routes, ApiResult, Inject, List, OptionHttpExt, Param, ValidatedBody,
+};
+
+use crate::users::{
+    dto::{CreateUserDto, UpdateUserDto, UserDto},
+    services::{UsersService, create_user, delete_user, get_user, list_users, update_user},
+};
+
+#[controller("/users")]
+pub struct UsersController;
+
+#[routes]
+impl UsersController {
+    #[nestforge::get("/")]
+    #[nestforge::version("1")]
+    async fn list(users: Inject<UsersService>) -> ApiResult<List<UserDto>> {
+        let users = list_users(users.as_ref())
+            .await
+            .map_err(|err| nestforge::HttpException::internal_server_error(err.to_string()))?;
+        Ok(Json(users))
+    }
+
+    #[nestforge::get("/{id}")]
+    #[nestforge::version("1")]
+    async fn get_user_by_id(id: Param<u64>, users: Inject<UsersService>) -> ApiResult<UserDto> {
+        let id = id.value();
+        let user = get_user(users.as_ref(), id)
+            .await
+            .map_err(|err| nestforge::HttpException::internal_server_error(err.to_string()))?
+            .or_not_found_id("User", id)?;
+        Ok(Json(user))
+    }
+
+    #[nestforge::post("/")]
+    #[nestforge::version("1")]
+    async fn create(
+        users: Inject<UsersService>,
+        body: ValidatedBody<CreateUserDto>,
+    ) -> ApiResult<UserDto> {
+        let user = create_user(users.as_ref(), body.value())
+            .await
+            .map_err(|err| nestforge::HttpException::internal_server_error(err.to_string()))?;
+        Ok(Json(user))
+    }
+
+    #[nestforge::put("/{id}")]
+    #[nestforge::version("1")]
+    async fn update(
+        id: Param<u64>,
+        users: Inject<UsersService>,
+        body: ValidatedBody<UpdateUserDto>,
+    ) -> ApiResult<UserDto> {
+        let id = id.value();
+        let updated = update_user(users.as_ref(), id, body.value())
+            .await
+            .map_err(|err| nestforge::HttpException::internal_server_error(err.to_string()))?
+            .or_not_found_id("User", id)?;
+        Ok(Json(updated))
+    }
+
+    #[nestforge::delete("/{id}")]
+    #[nestforge::version("1")]
+    async fn delete(id: Param<u64>, users: Inject<UsersService>) -> ApiResult<UserDto> {
+        let id = id.value();
+        let deleted = delete_user(users.as_ref(), id)
+            .await
+            .map_err(|err| nestforge::HttpException::internal_server_error(err.to_string()))?
+            .or_not_found_id("User", id)?;
+        Ok(Json(deleted))
+    }
+}
+```
+
+Create `src/users/controllers/mod.rs`:
+
+```rust
+pub mod users_controller;
+
+pub use users_controller::UsersController;
+```
+
+# Step 8: bootstrap the app
+
+Create `src/main.rs`:
+
+```rust
+mod app_module;
+mod users;
+
+use app_module::AppModule;
+use nestforge::{NestForgeFactory, NestForgeFactoryOpenApiExt};
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    NestForgeFactory::<AppModule>::create()?
+        .with_global_prefix("api")
+        .with_openapi_docs("My API", "1.0.0")?
+        .listen(3000)
+        .await
+}
+```
+
+# Step 9: test the route surface
+
+Example testing pattern:
+
+```rust
+#[tokio::test]
+async fn users_route_is_mounted() {
+    let module = nestforge::TestFactory::<AppModule>::create()
+        .build()
+        .expect("module should build");
+
+    let response = module
+        .http_router()
+        .oneshot(
+            axum::http::Request::builder()
+                .uri("/api/v1/users")
+                .body(axum::body::Body::empty())
+                .expect("request should build"),
+        )
+        .await
+        .expect("request should succeed");
+
+    assert_eq!(response.status(), axum::http::StatusCode::OK);
+}
+```
+
 # What to verify
 
-1. `Db` resolves from the app container
-2. migrations apply cleanly
-3. the service reads rows from `users`
-4. the existing users routes still behave correctly
+1. the migration creates the `users` table
+2. `Db` resolves from the root module
+3. `UsersService` resolves from the feature module
+4. `/api/v1/users` is mounted
+5. create, read, update, and delete routes all hit SQL-backed service code
 
-# Why this example matters
+# Why this page matters
 
-This is the normal migration path most teams need:
+This is the full code context the workflow page did not previously provide:
 
-- prototype with `ResourceService`
-- keep the module/controller shape
-- move persistence into SQL
+- which files exist
+- what goes in each file
+- how the DB-backed provider is actually registered
+- how the controller uses it
+- how the app is bootstrapped and tested

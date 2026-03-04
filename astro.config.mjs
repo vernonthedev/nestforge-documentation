@@ -75,6 +75,8 @@ export default defineConfig({
           items: [
             { label: 'Hello NestForge', slug: 'examples/hello-nestforge' },
             { label: 'Database-Backed Users Feature', slug: 'examples/database-backed-users-feature' },
+            { label: 'Mongo-Style Users Feature', slug: 'examples/mongo-users-feature' },
+            { label: 'Redis-Style Cache Feature', slug: 'examples/redis-cache-feature' },
             { label: 'GraphQL Example', slug: 'examples/hello-nestforge-graphql' },
             { label: 'gRPC Example', slug: 'examples/hello-nestforge-grpc' },
             { label: 'WebSocket Example', slug: 'examples/hello-nestforge-websockets' },

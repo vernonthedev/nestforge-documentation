@@ -1,11 +1,40 @@
 ---
 title: SQL Database Workflow
-description: A step-by-step workflow for moving a NestForge app from ResourceService to a SQL-backed provider with migrations and Db wiring.
+description: A step-by-step workflow for building or migrating to a SQL-backed NestForge provider with migrations and Db wiring.
 ---
 
 # Goal
 
-This is the missing bridge between prototype code and a real SQL-backed application.
+This page covers two valid starting points:
+
+- DB-first applications that should use `Db` from the beginning
+- prototype applications that started with `ResourceService` and now need real persistence
+
+If you want the full file-by-file implementation, read
+[Database-Backed Users Feature](/examples/database-backed-users-feature/).
+
+# Target structure
+
+```text
+src/
+  app_module.rs
+  main.rs
+  users/
+    controllers/
+      mod.rs
+      users_controller.rs
+    dto/
+      mod.rs
+      create_user_dto.rs
+      update_user_dto.rs
+      user_dto.rs
+    services/
+      mod.rs
+      users_service.rs
+    mod.rs
+migrations/
+  20260304_create_users_table.sql
+```
 
 Use this sequence:
 
@@ -13,7 +42,7 @@ Use this sequence:
 2. set `DATABASE_URL`
 3. create and apply schema changes
 4. register `Db` in the root module
-5. replace `ResourceService` with a DB-backed provider
+5. build a DB-backed provider
 6. test the new persistence path
 
 # Step 1: initialize migrations
@@ -103,15 +132,159 @@ pub struct AppModule;
 
 Exporting `Db` lets feature modules or services resolve it through the container.
 
-# Step 6: replace `ResourceService` with a DB-backed provider
-
-Your prototype might start with:
+Use this exact shape in `src/app_module.rs`:
 
 ```rust
-pub type UsersService = ResourceService<UserDto>;
+use nestforge::{Db, DbConfig};
+
+use crate::users::UsersModule;
+
+pub struct AppModule;
+
+fn connect_db() -> anyhow::Result<Db> {
+    Ok(Db::connect_lazy(DbConfig::new(
+        "postgres://postgres:postgres@localhost/my_app",
+    ))?)
+}
+
+impl nestforge::ModuleDefinition for AppModule {
+    fn register(container: &nestforge::Container) -> anyhow::Result<()> {
+        nestforge::register_provider(container, nestforge::Provider::value(connect_db()?))?;
+        UsersModule::register(container)?;
+        Ok(())
+    }
+
+    fn controllers() -> Vec<axum::Router<nestforge::Container>> {
+        UsersModule::controllers()
+    }
+}
 ```
 
-The next step is usually a provider that takes `Db` and runs SQL queries.
+# Step 6: build a DB-backed provider
+
+If your application is DB-first, start here directly.
+
+If your application began with `ResourceService`, this is the point where you swap the
+implementation behind the existing feature.
+
+The important rule is:
+
+- `ResourceService` is optional
+- it is not a required first step
+- a real application can start with `Db` immediately
+
+The SQL service should take `Db` and run queries. The full file-by-file version of this
+step is documented in [Database-Backed Users Feature](/examples/database-backed-users-feature/).
+
+Use this exact service shape in `src/users/services/users_service.rs`:
+
+```rust
+use nestforge::Db;
+
+use crate::users::dto::{CreateUserDto, UpdateUserDto, UserDto};
+
+#[derive(Clone)]
+pub struct UsersService {
+    db: Db,
+}
+
+#[derive(sqlx::FromRow)]
+struct UserRow {
+    id: i64,
+    name: String,
+    email: String,
+}
+
+impl From<UserRow> for UserDto {
+    fn from(row: UserRow) -> Self {
+        Self {
+            id: row.id as u64,
+            name: row.name,
+            email: row.email,
+        }
+    }
+}
+
+impl UsersService {
+    pub fn new(db: Db) -> Self {
+        Self { db }
+    }
+}
+
+pub async fn list_users(service: &UsersService) -> anyhow::Result<Vec<UserDto>> {
+    let rows: Vec<UserRow> = service
+        .db
+        .fetch_all("SELECT id, name, email FROM users ORDER BY id")
+        .await?;
+
+    Ok(rows.into_iter().map(UserDto::from).collect())
+}
+
+pub async fn get_user(service: &UsersService, id: u64) -> anyhow::Result<Option<UserDto>> {
+    let rows: Vec<UserRow> = service
+        .db
+        .fetch_all(&format!(
+            "SELECT id, name, email FROM users WHERE id = {}",
+            id
+        ))
+        .await?;
+
+    Ok(rows.into_iter().next().map(UserDto::from))
+}
+
+pub async fn create_user(service: &UsersService, dto: CreateUserDto) -> anyhow::Result<UserDto> {
+    service
+        .db
+        .execute(&format!(
+            "INSERT INTO users (name, email) VALUES ('{}', '{}')",
+            dto.name.replace('\'', "''"),
+            dto.email.replace('\'', "''"),
+        ))
+        .await?;
+
+    let rows: Vec<UserRow> = service
+        .db
+        .fetch_all("SELECT id, name, email FROM users ORDER BY id DESC LIMIT 1")
+        .await?;
+
+    let row = rows
+        .into_iter()
+        .next()
+        .ok_or_else(|| anyhow::anyhow!("insert succeeded but no row was returned"))?;
+
+    Ok(UserDto::from(row))
+}
+
+pub async fn update_user(
+    service: &UsersService,
+    id: u64,
+    dto: UpdateUserDto,
+) -> anyhow::Result<Option<UserDto>> {
+    if let Some(name) = dto.name {
+        service
+            .db
+            .execute(&format!(
+                "UPDATE users SET name = '{}' WHERE id = {}",
+                name.replace('\'', "''"),
+                id
+            ))
+            .await?;
+    }
+
+    if let Some(email) = dto.email {
+        service
+            .db
+            .execute(&format!(
+                "UPDATE users SET email = '{}' WHERE id = {}",
+                email.replace('\'', "''"),
+                id
+            ))
+            .await?;
+    }
+
+    get_user(service, id).await
+}
+```
 
 The low-level `Db` API supports common operations such as:
 
@@ -128,19 +301,118 @@ tx.execute("UPDATE users SET name = 'John Doe' WHERE id = 1").await?;
 tx.commit().await?;
 ```
 
-Use this stage to move persistence out of in-memory storage and into explicit DB-backed
-service functions.
+If you are migrating from a prototype, this stage moves persistence out of in-memory
+storage and into explicit DB-backed service functions. If you are DB-first, this is just
+your normal service implementation.
+
+Register the service in `src/users/mod.rs` with this pattern:
+
+```rust
+pub mod controllers;
+pub mod dto;
+pub mod services;
+
+use nestforge::{register_provider, Container, ControllerDefinition, Db, Provider};
+
+use self::{controllers::UsersController, services::UsersService};
+
+pub struct UsersModule;
+
+impl nestforge::ModuleDefinition for UsersModule {
+    fn register(container: &Container) -> anyhow::Result<()> {
+        register_provider(
+            container,
+            Provider::factory(|c| {
+                let db = c.resolve::<Db>()?;
+                Ok(UsersService::new(db))
+            }),
+        )?;
+        Ok(())
+    }
+
+    fn controllers() -> Vec<axum::Router<Container>> {
+        vec![<UsersController as ControllerDefinition>::router()]
+    }
+}
+```
 
 # Step 7: keep the controller layer stable
 
-When swapping persistence layers, try not to rewrite the route surface at the same time.
-The cleaner migration path is:
+When migrating from `ResourceService`, try not to rewrite the route surface at the same
+time. The cleaner migration path is:
 
 1. keep DTOs stable
 2. keep controller routes stable
 3. replace the provider implementation behind them
 
 That keeps regressions smaller and easier to debug.
+
+Use this controller shape in `src/users/controllers/users_controller.rs`:
+
+```rust
+use axum::Json;
+use nestforge::{
+    controller, routes, ApiResult, Inject, List, OptionHttpExt, Param, ValidatedBody,
+};
+
+use crate::users::{
+    dto::{CreateUserDto, UpdateUserDto, UserDto},
+    services::{UsersService, create_user, get_user, list_users, update_user},
+};
+
+#[controller("/users")]
+pub struct UsersController;
+
+#[routes]
+impl UsersController {
+    #[nestforge::get("/")]
+    #[nestforge::version("1")]
+    async fn list(users: Inject<UsersService>) -> ApiResult<List<UserDto>> {
+        let users = list_users(users.as_ref())
+            .await
+            .map_err(|err| nestforge::HttpException::internal_server_error(err.to_string()))?;
+        Ok(Json(users))
+    }
+
+    #[nestforge::get("/{id}")]
+    #[nestforge::version("1")]
+    async fn get_user_by_id(id: Param<u64>, users: Inject<UsersService>) -> ApiResult<UserDto> {
+        let id = id.value();
+        let user = get_user(users.as_ref(), id)
+            .await
+            .map_err(|err| nestforge::HttpException::internal_server_error(err.to_string()))?
+            .or_not_found_id("User", id)?;
+        Ok(Json(user))
+    }
+
+    #[nestforge::post("/")]
+    #[nestforge::version("1")]
+    async fn create(
+        users: Inject<UsersService>,
+        body: ValidatedBody<CreateUserDto>,
+    ) -> ApiResult<UserDto> {
+        let user = create_user(users.as_ref(), body.value())
+            .await
+            .map_err(|err| nestforge::HttpException::internal_server_error(err.to_string()))?;
+        Ok(Json(user))
+    }
+
+    #[nestforge::put("/{id}")]
+    #[nestforge::version("1")]
+    async fn update(
+        id: Param<u64>,
+        users: Inject<UsersService>,
+        body: ValidatedBody<UpdateUserDto>,
+    ) -> ApiResult<UserDto> {
+        let id = id.value();
+        let updated = update_user(users.as_ref(), id, body.value())
+            .await
+            .map_err(|err| nestforge::HttpException::internal_server_error(err.to_string()))?
+            .or_not_found_id("User", id)?;
+        Ok(Json(updated))
+    }
+}
+```
 
 # Step 8: choose the abstraction level
 
@@ -162,7 +434,36 @@ After the service is DB-backed, verify:
 3. the feature service can read and write rows
 4. the existing controller routes still behave correctly
 
-At that point the application has crossed from prototype storage into real persistence.
+Example test shape:
+
+```rust
+#[tokio::test]
+async fn users_route_is_mounted() {
+    use tower::ServiceExt;
+
+    let module = nestforge::TestFactory::<AppModule>::create()
+        .build()
+        .expect("module should build");
+
+    let response = module
+        .http_router()
+        .oneshot(
+            axum::http::Request::builder()
+                .uri("/api/v1/users")
+                .body(axum::body::Body::empty())
+                .expect("request should build"),
+        )
+        .await
+        .expect("request should succeed");
+
+    assert_eq!(response.status(), axum::http::StatusCode::OK);
+}
+```
+
+At that point the application has either:
+
+- completed the move from prototype storage into real persistence, or
+- finished its initial DB-first implementation cleanly
 
 # What to read next
 

@@ -1,19 +1,19 @@
 ---
-title: Mongo Workflow
-description: A file-by-file workflow for building a document-style users feature with MongoConfig and InMemoryMongoRepo.
+title: Mongo-Style Users Feature
+description: A full file-by-file example for a document-style users feature using MongoConfig and InMemoryMongoRepo.
 ---
 
 # Goal
 
-This page is the actual Mongo workflow.
+This is the concrete Mongo-style feature workflow that was missing.
 
 It shows:
 
-- where files go
-- what code goes in each file
+- where each file goes
+- what each file contains
 - how the repo is registered
-- how the service uses it
-- how the controller stays clean
+- how the service uses the repo
+- how the controller stays normal
 
 # Project shape
 
@@ -84,7 +84,7 @@ pub use user_document::UserDocument;
 pub use user_dto::UserDto;
 ```
 
-# Step 2: create the service
+# Step 2: create the service file
 
 Create `src/users/services/users_service.rs`:
 
@@ -123,12 +123,9 @@ pub async fn create_user(
     dto: CreateUserDto,
 ) -> anyhow::Result<UserDto> {
     let next = UserDocument {
-        id: format!(
-            "user:{}",
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)?
-                .as_millis()
-        ),
+        id: format!("user:{}", std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)?
+            .as_millis()),
         name: dto.name,
         email: dto.email,
     };
@@ -151,7 +148,7 @@ pub mod users_service;
 pub use users_service::{UsersService, create_user, list_users};
 ```
 
-# Step 3: create the controller
+# Step 3: create the controller file
 
 Create `src/users/controllers/users_controller.rs`:
 
@@ -219,26 +216,37 @@ use self::{
     services::UsersService,
 };
 
+fn register_users_repo(container: &Container) -> anyhow::Result<()> {
+    register_provider(container, Provider::value(InMemoryMongoRepo::<UserDocument>::new()))?;
+    Ok(())
+}
+
+fn register_users_service(container: &Container) -> anyhow::Result<()> {
+    register_users_repo(container)?;
+    register_provider(
+        container,
+        Provider::factory(|c| {
+            let repo = c.resolve::<InMemoryMongoRepo<UserDocument>>()?;
+            Ok(UsersService::new(repo))
+        }),
+    )?;
+    Ok(())
+}
+
+fn register_mongo_config(container: &Container) -> anyhow::Result<()> {
+    register_provider(
+        container,
+        Provider::value(MongoConfig::new("mongodb://localhost:27017", "my_app")),
+    )?;
+    Ok(())
+}
+
 pub struct UsersModule;
 
 impl nestforge::ModuleDefinition for UsersModule {
     fn register(container: &Container) -> anyhow::Result<()> {
-        register_provider(
-            container,
-            Provider::value(MongoConfig::new("mongodb://localhost:27017", "my_app")),
-        )?;
-        register_provider(
-            container,
-            Provider::value(InMemoryMongoRepo::<UserDocument>::new()),
-        )?;
-        register_provider(
-            container,
-            Provider::factory(|c| {
-                let repo = c.resolve::<InMemoryMongoRepo<UserDocument>>()?;
-                Ok(UsersService::new(repo))
-            }),
-        )?;
-        Ok(())
+        register_mongo_config(container)?;
+        register_users_service(container)
     }
 
     fn controllers() -> Vec<axum::Router<Container>> {
@@ -291,21 +299,18 @@ async fn main() -> anyhow::Result<()> {
 
 # Step 7: verify the feature
 
-Verify this sequence:
+After it runs, verify:
 
 1. `GET /api/v1/users` returns an empty list initially
-2. `POST /api/v1/users` inserts through `InMemoryMongoRepo`
+2. `POST /api/v1/users` stores a new document through `InMemoryMongoRepo`
 3. `GET /api/v1/users` returns the inserted document
-4. the controller never depends directly on repo APIs
+4. the controller remains document-store agnostic
 
-# Current support boundary
+# Why this example matters
 
-This is the current supported Mongo-style path in the workspace:
+This is the missing context the workflow page did not previously provide:
 
-- `MongoConfig` is available
-- `InMemoryMongoRepo<T>` is the concrete adapter shown in the framework
-- there is not yet a checked-in full external Mongo driver example app in this repo
-
-# What to read next
-
-For the backend overview, see [Data Layer](/guides/data-layer/).
+- exact `src/...` file placement
+- actual provider registration
+- actual controller shape
+- actual module wiring
