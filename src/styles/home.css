@@ -153,6 +153,7 @@ body.home-body::-webkit-scrollbar-corner {
   display: inline-flex;
   align-items: center;
   gap: 0.8rem;
+  min-width: 0;
 }
 
 .home-brand img {
@@ -163,6 +164,7 @@ body.home-body::-webkit-scrollbar-corner {
 .home-brand-copy {
   display: grid;
   gap: 0.1rem;
+  min-width: 0;
 }
 
 .home-brand-name {
@@ -185,12 +187,14 @@ body.home-body::-webkit-scrollbar-corner {
   padding: 0.3rem;
   border-radius: 999px;
   background: var(--home-nav-surface);
+  min-width: 0;
 }
 
 .home-nav a {
   padding: 0.62rem 0.95rem;
   border-radius: 999px;
   color: var(--home-text-soft);
+  white-space: nowrap;
   transition:
     background-color 160ms ease,
     color 160ms ease;
@@ -205,6 +209,9 @@ body.home-body::-webkit-scrollbar-corner {
   display: flex;
   align-items: center;
   gap: 0.65rem;
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .home-theme-switch {
@@ -676,15 +683,38 @@ html[data-theme="light"] .explore-group {
   .home-header-inner {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.85rem;
   }
 
   .home-nav {
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-radius: 1rem;
+  }
+
+  .home-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .home-nav a {
+    flex: 0 0 auto;
   }
 
   .home-header-actions {
     justify-content: space-between;
+    row-gap: 0.5rem;
+  }
+
+  .home-header-link,
+  .home-header-cta {
+    min-height: 2.75rem;
+  }
+
+  .home-header-cta {
+    flex: 1 1 auto;
   }
 
   .explore-groups {
@@ -693,6 +723,43 @@ html[data-theme="light"] .explore-group {
 
   .hero {
     padding-bottom: 3.2rem;
+  }
+}
+
+@media (max-width: 29.999rem) {
+  .home-header {
+    padding-top: 0.75rem;
+  }
+
+  .home-header-inner {
+    padding: 0.75rem;
+  }
+
+  .home-brand img {
+    width: 2.15rem;
+  }
+
+  .home-brand-name {
+    font-size: 1.02rem;
+  }
+
+  .home-brand-subtitle {
+    font-size: 0.72rem;
+  }
+
+  .home-header-actions {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+
+  .home-header-link {
+    justify-self: end;
+  }
+
+  .home-header-cta {
+    grid-column: 1 / -1;
+    width: 100%;
   }
 }
 
