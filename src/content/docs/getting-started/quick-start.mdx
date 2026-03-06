@@ -1,100 +1,106 @@
 ---
 title: Quick Start
-description: Build and run a first NestForge application with the current CLI and framework APIs.
+description: Build your first NestForge application from scratch in minutes.
 ---
 
-# Create a new application
+import { Aside, Steps } from "@astrojs/starlight/components";
 
-The fastest path into NestForge is the CLI:
+# Quick Start
 
-```bash
-nestforge new demo-api
-cd demo-api
-cargo run
-```
+This guide will walk you through creating a "Hello World" application using the NestForge CLI. You'll learn how to set up the project, define a controller, and run the server.
 
-That gives you a runnable HTTP app with:
+<Steps>
 
-- `src/main.rs`
-- `src/app_module.rs`
-- root controllers
-- service, DTO, guard, interceptor, and environment scaffolding
+1. **Create the Project**
 
-# Create transport-first variants
+   Use the CLI to scaffold a new project. We'll call it `hello-nestforge`.
 
-The CLI also supports transport-specific templates:
+   ```bash
+   nestforge new hello-nestforge
+   cd hello-nestforge
+   ```
 
-```bash
-nestforge new demo-graphql --transport graphql
-nestforge new demo-grpc --transport grpc
-nestforge new demo-bus --transport microservices
-nestforge new demo-events --transport websockets
-```
+2. **Examine the Structure**
 
-These templates change the bootstrap files and generated folders so the project starts
-from the chosen runtime model instead of from plain HTTP.
+   The CLI generates a modular structure. The key files are:
+   - `src/main.rs`: Entry point that bootstraps the application.
+   - `src/app_module.rs`: Root module that wires up controllers and providers.
 
-# Minimal bootstrap
+3. **Define a Controller**
 
-The core HTTP bootstrap pattern is:
+   Open `src/main.rs` (or a dedicated controller file if you prefer). By default, the CLI creates a simple controller for you. Let's look at how a basic controller is defined:
 
-```rust
-use nestforge::{NestForgeFactory, NestForgeFactoryOpenApiExt};
+   ```rust
+   use nestforge::{controller, routes, ApiResult};
+   use axum::Json;
 
-NestForgeFactory::<AppModule>::create()?
-    .with_global_prefix("api")
-    .with_openapi_docs("My API", "1.0.0")?
-    .listen(3000)
-    .await?;
-```
+   #[controller("/")]
+   pub struct AppController;
 
-This is the main equivalent of `NestFactory.create(AppModule)` in NestJS terms.
+   #[routes]
+   impl AppController {
+       #[nestforge::get("/")]
+       async fn get_hello() -> ApiResult<String> {
+           Ok(Json("Hello from NestForge!".to_string()))
+       }
+   }
+   ```
 
-# Minimal module
+4. **Register the Controller**
 
-NestForge applications are wired through a module:
+   In `src/app_module.rs`, ensure your `AppController` is registered in the `AppModule`:
 
-```rust
-use nestforge::module;
+   ```rust
+   use nestforge::module;
+   use crate::AppController;
 
-#[module(
-    imports = [],
-    controllers = [AppController],
-    providers = [load_app_config()?],
-    exports = []
-)]
-pub struct AppModule;
-```
+   #[module(
+       controllers = [AppController],
+       providers = [],
+   )]
+   pub struct AppModule;
+   ```
 
-Modules are where you make feature boundaries explicit. They also determine provider
-registration order and export visibility.
+5. **Bootstrap the App**
 
-# Add a feature module
+   The `src/main.rs` file bootstraps the application using `NestForgeFactory`:
 
-The CLI can generate a feature module:
+   ```rust
+   use nestforge::NestForgeFactory;
+   use crate::app_module::AppModule;
 
-```bash
-nestforge g module users
-nestforge g resource users --module users
-```
+   #[tokio::main]
+   async fn main() -> anyhow::Result<()> {
+       NestForgeFactory::<AppModule>::create()?
+           .listen(3000)
+           .await?;
+       Ok(())
+   }
+   ```
 
-That pattern creates a Nest-style folder layout under `src/users/` and patches the
-application module so the feature becomes part of the app.
+6. **Run it!**
 
-If you want the full beginner path instead of only the generator commands, continue with:
+   Start your server with Cargo:
 
-- [Feature Modules](/getting-started/feature-modules/)
-- [DTOs, Services, and Routes](/getting-started/dtos-services-routes/)
-- [Build Your First Feature](/getting-started/build-your-first-feature/)
+   ```bash
+   cargo run
+   ```
 
-# What to inspect next
+   Visit [http://localhost:3000](http://localhost:3000) in your browser. You should see:
+   `"Hello from NestForge!"`
 
-After your first app boots, inspect these files in the generated or example app:
+</Steps>
 
-- `src/main.rs` for runtime bootstrap
-- `src/app_module.rs` for module wiring
-- `src/users/` or another feature folder for the module pattern
-- `.env` and `.env.example` for configuration assumptions
+## What's Happening?
 
-If you prefer to learn from a maintained example instead of from generated output, read
-[Hello NestForge](/examples/hello-nestforge/).
+- **`#[controller]`**: Defines a base path for all routes within the struct.
+- **`#[routes]`**: A required attribute for the `impl` block where your handlers live.
+- **`NestForgeFactory`**: The engine that resolves your module graph and mounts the Axum router.
+
+## Next Steps
+
+Now that you have a basic app running, let's add some documentation!
+
+- [Setting up OpenAPI from Scratch](/guides/auth-openapi-workflow/)
+- [Understanding Modules and DI](/concepts/modules-and-di/)
+- [CLI Reference](/getting-started/cli-workflow/)

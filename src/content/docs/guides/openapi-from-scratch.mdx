@@ -1,0 +1,110 @@
+---
+title: OpenAPI from Scratch
+description: A complete guide to setting up OpenAPI documentation in a new NestForge project.
+---
+
+import { Aside, Steps } from "@astrojs/starlight/components";
+
+# OpenAPI Setup from Scratch
+
+This guide walks you through enabling and configuring automatic OpenAPI documentation generation for your NestForge project.
+
+<Aside type="important">
+  OpenAPI support is a feature-gated module. You must enable the `openapi`
+  feature in your `Cargo.toml` to use it.
+</Aside>
+
+## Step 1: Enable the Feature
+
+First, add the `openapi` feature to your `nestforge` dependency in `Cargo.toml`:
+
+```toml
+[dependencies]
+nestforge = { version = "1", features = ["openapi"] }
+```
+
+## Step 2: Configure the App Factory
+
+In your `src/main.rs`, use the `with_openapi_docs` extension method to enable the documentation routes.
+
+```rust
+use nestforge::{NestForgeFactory, NestForgeFactoryOpenApiExt};
+use crate::app_module::AppModule;
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    NestForgeFactory::<AppModule>::create()?
+        // This adds /openapi.json and /docs routes
+        .with_openapi_docs("My API Title", "1.0.0")?
+        .listen(3000)
+        .await?;
+    Ok(())
+}
+```
+
+## Step 3: Document your Controllers
+
+Add metadata to your controller routes using `nestforge` attributes. These will be automatically picked up by the documentation generator.
+
+```rust
+use nestforge::{controller, routes, ApiResult};
+use axum::Json;
+
+#[controller("/users")]
+pub struct UsersController;
+
+#[routes]
+impl UsersController {
+    #[nestforge::get("/")]
+    #[nestforge::summary("List all users")]
+    #[nestforge::tag("Users")]
+    #[nestforge::response(status = 200, description = "List of users successfully retrieved")]
+    async fn list_users() -> ApiResult<Vec<String>> {
+        Ok(Json(vec!["Alice".to_string(), "Bob".to_string()]))
+    }
+
+    #[nestforge::get("/{id}")]
+    #[nestforge::summary("Get a user by ID")]
+    #[nestforge::tag("Users")]
+    #[nestforge::response(status = 200, description = "User found")]
+    #[nestforge::response(status = 404, description = "User not found")]
+    async fn get_user(id: nestforge::Param<u64>) -> ApiResult<String> {
+        Ok(Json("Alice".to_string()))
+    }
+}
+```
+
+## Step 4: Verify the Documentation
+
+1. Run your application: `cargo run`
+2. Access the OpenAPI JSON: [http://localhost:3000/openapi.json](http://localhost:3000/openapi.json)
+3. Access the Documentation UI: [http://localhost:3000/docs](http://localhost:3000/docs)
+
+## Advanced Configuration
+
+### Grouping and Tags
+
+Use `#[nestforge::tag("Name")]` at the method level to group routes in the UI.
+
+### Custom Responses
+
+You can specify multiple `#[nestforge::response(...)]` attributes to document different status codes and their meanings.
+
+### Authentication Documentation
+
+If a route is marked with `#[nestforge::authenticated]`, the generated OpenAPI spec will automatically include the required security schemes (Bearer Auth by default).
+
+```rust
+#[nestforge::get("/me")]
+#[nestforge::authenticated]
+#[nestforge::summary("Get current user")]
+async fn me() -> ApiResult<String> {
+    // ...
+}
+```
+
+## Troubleshooting
+
+- **"Cannot find attribute `summary`":** Ensure the `openapi` feature is enabled in `Cargo.toml`.
+- **"Trait bound `NestForgeFactory<...>: NestForgeFactoryOpenApiExt<...>` not satisfied":** Make sure you have `use nestforge::NestForgeFactoryOpenApiExt;` in your imports.
+- **Routes missing from docs:** Ensure the controller is registered in your `AppModule`.

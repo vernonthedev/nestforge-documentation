@@ -1,77 +1,175 @@
 ---
 title: Installation
-description: Install the NestForge CLI, create an application, and run it locally.
+description: Install the NestForge CLI, set up your Rust project, and choose the features your application needs.
 ---
 
-# What this page is for
+import { Aside, Steps } from "@astrojs/starlight/components";
 
-This page is for application developers using NestForge to create and run a service.
+# Installation
 
-If you want to work on the NestForge framework repository itself, use the framework
-developer setup in the contributing docs instead.
+This page covers everything needed to go from zero to a running NestForge application.
 
-# Prerequisites
+<Aside type="note">
+  NestForge targets the **stable Rust toolchain**. Nightly is not required.
+</Aside>
 
-To create and run a NestForge app you need:
+## Prerequisites
 
-- a stable Rust toolchain
-- `cargo`
-- `git`
+Before you start, make sure you have:
 
-# Install the CLI
+| Requirement         | Notes                                         |
+| ------------------- | --------------------------------------------- |
+| Stable Rust + Cargo | Install from [rustup.rs](https://rustup.rs)   |
+| Git                 | Any recent version                            |
+| `protoc`            | Only required if you use the **gRPC** feature |
 
-Install the CLI from Cargo:
+Check your Rust version with:
+
+```bash
+rustc --version
+# rustc 1.75.0 (or later)
+```
+
+---
+
+## Step 1 — Install the CLI
+
+Install the NestForge CLI from crates.io:
 
 ```bash
 cargo install nestforge-cli
 ```
 
-If you are developing against a local checkout of the framework, you can install the
-CLI from the repository workspace instead:
+Verify the install worked:
+
+```bash
+nestforge --version
+```
+
+<Aside type="tip">
+  If you are working from a local checkout of the NestForge repository instead of crates.io, use:
 
 ```bash
 cargo install --path crates/nestforge-cli
 ```
 
-# Create a project
+</Aside>
 
-After the CLI is installed, scaffold a new project:
+---
+
+## Step 2 — Create a new project
+
+Scaffold a new HTTP application:
 
 ```bash
-nestforge new demo-api
-cd demo-api
+nestforge new my-api
+cd my-api
+```
+
+The generator creates:
+
+```
+my-api/
+├── Cargo.toml
+├── .env
+├── .env.example
+└── src/
+    ├── main.rs
+    └── app_module.rs
+```
+
+Run it right away:
+
+```bash
 cargo run
 ```
 
-# Run the app
+The server starts on **http://127.0.0.1:3000** by default.
 
-The generated app starts with the normal Rust workflow:
+---
 
-```bash
-cargo run
-```
+## Step 3 — Understand your Cargo.toml
 
-Typical local default for an HTTP service:
-
-- `http://127.0.0.1:3000`
-
-# Add the features you need
-
-NestForge is modular at the Cargo level. Enable only the feature sets your application
-needs. Common examples:
+The generated `Cargo.toml` starts with only the core dependency:
 
 ```toml
-nestforge = { version = "1", features = ["config", "openapi"] }
-nestforge = { version = "1", features = ["graphql"] }
-nestforge = { version = "1", features = ["grpc", "microservices"] }
+[dependencies]
+nestforge = { version = "1", features = [] }
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+axum = "0.7"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 ```
 
-Depending on your stack, you may also need:
+NestForge is **feature-gated**. You only compile and link what you need.
 
-- `protoc` for gRPC code generation
-- a reachable database for database-backed application code
+---
 
-# Next step
+## Step 4 — Choose your features
 
-Continue with [CLI Workflow](/getting-started/cli-workflow/) or go straight to
-[Quick Start](/getting-started/quick-start/).
+Enable features by adding them to your `Cargo.toml`:
+
+```toml
+[dependencies]
+nestforge = { version = "1", features = ["openapi"] }
+```
+
+Here is the full feature reference:
+
+| Feature         | What it adds                                                                   |
+| --------------- | ------------------------------------------------------------------------------ |
+| `openapi`       | `#[summary]`, `#[tag]`, `#[response]` macros + `/openapi.json` + `/docs` route |
+| `config`        | `ConfigModule`, `EnvSchema`, `load_config()` for typed env config              |
+| `db`            | `Db`, `connect_db()` for SQL via sqlx                                          |
+| `orm`           | `Repo`, `SqlRepo`, `EntityMeta` on top of `db`                                 |
+| `graphql`       | `graphql_router`, `GraphQlConfig`, `async_graphql` re-export                   |
+| `grpc`          | `NestForgeGrpcFactory`, `GrpcContext`, `prost`/`tonic` re-export               |
+| `websockets`    | `websocket_router`, `WebSocketGateway`, `Message` types                        |
+| `microservices` | `MicroserviceRegistry`, `InProcessMicroserviceClient`                          |
+| `schedule`      | `ScheduleRegistry`, `ScheduledJob`, `start_schedules()`                        |
+| `cache`         | `CacheInterceptor`, `CachePolicy`, `cached_response_interceptor`               |
+| `mongo`         | `InMemoryMongoRepo`, `MongoConfig`                                             |
+| `redis`         | `InMemoryRedisStore`, `RedisConfig`                                            |
+| `testing`       | `TestFactory`, `TestingModule` for integration tests                           |
+| `data`          | Base data-layer trait; pulled in by `cache`, `mongo`, and `redis`              |
+
+### Common feature combinations
+
+```toml
+# REST API with OpenAPI docs
+nestforge = { version = "1", features = ["openapi", "config"] }
+
+# REST API with a SQL database
+nestforge = { version = "1", features = ["db", "orm", "openapi", "config"] }
+
+# GraphQL API
+nestforge = { version = "1", features = ["graphql", "config"] }
+
+# Full-stack transport app
+nestforge = { version = "1", features = ["openapi", "graphql", "websockets", "schedule", "config"] }
+```
+
+<Aside type="caution">
+  Do not enable `grpc` unless you also have `protoc` installed. The gRPC crate
+  wraps `tonic` which requires the Protocol Buffers compiler for code generation
+  steps.
+</Aside>
+
+---
+
+## Step 5 — Verify the project builds
+
+```bash
+cargo check
+```
+
+You should see no errors. If you see `E0433` for unresolved items from `nestforge`, you likely need to add the corresponding feature flag.
+
+---
+
+## What to read next
+
+- [Quick Start](/getting-started/quick-start/) — build and run your first handler
+- [CLI Workflow](/getting-started/cli-workflow/) — all available generator commands
+- [Feature Modules](/getting-started/feature-modules/) — how to add features to your app
