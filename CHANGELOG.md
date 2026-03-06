@@ -1,3 +1,14 @@
+## [1.2.0](https://github.com/vernonthedev/nestforge-documentation/compare/v1.1.1...v1.2.0) (2026-03-06)
+
+### Features
+
+* improved and cleaned our whole workflow to a cleaner one ([9869192](https://github.com/vernonthedev/nestforge-documentation/commit/986919200a384c80d78068ebb3c4497381d746d1))
+
+### Bug Fixes
+
+* cleanedout the framework contributions from the main docs ([01b868b](https://github.com/vernonthedev/nestforge-documentation/commit/01b868be90482d0763221c0ea0a34baebc4a759f))
+* fixed application sidebar AstroUserError ([041d2ac](https://github.com/vernonthedev/nestforge-documentation/commit/041d2ac95798bee349c357836f880976fab87cb1))
+
 ## [1.1.1](https://github.com/vernonthedev/nestforge-documentation/compare/v1.1.0...v1.1.1) (2026-03-04)
 
 ## [1.1.0](https://github.com/vernonthedev/nestforge-documentation/compare/v1.0.0...v1.1.0) (2026-03-04)
