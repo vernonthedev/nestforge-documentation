@@ -1,15 +1,19 @@
-```text
+# NestForge Documentation
 
+```text
 ███╗   ██╗███████╗███████╗████████╗███████╗ ██████╗ ██████╗  ██████╗ ███████╗
 ████╗  ██║██╔════╝██╔════╝╚══██╔══╝██╔════╝██╔═══██╗██╔══██╗██╔════╝ ██╔════╝
 ██╔██╗ ██║█████╗  ███████╗   ██║   █████╗  ██║   ██║██████╔╝██║  ███╗█████╗
 ██║╚██╗██║██╔══╝  ╚════██║   ██║   ██╔══╝  ██║   ██║██╔══██╗██║   ██║██╔══╝
 ██║ ╚████║███████╗███████║   ██║   ██║     ╚██████╔╝██║  ██║╚██████╔╝███████╗
 ╚═╝  ╚═══╝╚══════╝╚══════╝   ╚═╝   ╚═╝      ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝
-
 ```
 
-# NestForge Documentation
+Welcome to the NestForge documentation!
+
+[![Rust](https://img.shields.io/badge/rust-v1.75+-orange.svg)](https://www.rust-lang.org/)
+[![Axum](https://img.shields.io/badge/framework-Axum-blue.svg)](https://github.com/tokio-rs/axum)
+[![NestForge](https://img.shields.io/badge/core-NestForge-green.svg)](https://github.com/nestforge/nestforge)
 
 This repository contains the Astro + Starlight site for the NestForge documentation. It is written for two audiences:
 
@@ -46,7 +50,6 @@ Useful commands:
 - `yarn build` creates a production build in `dist/`
 - `yarn preview` serves the built site locally
 - `yarn astro check` validates Astro content and configuration changes
-- `yarn release:dry-run` previews the next semantic-release result without publishing
 
 ## Writing and Updating Docs
 
