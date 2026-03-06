@@ -1,23 +1,30 @@
 ---
 title: GraphQL
-description: Add GraphQL to a NestForge application and understand how resolvers interact with the framework container.
+description: Building powerful GraphQL APIs with NestForge and async-graphql.
 ---
 
-If you want the step-by-step setup path, start with
-[GraphQL Workflow](/transports/graphql-workflow/).
+import { Aside, Steps } from "@astrojs/starlight/components";
 
-# Feature activation
+# GraphQL
 
-Enable GraphQL through the `graphql` feature:
+NestForge provides a first-class integration with **`async-graphql`**, the most popular GraphQL library in the Rust ecosystem. This allows you to combine the power of schema-first development with the elegant dependency injection of NestForge.
+
+---
+
+## 🚀 Getting Started
+
+First, enable the `graphql` feature in your `Cargo.toml`.
 
 ```toml
+[dependencies]
 nestforge = { version = "1", features = ["graphql"] }
 ```
 
-# Basic setup
+---
 
-NestForge integrates with `async-graphql` and provides helpers that attach a schema to
-the framework runtime:
+## 🛠️ Basic Setup
+
+To add GraphQL to your NestForge application, you simply build your `async-graphql` schema and mount it onto the framework during bootstrap using the `with_graphql` extension.
 
 ```rust
 use nestforge::{
@@ -25,52 +32,97 @@ use nestforge::{
     NestForgeFactory, NestForgeFactoryGraphQlExt,
 };
 
+// 1. Define your Query root
 struct QueryRoot;
 
 #[Object]
 impl QueryRoot {
-    async fn health(&self) -> &str {
-        "ok"
+    async fn hello(&self) -> &str {
+        "Hello from NestForge GraphQL!"
     }
 }
 
+// 2. Build the schema
 let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription).finish();
 
+// 3. Bootstrap and mount
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    NestForgeFactory::<AppModule>::create()?
+        .with_graphql(schema) // Mounts /graphql and /graphiql
+        .listen(3000)
+        .await?;
+    Ok(())
+}
+```
+
+By default, NestForge mounts:
+
+- **`GET /graphiql`**: The interactive playground.
+- **`POST /graphql`**: The actual API endpoint.
+
+---
+
+## 💉 Dependency Injection in Resolvers
+
+This is where NestForge truly shines. Every GraphQL request automatically carries the **NestForge Container**. This means your resolvers can easily access services registered in your modules.
+
+Use the `resolve_graphql` helper inside your resolver methods:
+
+```rust
+use nestforge::{async_graphql::Context, resolve_graphql};
+use crate::users::services::UsersService;
+
+#[Object]
+impl QueryRoot {
+    async fn users(&self, ctx: &Context<'_>) -> Vec<UserDto> {
+        // Resolve the service directly from the request container
+        let users_service = resolve_graphql::<UsersService>(ctx)
+            .expect("UsersService should be registered");
+
+        users_service.find_all().await.unwrap_or_default()
+    }
+}
+```
+
+<Aside type="tip">
+  By using `resolve_graphql`, you maintain a single source of truth for your
+  business logic, regardless of whether it's called via REST, GraphQL, or gRPC.
+</Aside>
+
+---
+
+## ⚙️ Custom Configuration
+
+If you need to change the default paths or add custom GraphQL extensions, use the `GraphQlConfig`:
+
+```rust
+use nestforge::GraphQlConfig;
+
 NestForgeFactory::<AppModule>::create()?
-    .with_graphql(schema)
+    .with_graphql_config(
+        schema,
+        GraphQlConfig::new()
+            .with_path("/my-api")
+            .with_playground_path("/play")
+    )
     .listen(3000)
     .await?;
 ```
 
-# Default routes
+---
 
-The current helpers mount:
+## 🧩 Modularity
 
-- `/graphql`
-- `/graphiql`
-
-# Custom paths
-
-Use `GraphQlConfig` and `graphql_router_with_config(...)` when you want custom routes.
-
-# Resolver access to providers
-
-GraphQL requests receive the NestForge container, which means resolvers can resolve
-application providers from the GraphQL context:
+Just like the rest of NestForge, we recommend organizing your GraphQL logic into **Feature Modules**.
 
 ```rust
-use nestforge::{async_graphql::Context, resolve_graphql};
-
-async fn app_name(&self, ctx: &Context<'_>) -> String {
-    let config = resolve_graphql::<AppConfig>(ctx).expect("app config should exist");
-    config.app_name.clone()
-}
+// users/mod.rs
+#[module(
+    providers = [UsersService, UsersResolver],
+    exports = [UsersService]
+)]
+pub struct UsersModule;
 ```
 
-# Good fit
-
-Choose the GraphQL path when:
-
-- your consumers benefit from schema-driven queries
-- your team already uses `async-graphql`
-- you still want the same module and provider model as the HTTP layer
+While NestForge doesn't currently auto-discover resolvers, the modular patterns ensure your DI remains clean and manageable as your schema grows.

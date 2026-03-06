@@ -85,7 +85,7 @@ Middleware is best suited for cross-cutting HTTP concerns that don't require kno
 - **Compression**: Gzip/Brotli encoding of responses.
 - **Request ID Tracking**: Generating and attaching unique IDs to every request.
 
-<Aside type="important">
+<Aside type="caution">
   If your logic depends on **Authorization** or **Roles**, you should almost
   always use a [Guard](/guides/guards-interceptors/) instead. Guards are
   executed after middleware and have better access to the application context.

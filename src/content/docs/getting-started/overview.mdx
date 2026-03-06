@@ -1,6 +1,7 @@
 ---
 title: Overview
 description: Introduction to NestForge, the modular backend framework for Rust.
+lastUpdated: 2026-03-06
 ---
 
 import { Aside } from "@astrojs/starlight/components";
@@ -69,9 +70,19 @@ We recommend following the documentation in this order:
 
 ---
 
-<Aside type="note">
-  This site is split into two tracks. The default track is for **Application
-  Developers**. There is also a **[Framework
-  Contributor](/framework/workspace-structure/)** track for those helping build
-  NestForge itself.
-</Aside>
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+## Choose your Path
+
+Whether you're building a new API or helping us build the framework, we've got you covered.
+
+<CardGrid>
+  <Card title="Application Developer" icon="rocket">
+    Learn how to build scalable server-side applications with NestForge. [Get
+    Started](/getting-started/quick-start/)
+  </Card>
+  <Card title="Framework Contributor" icon="setting">
+    Help us build the future of Rust backend development. [View Internal
+    Docs](/framework/contributing/)
+  </Card>
+</CardGrid>

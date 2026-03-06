@@ -87,7 +87,7 @@ pub struct AppModule;
 
 Now, update your service to use the injected `Db` instance.
 
-<Aside type="important">
+<Aside type="caution">
   **Security Note**: Always use parameterized queries (e.g., `$1`, `$2`) instead
   of string interpolation to prevent SQL injection.
 </Aside>
