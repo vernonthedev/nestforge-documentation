@@ -1,90 +1,124 @@
 ---
 title: Guards and Interceptors
-description: Use guards, interceptors, and exception filters to shape access control and handler execution.
+description: Protect your routes and wrap handler execution with custom logic.
 ---
 
-# Guards
+import { Aside, Steps } from "@astrojs/starlight/components";
 
-Guards decide whether a request is allowed to continue. They run before handler logic and
-return either:
+# Guards and Interceptors
 
-- `Ok(())` to allow the request
-- `HttpException` to block it
+NestForge provides two primary mechanisms to intercept and control the request execution flow: **Guards** for access control and **Interceptors** for execution wrapping.
 
-Fast macro form:
+---
+
+## Guards
+
+Guards have a single responsibility. They determine whether a given request will be handled by the route handler or not, based on certain conditions (like permissions, roles, ACLs, etc.) present at run-time.
+
+### Why Guards?
+
+In traditional web applications, authentication and authorization were often handled by middleware. While middleware is a fine choice for things like logging or header manipulation, it's not ideal for authorization because it has no knowledge of which handler will be executed after it.
+
+**Guards have access to the `RequestContext`**, metadata, and can be applied at the controller or route level.
+
+### Creating a Guard
+
+The easiest way to create a guard is using the `nestforge::guard!` macro.
 
 ```rust
-nestforge::guard!(RequireValidIdGuard, |ctx| {
-    if let Some(last_segment) = ctx.uri.path().rsplit('/').next() {
-        if last_segment == "0" {
-            return Err(nestforge::HttpException::bad_request("id must be greater than 0"));
-        }
+nestforge::guard!(ApiKeyGuard, |ctx| {
+    let has_key = ctx.headers.get("x-api-key").is_some();
+
+    if !has_key {
+        return Err(nestforge::HttpException::unauthorized("Missing API Key"));
     }
+
     Ok(())
 });
 ```
 
-# Interceptors
+### Applying Guards
 
-Interceptors wrap handler execution. Use them for:
+You can apply guards at the controller level or route level using the `#[nestforge::use_guards()]` attribute.
 
-- timing
-- logging
-- response shaping
-- cross-cutting behavior around a successful or failed handler call
+```rust
+#[controller("/admin")]
+#[nestforge::use_guards(ApiKeyGuard)] // Applied to all routes in this controller
+pub struct AdminController;
 
-Example:
+#[routes]
+impl AdminController {
+    #[nestforge::get("/secret")]
+    #[nestforge::use_guards(SuperAdminGuard)] // Additional guard for this specific route
+    async fn get_secret() -> ApiResult<String> { ... }
+}
+```
+
+---
+
+## Interceptors
+
+Interceptors are inspired by the Aspect-Oriented Programming (AOP) technique. They allow you to wrap the handler execution, giving you the ability to:
+
+- Bind extra logic **before** and **after** method execution.
+- Transform the result returned from a function.
+- Transform the exception thrown from a function.
+- Completely override the handler execution (e.g., for caching purposes).
+
+### Creating an Interceptor
+
+Using the `nestforge::interceptor!` macro:
 
 ```rust
 nestforge::interceptor!(LoggingInterceptor, |ctx, req, next| {
-    let started = std::time::Instant::now();
+    let start = std::time::Instant::now();
+    let method = ctx.method.clone();
+    let path = ctx.uri.path().to_string();
+
     let response = (next)(req).await;
-    println!("{} {} - {}ms", ctx.method, ctx.uri, started.elapsed().as_millis());
+
+    println!("[{}] {} took {}ms", method, path, start.elapsed().as_millis());
     response
 });
 ```
 
-# Registration levels
+### Use Case: Response Mapping
 
-Both guards and interceptors can be attached:
-
-- globally through `NestForgeFactory`
-- at controller level through `#[routes]` metadata
-- at route level through route metadata macros
-
-# Exception filters
-
-Exception filters rewrite `HttpException` values. This is useful when you need:
-
-- consistent public error messages
-- route-specific error mapping
-- centralized translation of framework errors
-
-Example:
+Interceptors are perfect for transforming global response shapes.
 
 ```rust
-#[derive(Default)]
-struct RewriteBadRequestFilter;
-
-impl nestforge::ExceptionFilter for RewriteBadRequestFilter {
-    fn catch(
-        &self,
-        exception: nestforge::HttpException,
-        _ctx: &nestforge::RequestContext,
-    ) -> nestforge::HttpException {
-        exception
-    }
-}
+nestforge::interceptor!(TransformInterceptor, |ctx, req, next| {
+    let response = (next)(req).await;
+    // Map the success response into a standard format
+    // ...
+    response
+});
 ```
 
-# Choosing the right tool
+---
 
-Use this rule of thumb:
+## Summary Comparison
 
-- middleware for raw HTTP concerns
-- guards for access and preconditions
-- interceptors for execution wrappers
-- exception filters for public error shaping
+| Feature                | Middleware                    | Guards                      | Interceptors                     |
+| ---------------------- | ----------------------------- | --------------------------- | -------------------------------- |
+| **Aware of Handler?**  | No                            | Yes                         | Yes                              |
+| **Execution Order**    | 1st                           | 2nd                         | 3rd (Wraps Handler)              |
+| **Best Use Case**      | Raw HTTP details (CORS, Logs) | Authorization & Permissions | Logic wrapping, Caching, Mapping |
+| **Can block request?** | Yes                           | Yes                         | Yes                              |
 
-Keeping these roles separate makes both the application and the framework easier to
-reason about.
+<Aside type="tip">
+  Guards run **after** all middleware but **before** any interceptor or the
+  handler itself. This makes them the ideal place for authorization logic.
+</Aside>
+
+## Global Registration
+
+You can register guards and interceptors globally in your `main.rs`:
+
+```rust
+NestForgeFactory::<AppModule>::create()?
+    .use_guard::<GlobalAuthGuard>()
+    .use_interceptor::<GlobalLoggingInterceptor>()
+    .listen(3000)
+    .await?;
+```

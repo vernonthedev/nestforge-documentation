@@ -1,60 +1,77 @@
 ---
 title: Overview
-description: Start here if you are building an application with NestForge.
+description: Introduction to NestForge, the modular backend framework for Rust.
 ---
 
-# Start with application development
+import { Aside } from "@astrojs/starlight/components";
 
-NestForge is a backend framework for building services in Rust with a structure inspired
-by NestJS. If you are here to build an API, worker, or service, this documentation is
-primarily for you.
+# Introduction
 
-The main application path is:
+NestForge is a framework for building efficient, scalable Rust server-side applications. It uses a modular architecture inspired by **NestJS**, bringing familiar patterns like Dependency Injection, Modules, and Middleware to the high-performance world of Rust.
 
-1. [Installation](/getting-started/installation/)
-2. [Quick Start](/getting-started/quick-start/)
-3. [CLI Workflow](/getting-started/cli-workflow/)
-4. [Architecture](/concepts/architecture/)
-5. the guide or transport that matches your app
+## Philosophy
 
-# What you can do as a user
+In recent years, the Rust ecosystem has seen incredible growth in web development. However, while crates like Axum, Tokio, and Tower provide amazing foundations, they often leave the developer to figure out their own architectural patterns. This can lead to fragmented codebases that are difficult to scale and maintain.
 
-NestForge gives application teams a structured way to build services with:
+**NestForge** provides an out-of-the-box application architecture which allows developers and teams to create highly testable, scalable, loosely coupled, and easily maintainable applications. The architecture is heavily inspired by NestJS, but built from the ground up to leverage Rust's unique strengths: **Zero-cost abstractions, Memory safety, and Fearless concurrency.**
 
-- modules for feature boundaries
-- providers and dependency injection
-- controllers and routing macros
-- middleware, guards, and interceptors
-- OpenAPI support
-- optional transports such as GraphQL, gRPC, WebSockets, and microservices
+## Core Features
 
-# Recommended path
+- 🧩 **Modular Architecture**: Group your code into logical feature sets using Modules.
+- 💉 **Dependency Injection**: First-class DI system that makes testing and decoupling a breeze.
+- 🛣️ **Declarative Routing**: Use simple attributes like `#[get("/")]` to define your API surface.
+- 🛡️ **Request Pipeline**: Robust support for Middleware, Guards, and Interceptors.
+- 📝 **Auto-OpenAPI**: Generate documentation directly from your controller metadata.
+- 🚀 **Multi-Transport**: First-class support for REST, GraphQL, gRPC, and WebSockets.
 
-If you are new to NestForge, read in this order:
+## Comparing to NestJS
 
-1. [Installation](/getting-started/installation/)
-2. [Quick Start](/getting-started/quick-start/)
-3. [Architecture](/concepts/architecture/)
-4. [Modules and DI](/concepts/modules-and-di/)
-5. [Controllers and Routing](/concepts/controllers-routing/)
-6. [Request Pipeline](/concepts/request-pipeline/)
+If you're coming from the NestJS world, you'll feel right at home. Here's how the concepts map:
 
-Then continue into:
+| NestJS (TypeScript)    | NestForge (Rust)                                                |
+| ---------------------- | --------------------------------------------------------------- |
+| `@Module()`            | `#[nestforge::module]`                                          |
+| `@Controller()`        | `#[nestforge::controller]`                                      |
+| `@Injectable()`        | `#[nestforge::provider]` or plain structs registered in modules |
+| `NestFactory.create()` | `NestForgeFactory::create()`                                    |
+| Pipe / ValidationPipe  | `ValidatedBody<T>`                                              |
 
-- [Application Guides](/guides/middleware/) for common development tasks
-- [Transports and Runtime](/transports/graphql/) for transport-specific setup
-- [Examples](/examples/hello-nestforge/) for runnable reference apps
+<Aside type="tip">
+  NestForge doesn't just copy NestJS—it adapts it. We use Rust's macros to
+  handle a lot of the boilerplate that would typically be handled by decorators
+  and reflection in TypeScript.
+</Aside>
 
-# Framework contributor docs
+## A Glimpse of NestForge
 
-Some documentation in this site is for people working on the NestForge framework
-repository itself. That is a separate contributor track, not the default user path.
+```rust
+#[controller("/users")]
+pub struct UsersController;
 
-Use that section only if you are changing the framework workspace, crates, macros, or
-release process.
+#[routes]
+impl UsersController {
+    #[nestforge::get("/")]
+    async fn list(users: Inject<UsersService>) -> ApiResult<Vec<UserDto>> {
+        let all_users = users.find_all().await?;
+        Ok(Json(all_users))
+    }
+}
+```
 
-Start there with:
+## Ready to dive in?
 
-- [Workspace Structure](/framework/workspace-structure/)
-- [Crate Architecture](/framework/crate-architecture/)
-- [Contributing](/framework/contributing/)
+We recommend following the documentation in this order:
+
+1.  **[Installation](/getting-started/installation/)**: Set up your environment.
+2.  **[Quick Start](/getting-started/quick-start/)**: Build your first "Hello World".
+3.  **[First Steps](/getting-started/build-your-first-feature/)**: Build a real feature with DTOs and Services.
+4.  **[Core Concepts](/concepts/architecture/)**: Understand the mental model.
+
+---
+
+<Aside type="note">
+  This site is split into two tracks. The default track is for **Application
+  Developers**. There is also a **[Framework
+  Contributor](/framework/workspace-structure/)** track for those helping build
+  NestForge itself.
+</Aside>

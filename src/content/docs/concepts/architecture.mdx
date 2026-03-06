@@ -1,67 +1,104 @@
 ---
 title: Architecture
-description: The high-level mental model behind NestForge and the relationship between its crates and runtimes.
+description: The high-level mental model behind NestForge and its request lifecycle.
 ---
 
-# The mental model
+import { Aside } from "@astrojs/starlight/components";
 
-NestForge is easier to understand if you think of it as three layers:
+# Architecture
 
-1. `nestforge-core` defines the framework model: modules, dependency injection, request
-   extractors, validation, route documentation, errors, and pipeline abstractions.
-2. `nestforge-http` turns that model into a running Axum application through
-   `NestForgeFactory`.
-3. optional crates integrate other runtime styles such as GraphQL, gRPC, WebSockets,
-   scheduling, cache, and microservices.
+NestForge is designed to be a **platform-agnostic** framework. While its primary use case is building HTTP APIs, its core architecture is decoupled from any specific transport. This allows NestForge patterns to be applied to GraphQL, gRPC, and even custom message buses.
 
-# Why the workspace is split this way
+## The Three Layers
 
-This separation makes the framework easier to grow and easier to reason about:
+The NestForge ecosystem is organized into three distinct layers:
 
-- core behavior stays transport-neutral
-- the HTTP runtime can evolve without forcing every crate to depend on it directly
-- optional transports remain opt-in through Cargo features
-- the public `nestforge` crate becomes a curated facade instead of the implementation home
+1.  **Core Layer (`nestforge-core`)**: The brain of the framework. It handles the Module graph, Dependency Injection, Validation, and internal Pipeline abstractions. It has no knowledge of HTTP or Axum.
+2.  **Runtime Layer (`nestforge-http`)**: The bridge to the world. It takes the Core model and mounts it onto a web server (Axum/Tokio).
+3.  **Transport Layer**: Optional extensions for other protocols like `nestforge-graphql`, `nestforge-grpc`, and `nestforge-websockets`.
 
-# Request and runtime flow
+---
 
-For an HTTP request, the important flow is:
+## Request Lifecycle
 
-1. the app boots through `NestForgeFactory::<AppModule>::create()`
-2. the module graph is resolved and providers/controllers are registered
-3. request context is created, including request ID and scoped container
-4. auth resolution runs if configured
-5. middleware, guards, and interceptors execute
-6. the handler resolves dependencies and returns a response or an `HttpException`
+Understanding how a request moves through NestForge is crucial for debugging and designing efficient applications. Below is the sequence of events from when a request hits the server to when the response is sent back.
 
-# Module graph first, transport second
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Middleware as Middleware (Axum Layer)
+    participant Guards as Guards
+    participant Interceptors_Pre as Interceptors (Pre)
+    participant Handler as Route Handler (Controller)
+    participant Interceptors_Post as Interceptors (Post)
+    participant ExceptionFilters as Exception Filters
 
-A useful design rule in the current codebase is that your module graph defines your
-application shape, while transports expose that shape in different ways.
+    Client->>Middleware: HTTP Request
+    Middleware->>Guards: Extract Context & Run Guards
+    alt Unauthorized
+        Guards-->>Client: 403 Forbidden / 401 Unauthorized
+    else Authorized
+        Guards->>Interceptors_Pre: Initialize Interceptor Chain
+        Interceptors_Pre->>Handler: Execute Handler (DI Resolution)
+        alt Success
+            Handler->>Interceptors_Post: Map Response
+            Interceptors_Post->>Client: HTTP Response
+        else Error
+            Handler->>ExceptionFilters: Catch Error
+            ExceptionFilters->>Client: Formatted Error Response
+        end
+    end
+```
 
-Examples:
+### 1. Middleware
 
-- HTTP controllers map module features to routes
-- GraphQL resolvers can resolve providers from the same container
-- gRPC services can resolve providers through `GrpcContext`
-- WebSocket gateways can resolve providers through `WebSocketContext`
-- microservice pattern handlers can resolve providers through `MicroserviceContext`
+Middleware is the first line of defense. In NestForge, these are standard Axum/Tower middlewares. They are perfect for low-level concerns like logging, CORS, or compression.
 
-This is what makes NestForge feel consistent across multiple runtime styles.
+### 2. Guards
 
-# Re-exports are part of the architecture
+Guards have a single responsibility: determine whether a request should be handled by the route handler or not, based on certain conditions (e.g., roles, permissions).
 
-The public `crates/nestforge/src/lib.rs` file is important architecture, not just
-convenience. It re-exports:
+### 3. Interceptors
 
-- core traits and types
-- macros
-- the HTTP factory
-- feature-gated transport helpers
-- utility macros such as `guard!`, `interceptor!`, `middleware!`, and `request_decorator!`
+Interceptors are powerful tools that allow you to:
 
-When you add framework functionality, you need to decide whether it belongs:
+- Bind extra logic before/after method execution.
+- Transform the result returned from a function.
+- Transform the exception thrown from a function.
+- Extend basic function behavior.
 
-- only in an implementation crate
-- in a dedicated feature crate
-- or in the public `nestforge` facade as part of the supported user API
+### 4. Route Handler
+
+This is where your business logic lives. Handlers use **Dependency Injection** to resolve the services they need to fulfill the request.
+
+---
+
+## Dependency Injection (DI)
+
+NestForge features a robust DI system. Unlike many Rust frameworks that rely on global state, NestForge creates a **scoped container** for every request.
+
+- **Singleton Providers**: Created once and shared across the entire application lifetime.
+- **Request Providers**: Created once per request. Perfect for services that need to know about the current user or request ID.
+- **Transient Providers**: A new instance is created every time it is injected.
+
+```rust
+// A service is just a struct registered as a provider
+pub struct UsersService {
+    db: Inject<Db>,
+}
+
+#[routes]
+impl UsersController {
+    // UsersService is automatically resolved from the container
+    async fn get(users: Inject<UsersService>) -> ApiResult<UserDto> { ... }
+}
+```
+
+## Platform Independence
+
+The "Secret Sauce" of NestForge is that the **Module Graph** is resolved independently of the transport. This means you can write a service once and inject it into an HTTP Controller, a GraphQL Resolver, AND a gRPC Service simultaneously.
+
+<Aside type="tip">
+  By keeping your business logic in transport-agnostic Services, you make your
+  application future-proof and significantly easier to unit test.
+</Aside>

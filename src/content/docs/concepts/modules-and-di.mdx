@@ -1,105 +1,155 @@
 ---
-title: Modules and DI
-description: How NestForge modules, providers, exports, scopes, and lifecycle hooks work.
+title: Modules
+description: How NestForge uses modules to organize applications and manage dependencies.
 ---
 
-# Modules define application structure
+import { Aside } from "@astrojs/starlight/components";
 
-NestForge modules are the main unit of composition. A module groups:
+# Modules
 
-- imports
-- controllers
-- providers
-- exports
-- optional lifecycle hooks
+A module is a class (struct) annotated with a `#[module()]` macro. The `#[module()]` macro provides metadata that **NestForge** uses to organize the application structure.
 
-Basic example:
+## Overview
+
+Each application has at least one module, a **root module**. The root module is the starting point used to build the **application graph**—the internal data structure NestForge uses to resolve module and provider relationships and dependencies.
+
+While very small applications might theoretically have only the root module, this is not the typical case. We want to emphasize that modules are strongly recommended as an effective way to organize your components. Thus, for most applications, the resulting architecture will employ multiple modules, each encapsulating a closely related set of capabilities.
+
+```mermaid
+graph TD
+    AppModule --> UsersModule
+    AppModule --> AuthModule
+    AppModule --> ConfigModule
+    UsersModule --> DbModule
+    AuthModule --> UsersModule
+```
+
+## The `#[module]` Macro
+
+The macro takes four properties that describe the module:
+
+| Property      | Description                                                                                                                   |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `imports`     | The list of imported modules that export the providers which are required in this module.                                     |
+| `controllers` | The set of controllers defined in this module which have to be instantiated.                                                  |
+| `providers`   | The providers that will be instantiated by the NestForge injector and that may be shared at least across this module.         |
+| `exports`     | The subset of `providers` that are provided by this module and should be available in other modules which import this module. |
+
+### Basic Example
 
 ```rust
 #[module(
-    imports = [UsersModule, SettingsModule],
-    controllers = [AppController, HealthController],
-    providers = [load_app_config()?, connect_db()?],
-    exports = [Db, AppConfig]
+    imports = [DatabaseModule],
+    controllers = [UsersController],
+    providers = [UsersService],
+    exports = [UsersService]
 )]
-pub struct AppModule;
+pub struct UsersModule;
 ```
 
-# Registration order
+---
 
-The framework resolves modules in a deterministic order:
+## Provider Scopes
 
-1. visit imported modules
-2. register current module providers
-3. mount current module controllers
+In NestForge, providers can have different lifetimes. Choosing the right scope is essential for both performance and correctness.
 
-That matters because exported providers from imported modules must already exist before
-downstream modules try to resolve them.
+### Singleton (Default)
 
-# Providers
+A single instance of the provider is shared across the entire application. It is instantiated during application bootstrap.
 
-Providers are the values stored in the DI container. NestForge supports several styles:
+### Request
 
-- direct values with `Provider::value(...)`
-- singleton factories with `Provider::factory(...)`
-- request-scoped factories with `Provider::request_factory(...)`
-- transient factories with `Provider::transient_factory(...)`
-- async provider construction in dynamic modules
+A new instance of the provider is created for **every incoming request**. This instance is garbage collected after the request has finished processing. Use this when your service needs access to `RequestContext` (e.g., the current user).
 
-# Choosing provider scope
+### Transient
 
-Use these rules:
+A new instance of the provider is created every time it is injected into another component.
 
-- singleton: shared services, configuration, registries, lazy DB handles
-- request-scoped: services that need request context, request ID, or auth identity
-- transient: short-lived helpers that should be recreated on every resolve
+---
 
-Request-scoped providers are especially useful when a service depends on
-`RequestContext`, `RequestId`, or authenticated identity stored in the scoped container.
+## Feature Modules
 
-# Exports
+A feature module simply organizes code relevant for a specific feature, keeping code organized and establishing clear boundaries. This helps us manage complexity and develop with **SOLID** principles.
 
-Exports make provider sharing explicit. If a module lists an export that it never
-registered, startup fails instead of silently continuing. That keeps the module graph
-honest and readable.
+```rust
+// src/users/mod.rs
+pub mod users_controller;
+pub mod users_service;
 
-# Dynamic modules
+use nestforge::module;
+use self::users_controller::UsersController;
+use self::users_service::UsersService;
 
-Dynamic modules cover the runtime-configuration pattern often called `register(...)` in
-NestJS-style frameworks. NestForge uses `ModuleRef::builder(...)` for this.
+#[module(
+    controllers = [UsersController],
+    providers = [UsersService],
+    exports = [UsersService]
+)]
+pub struct UsersModule;
+```
 
-Typical use cases:
+## Shared Modules
 
-- wrapping remote configuration
-- building auth modules from secrets or config values
-- packaging reusable module bundles for other applications
+In NestForge, modules are **singletons** by default, and thus you can share the same instance of any provider between multiple modules effortlessly.
 
-# Lifecycle hooks
+Once defined, the `UsersService` can be reused. To do so, we first need to **export** it, and then other modules can **import** `UsersModule`.
 
-Modules can run explicit lifecycle hooks:
+---
 
-- `on_module_init`
-- `on_application_bootstrap`
-- `on_module_destroy`
-- `on_application_shutdown`
+## Global Modules
 
-These are plain functions that receive the container. Common uses:
+If you have to import the same set of modules everywhere, it can get tedious. In NestJS-style frameworks, you can make a module **Global**.
 
-- warm caches
-- start schedules
-- log startup state
-- release resources on shutdown
+```rust
+#[module(
+    providers = [ConfigService],
+    exports = [ConfigService],
+    global = true
+)]
+pub struct ConfigModule;
+```
 
-# Diagnostics
+<Aside type="caution">
+  Making everything global is not a good design decision. Global modules are
+  available to diminish the amount of necessary boilerplate. The `imports` array
+  is generally the preferred way to make the module's API available to
+  consumers.
+</Aside>
 
-For contributor or debugging work, `collect_module_graph::<AppModule>()` can produce a
-report of:
+## Dynamic Modules
 
-- module names
-- imports
-- exports
-- controller counts
-- whether a module is global
+Dynamic modules allow you to create customizable modules that can register and configure providers dynamically. This is the equivalent of `forRoot()` or `register()` in NestJS.
 
-That is valuable when you are diagnosing missing providers, cycles, or surprising import
-trees.
+```rust
+impl DatabaseModule {
+    pub fn for_root(options: DbOptions) -> DynamicModule {
+        DynamicModule::builder()
+            .module::<Self>()
+            .providers([
+                Provider::value(options)
+            ])
+            .exports([DbOptions])
+            .build()
+    }
+}
+```
+
+---
+
+## Lifecycle Hooks
+
+Modules can hook into the application lifecycle to perform setup or cleanup tasks.
+
+- `on_module_init()`: Called once the module has been initialized.
+- `on_application_bootstrap()`: Called once the entire application has started.
+- `on_module_destroy()`: Called before the module is destroyed.
+- `on_application_shutdown()`: Called before the application shuts down.
+
+```rust
+impl OnModuleInit for UsersService {
+    async fn on_module_init(&self, container: &Container) -> anyhow::Result<()> {
+        println!("UsersService initialized!");
+        Ok(())
+    }
+}
+```

@@ -1,16 +1,23 @@
 ---
-title: Controllers and Routing
-description: How controllers, routes, extractors, validation, serialization, and versioning work in NestForge.
+title: Controllers
+description: Handling incoming requests and returning responses in NestForge.
 ---
 
-# Controller model
+import { Aside } from "@astrojs/starlight/components";
 
-NestForge HTTP endpoints are defined with macros over plain Rust types and methods.
+# Controllers
 
-The common pattern is:
+Controllers are responsible for handling incoming **requests** and returning **responses** to the client.
+
+A controller's purpose is to receive specific requests for the application. The **routing** mechanism controls which controller receives which requests. Frequently, each controller has more than one route, and different routes can perform different actions.
+
+## Routing
+
+In order to create a basic controller, we use the `#[controller]` macro. We'll specify an optional path prefix in the `#[controller()]` macro to easily group a set of related routes and minimize repetitive code.
 
 ```rust
-use nestforge::{controller, routes, Inject};
+use nestforge::{controller, routes, ApiResult};
+use axum::Json;
 
 #[controller("/users")]
 pub struct UsersController;
@@ -18,86 +25,141 @@ pub struct UsersController;
 #[routes]
 impl UsersController {
     #[nestforge::get("/")]
-    async fn list(service: Inject<UsersService>) -> nestforge::ApiResult<Vec<UserDto>> {
-        service.all().or_bad_request()
+    async fn find_all() -> ApiResult<Vec<String>> {
+        Ok(Json(vec!["Alice".to_string(), "Bob".to_string()]))
     }
 }
 ```
 
-# Route macros
+<Aside type="tip">
+  By using a path prefix in `#[controller("/users")]`, NestForge will prepend
+  `/users` to every route defined in the `impl` block.
+</Aside>
 
-The current route method macros are:
+## Request Object
 
-- `#[nestforge::get(...)]`
-- `#[nestforge::post(...)]`
-- `#[nestforge::put(...)]`
-- `#[nestforge::delete(...)]`
+Handlers often need access to the client request details. NestForge provides a set of **extractors** that you can use in your handler's signature.
 
-These attach route definitions to methods inside a `#[routes]` impl block.
+| Extractor          | Description                              |
+| ------------------ | ---------------------------------------- |
+| `Param<T>`         | Route parameters (e.g., `:id`)           |
+| `Query<T>`         | Query string parameters                  |
+| `Body<T>`          | The request body (JSON)                  |
+| `Headers`          | Request headers                          |
+| `Cookies`          | Request cookies                          |
+| `Inject<T>`        | Resolve a provider from the DI container |
+| `ValidatedBody<T>` | JSON body with automatic validation      |
 
-# Extractors
-
-NestForge ships several request extractors:
-
-- `Inject<T>` for provider resolution
-- `Param<T>` and `PipedParam<T, P>` for route parameters
-- `Query<T>` and `PipedQuery<T, P>` for query strings
-- `Body<T>` and `PipedBody<T, P>` for JSON request bodies
-- `ValidatedBody<T>` for JSON bodies that implement `Validate`
-- `Decorated<T>` for custom request decorators
-- `Headers`, `Cookies`, and `RequestId` for common request metadata
-
-# Validation
-
-`ValidatedBody<T>` is the default pattern when you want DTO validation at the edge of
-the handler. A common controller signature looks like:
+### Example: Path Parameters
 
 ```rust
-async fn create(body: nestforge::ValidatedBody<CreateUserDto>) -> nestforge::ApiResult<UserDto>
+#[nestforge::get("/{id}")]
+async fn find_one(id: Param<u64>) -> ApiResult<UserDto> {
+    let user_id = id.value();
+    // ...
+}
 ```
 
-This keeps validation close to route handling instead of scattering it through service
-code.
+### Example: Query Strings
 
-# Versioning and prefixes
+```rust
+#[derive(Deserialize)]
+struct PaginationQuery {
+    page: Option<usize>,
+    limit: Option<usize>,
+}
 
-NestForge supports two levels of URL shaping:
+#[nestforge::get("/")]
+async fn find_all(query: Query<PaginationQuery>) -> ApiResult<Vec<UserDto>> {
+    let page = query.page.unwrap_or(1);
+    // ...
+}
+```
 
-- app-level prefixes such as `.with_global_prefix("api")`
-- route-level version metadata such as `#[nestforge::version("1")]`
+---
 
-Together, these produce routes like `/api/v1/users`.
+## Request Payloads (DTOs)
 
-# Response envelopes
+Our previous example of the POST route handler didn't accept any client params. Let's fix this by adding the `Body` extractor here.
 
-If you want a stable response contract, use `ResponseEnvelope<T>`. That is useful when
-you want all success responses to carry common metadata or pagination information.
+But first, we need to determine the **DTO** (Data Transfer Object) schema. A DTO is an object that defines how the data will be sent over the network.
 
-# Response serialization
+```rust
+#[nestforge::dto]
+pub struct CreateUserDto {
+    pub name: String,
+    pub age: i32,
+}
 
-If the domain type you return should not be exposed directly, use `Serialized<T, S>` and
-implement `ResponseSerializer<T>`. This is useful for:
+#[nestforge::post("/")]
+async fn create(body: Body<CreateUserDto>) -> ApiResult<UserDto> {
+    let dto = body.value();
+    // ...
+}
+```
 
-- hiding internal fields
-- translating domain models to public DTOs
-- keeping controller return types explicit
+---
 
-# Error handling
+## Validation
 
-HTTP errors are represented by `HttpException`. Controller helpers such as
-`.or_bad_request()?` and `.or_not_found_id("User", id)?` keep route code concise without
-losing readable error semantics.
+NestForge provides a `ValidatedBody<T>` extractor that automatically validates the incoming request body against your DTO rules.
 
-# Route documentation metadata
+```rust
+#[nestforge::dto]
+pub struct CreateUserDto {
+    #[validate(length(min = 3))]
+    pub name: String,
+    #[validate(range(min = 18, max = 100))]
+    pub age: i32,
+}
 
-The same controller methods can carry documentation metadata used for OpenAPI
-generation:
+#[nestforge::post("/")]
+async fn create(body: ValidatedBody<CreateUserDto>) -> ApiResult<UserDto> {
+    // If validation fails, NestForge returns a 400 Bad Request automatically.
+    let dto = body.value();
+    // ...
+}
+```
 
-- `#[nestforge::summary(...)]`
-- `#[nestforge::description(...)]`
-- `#[nestforge::tag(...)]`
-- `#[nestforge::response(...)]`
-- `#[nestforge::authenticated]`
-- `#[nestforge::roles(...)]`
+---
 
-That makes controllers both the routing definition and the source of endpoint metadata.
+## Status Codes
+
+By default, the response status code is always **200 OK**, except for POST requests which are **201 Created**. We can easily change this behavior by returning a custom result or using the `HttpException` type.
+
+```rust
+#[nestforge::post("/")]
+async fn create() -> ApiResult<UserDto> {
+    if something_failed {
+        return Err(HttpException::bad_request("Invalid data").into());
+    }
+    // ...
+}
+```
+
+---
+
+## Response Envelopes
+
+To maintain a consistent API structure, you might want to wrap all your responses in a standard "envelope".
+
+```rust
+#[nestforge::get("/")]
+async fn find_all() -> ApiResult<Vec<UserDto>> {
+    let data = vec![...];
+    Ok(ResponseEnvelope::paginated(data, total, page, limit).into())
+}
+```
+
+This would produce a JSON response like:
+
+```json
+{
+  "data": [...],
+  "meta": {
+    "total": 100,
+    "page": 1,
+    "limit": 10
+  }
+}
+```

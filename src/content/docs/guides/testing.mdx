@@ -1,65 +1,104 @@
 ---
 title: Testing
-description: Use NestForge testing helpers for provider overrides, HTTP tests, GraphQL tests, and transport-level testing.
+description: Unit and integration testing strategies for NestForge applications.
 ---
 
-If you want the step-by-step path instead of the reference view, start with
-[Testing Workflow](/guides/testing-workflow/).
+import { Aside, Steps } from "@astrojs/starlight/components";
 
-# Testing feature
+# Testing
 
-NestForge testing helpers are enabled through the `testing` feature:
+Automated testing is a critical part of software development. NestForge provides a set of testing utilities that allow for efficient unit testing and robust integration testing by leveraging a **testing module** system.
 
-```toml
-nestforge = { version = "1", features = ["testing"] }
+## The `TestFactory`
+
+The `TestFactory` is the primary entry point for creating a testing environment. It allows you to create a mock-vibe of your application where you can **override providers** (like databases or third-party services) before building the container.
+
+```rust
+#[tokio::test]
+async fn test_users_service() {
+    let module = nestforge::TestFactory::<AppModule>::create()
+        .override_provider(MockDatabase::default())
+        .build()
+        .expect("Failed to build testing module");
+
+    let service = module.resolve::<UsersService>().expect("Could not resolve service");
+    let user = service.find_by_id(1).await;
+
+    assert!(user.is_ok());
+}
 ```
 
-# Build a testing module
+---
 
-The main entry point is `TestFactory::<AppModule>`:
+## Integration Testing (End-to-End)
+
+Integration tests allow you to test the entire request/response cycle, including routing, validation, and middleware.
+
+NestForge's `TestingModule` can produce an `http_router()` which is a standard Axum router. You can use the `tower::ServiceExt` trait to send simulated requests to it.
+
+```rust
+use tower::ServiceExt; // for .oneshot()
+use axum::http::{Request, StatusCode};
+use axum::body::Body;
+
+#[tokio::test]
+async fn test_get_users_route() {
+    let module = nestforge::TestFactory::<AppModule>::create().build().unwrap();
+    let app = module.http_router();
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/users")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+}
+```
+
+---
+
+## Overriding Providers
+
+One of the most powerful features of the NestForge testing system is the ability to swap out actual implementations with mocks or stubs.
 
 ```rust
 let module = nestforge::TestFactory::<AppModule>::create()
-    .override_provider(AppConfig {
-        app_name: "test".to_string(),
-        log_level: "debug".to_string(),
-    })
-    .build()?;
+    // Replace the real MailService with a mock that doesn't send real emails
+    .override_provider(MockMailService::new())
+    .build()
+    .unwrap();
 ```
 
-That creates a module runtime with provider overrides applied before your tests run.
+---
 
-# Resolve providers directly
+## Testing Other Transports
 
-Testing modules can resolve providers in the same style as production code:
+The testing module isn't limited to HTTP. You can create specialized contexts for any transport:
 
-```rust
-let config = module.resolve::<AppConfig>()?;
-```
+- **GraphQL**: `module.graphql_router(schema)`
+- **WebSockets**: `module.websocket_context()`
+- **gRPC**: `module.grpc_context()`
 
-# Test HTTP routes
+This ensures that your transport-specific logic (like gRPC interceptors or WebSocket auth) can be tested in isolation but with full DI support.
 
-`TestingModule::http_router()` returns an Axum router with the framework state attached.
-That makes request-level tests straightforward with `tower::ServiceExt::oneshot(...)`.
+---
 
-# Test GraphQL
+## Best Practices
 
-If your app uses GraphQL, `TestingModule::graphql_router(...)` and related helpers let
-you mount a schema into the same test container, which means resolvers can access the
-same overridden providers.
+<Steps>
 
-# Test transport logic directly
+1.  **Use `oneshot` for HTTP Tests**: It's faster than starting a real TCP server and sufficient for 99% of integration tests.
+2.  **Clean up with `shutdown()`**: If your modules use lifecycle hooks (like closing DB pools), call `module.shutdown()` at the end of your test.
+3.  **Mock Externally**: Always override providers that make external network calls (Stripe, Twilio, AWS) to keep your tests fast and deterministic.
 
-The testing module can also create transport contexts:
+</Steps>
 
-- `grpc_context()`
-- `websocket_context()`
-- `microservice_context(transport, pattern)`
-
-These are useful when you want focused tests around transport integration or message
-handler behavior without running a full server.
-
-# Shutdown matters
-
-If your modules use lifecycle hooks, call `module.shutdown()?` at the end of the test so
-destroy and shutdown hooks run inside the testing runtime.
+<Aside type="tip">
+  You can find comprehensive testing examples in the [Official
+  Repository](https://github.com/vernonthedev/nestforge/tree/main/examples).
+</Aside>

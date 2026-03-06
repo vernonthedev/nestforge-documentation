@@ -1,258 +1,168 @@
 ---
-title: Build Your First Feature
-description: A step-by-step guide to adding a users feature with a module, DTOs, service, routes, and application wiring.
+title: First Steps
+description: Your first hands-on encounter with NestForge. Let's build a simple Users feature.
 ---
 
-# Goal
+import { Aside, Steps } from "@astrojs/starlight/components";
 
-This walkthrough shows the exact path a new NestForge user usually needs:
+# First Steps
 
-1. create a feature module
-2. add DTOs
-3. add a service
-4. add routes
-5. import the module into the application
-6. run the app and verify the route surface
+In this guide, you'll learn the **fundamental building blocks** of NestForge by building a simple "Users" feature. We'll cover modules, services, DTOs, and controllers.
 
-The example feature is `users`, because it matches the maintained example application.
+<Steps>
 
-# Step 1: generate the feature
+1.  **Generate the Feature**
 
-From your app root:
+    NestForge provides a powerful CLI to speed up development. Instead of creating files manually, let's use the generator.
 
-```bash
-nestforge g module users
-nestforge g resource users --module users
-```
+    ```bash
+    # Generate a module
+    nestforge g module users
 
-If you prefer to create the feature manually, the target structure is:
+    # Generate a service and controller within that module
+    nestforge g resource users --module users
+    ```
 
-```text
-src/
-  users/
-    controllers/
-    dto/
-    services/
-    mod.rs
-```
+    This creates a structured folder at `src/users/` with everything we need.
 
-# Step 2: define the DTOs
+2.  **Define a Data Transfer Object (DTO)**
 
-Start with one DTO for the stored or returned shape:
+    Before we write business logic, we need to define the "shape" of the data entering and leaving our API. We'll create a `UserDto` for output and a `CreateUserDto` for input.
 
-```rust
-#[nestforge::dto]
-pub struct UserDto {
-    pub id: u64,
-    pub name: String,
-    pub email: String,
-}
-
-nestforge::impl_identifiable!(UserDto, id);
-```
-
-Then add request DTOs:
-
-```rust
-#[nestforge::dto]
-pub struct CreateUserDto {
-    #[validate(required)]
-    pub name: String,
-    #[validate(required, email)]
-    pub email: String,
-}
-
-#[nestforge::dto]
-pub struct UpdateUserDto {
-    pub name: Option<String>,
-    #[validate(email)]
-    pub email: Option<String>,
-}
-```
-
-Use this pattern consistently:
-
-- `UserDto` for returned or stored data
-- `CreateUserDto` for required create input
-- `UpdateUserDto` for partial updates
-
-# Step 3: define the service
-
-For a first feature, `ResourceService<T>` is the easiest service layer:
-
-```rust
-use nestforge::{ResourceError, ResourceService};
-
-use crate::users::dto::{CreateUserDto, UpdateUserDto, UserDto};
-
-pub type UsersService = ResourceService<UserDto>;
-
-pub fn users_service_seed() -> UsersService {
-    ResourceService::with_seed(vec![
-        UserDto {
-            id: 1,
-            name: "John Doe".to_string(),
-            email: "john.doe@example.com".to_string(),
-        },
-    ])
-}
-
-pub fn create_user(service: &UsersService, dto: CreateUserDto) -> Result<UserDto, ResourceError> {
-    service.create(dto)
-}
-
-pub fn update_user(
-    service: &UsersService,
-    id: u64,
-    dto: UpdateUserDto,
-) -> Result<Option<UserDto>, ResourceError> {
-    service.update(id, dto)
-}
-```
-
-This gives you a working CRUD-style provider before you commit to a database.
-
-# Step 4: expose routes in a controller
-
-Now add the HTTP layer:
-
-```rust
-use axum::Json;
-use nestforge::{
-    controller, routes, ApiResult, Inject, Param, ResultHttpExt, ValidatedBody,
-};
-
-use crate::users::{
-    dto::{CreateUserDto, UpdateUserDto, UserDto},
-    services::{UsersService, create_user, update_user},
-};
-
-#[controller("/users")]
-pub struct UsersController;
-
-#[routes]
-impl UsersController {
-    #[nestforge::post("/")]
-    #[nestforge::version("1")]
-    async fn create(
-        users: Inject<UsersService>,
-        body: ValidatedBody<CreateUserDto>,
-    ) -> ApiResult<UserDto> {
-        let user = create_user(users.as_ref(), body.value()).or_bad_request()?;
-        Ok(Json(user))
+    ```rust
+    // src/users/dto/user_dto.rs
+    #[nestforge::dto]
+    pub struct UserDto {
+        pub id: u64,
+        pub name: String,
+        pub email: String,
     }
 
-    #[nestforge::put("/{id}")]
-    #[nestforge::version("1")]
-    async fn update(
-        id: Param<u64>,
-        users: Inject<UsersService>,
-        body: ValidatedBody<UpdateUserDto>,
-    ) -> ApiResult<UserDto> {
-        let id = id.value();
-        let updated = update_user(users.as_ref(), id, body.value())
-            .or_bad_request()?
-            .or_not_found_id("User", id)?;
-        Ok(Json(updated))
+    // src/users/dto/create_user_dto.rs
+    #[nestforge::dto]
+    pub struct CreateUserDto {
+        #[validate(length(min = 3))]
+        pub name: String,
+        #[validate(email)]
+        pub email: String,
     }
-}
-```
+    ```
 
-At this point the feature has a real request path:
+3.  **Build the Service**
 
-- request body enters through `ValidatedBody<T>`
-- service resolves through `Inject<UsersService>`
-- controller maps service errors to HTTP errors
+    Applications need a place for "business logic". In NestForge, this happens in **Services**. For this example, we'll use a built-in `ResourceService` which provides an in-memory storage for quick prototyping.
 
-# Step 5: wire the feature module
+    ```rust
+    // src/users/services/users_service.rs
+    use nestforge::ResourceService;
+    use crate::users::dto::{UserDto, CreateUserDto};
 
-The feature module should register the controller and provider:
+    pub type UsersService = ResourceService<UserDto>;
 
-```rust
-pub mod controllers;
-pub mod dto;
-pub mod services;
+    // A simple factory to seed our service with initial data
+    pub fn users_service_factory() -> UsersService {
+        ResourceService::with_seed(vec![
+            UserDto { id: 1, name: "Alice".into(), email: "alice@example.com".into() }
+        ])
+    }
+    ```
 
-use nestforge::module;
+4.  **Expose the API via a Controller**
 
-use self::controllers::UsersController;
-use self::services::{UsersService, users_service_seed};
+    Now we need to make our service reachable over HTTP. We'll define a controller and inject our `UsersService`.
 
-#[module(
-    imports = [],
-    controllers = [UsersController],
-    providers = [users_service_seed()],
-    exports = [UsersService]
-)]
-pub struct UsersModule;
-```
+    ```rust
+    // src/users/controllers/users_controller.rs
+    use nestforge::{controller, routes, Inject, ApiResult, ValidatedBody};
+    use axum::Json;
+    use crate::users::dto::{UserDto, CreateUserDto};
+    use crate::users::services::UsersService;
 
-# Step 6: import it into the app
+    #[controller("/users")]
+    pub struct UsersController;
 
-Finally, add the feature to `AppModule`:
+    #[routes]
+    impl UsersController {
+        #[nestforge::get("/")]
+        async fn list(users: Inject<UsersService>) -> ApiResult<Vec<UserDto>> {
+            // as_ref() gives us the service instance from the wrapper
+            let all = users.all().await;
+            Ok(Json(all))
+        }
 
-```rust
-#[module(
-    imports = [UsersModule, SettingsModule, VersioningModule],
-    controllers = [AppController, HealthController],
-    providers = [
-        load_app_config()?,
-        connect_db()?
-    ],
-    exports = [Db, AppConfig]
-)]
-pub struct AppModule;
-```
+        #[nestforge::post("/")]
+        async fn create(
+            users: Inject<UsersService>,
+            body: ValidatedBody<CreateUserDto>
+        ) -> ApiResult<UserDto> {
+            let newUser = users.create(body.value()).await?;
+            Ok(Json(newUser))
+        }
+    }
+    ```
 
-Without this import, the users feature does not become part of the running application.
+5.  **Wire it up in the Module**
 
-# Step 7: run and verify
+    We need to tell NestForge about our new controller and service. We do this in the `UsersModule`.
 
-Start the app:
+    ```rust
+    // src/users/mod.rs
+    use nestforge::module;
+    use self::controllers::UsersController;
+    use self::services::users_service_factory;
 
-```bash
-cargo run
-```
+    #[module(
+        controllers = [UsersController],
+        providers = [users_service_factory()],
+        exports = []
+    )]
+    pub struct UsersModule;
+    ```
 
-If your bootstrap includes:
+6.  **Import to the Root Module**
 
-```rust
-NestForgeFactory::<AppModule>::create()?
-    .with_global_prefix("api")
-    .with_openapi_docs("My API", "1.0.0")?
-    .listen(3000)
-    .await?;
-```
+    Finally, import the `UsersModule` into your `AppModule` so the framework knows it exists.
 
-and your users controller uses `#[nestforge::version("1")]`, your routes will appear
-under paths such as:
+    ```rust
+    // src/app_module.rs
+    #[module(
+        imports = [UsersModule],
+        controllers = [AppController],
+        providers = [],
+    )]
+    pub struct AppModule;
+    ```
 
-- `GET /api/v1/users`
-- `POST /api/v1/users`
-- `PUT /api/v1/users/{id}`
+7.  **Test the Results**
 
-# What new users usually miss
+    Start your application:
 
-These are the common onboarding mistakes:
+    ```bash
+    cargo run
+    ```
 
-- creating the feature files but forgetting to import the module into `AppModule`
-- defining DTOs but not using `ValidatedBody<T>` in the controller
-- creating a service type but not registering it in `providers`
-- exporting a service from a feature without actually registering it
-- expecting routes to appear without accounting for global prefix and version metadata
+    Try hitting your new endpoint:
 
-# Where to go next
+    ```bash
+    curl http://localhost:3000/users
+    ```
 
-After this first feature works, the usual next steps are:
+</Steps>
 
-- replace `ResourceService<T>` with a data-layer-backed provider
-- add guards and interceptors
-- add OpenAPI metadata to routes
-- add tests with `TestFactory::<AppModule>`
+## What did we learn?
 
-For deeper reference material, continue with:
+- **DTOs** define the data contract.
+- **Services** contain the logic.
+- **Controllers** handle the HTTP transport.
+- **Modules** act as the glue, wiring everything into the application's dependency injection system.
 
-- [Feature Modules](/getting-started/feature-modules/)
-- [DTOs, Services, and Routes](/getting-started/dtos-services-routes/)
-- [Resource Services](/guides/resource-services/)
-- [Controllers and Routing](/concepts/controllers-routing/)
+---
+
+## Pro Tip: Automatic Validation
+
+Notice the `ValidatedBody<CreateUserDto>` in our controller? Because we added `#[validate]` attributes to our DTO, NestForge **automatically** validates the incoming JSON. If a user sends an invalid email, they'll get a `400 Bad Request` with a helpful error message—without you writing a single `if` statement!
+
+<Aside type="tip">
+  Ready for more? Learn how to [connect a real
+  database](/guides/database-workflow/) to your new service.
+</Aside>

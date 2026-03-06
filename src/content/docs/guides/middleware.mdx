@@ -1,77 +1,107 @@
 ---
 title: Middleware
-description: How route-targeted middleware works in NestForge and where it fits in the request pipeline.
+description: Handle low-level HTTP concerns before they reach your controllers.
 ---
 
-# Middleware in NestForge
+import { Aside, Steps } from "@astrojs/starlight/components";
 
-NestForge supports HTTP middleware through `NestForgeFactory::configure_middleware(...)`
-and `NestForgeFactory::use_middleware(...)`.
+# Middleware
 
-Middleware is the earliest application-level place to deal with raw HTTP concerns before
-controller handlers run.
+Middleware is a function which is called **before** the route handler. Middleware functions have access to the request and response objects, and the `next()` middleware function in the application’s request-response cycle.
 
-# Middleware type
+NestForge middleware are, by default, equivalent to **Axum/Tower middleware**. They are the perfect place to handle low-level HTTP concerns.
 
-Middleware implements `NestMiddleware`. The macro form is the fastest way to write one:
+---
+
+## Creating Middleware
+
+The easiest way to create a middleware is using the `nestforge::middleware!` macro.
 
 ```rust
 use nestforge::middleware;
 
-middleware!(RequestLogger, |req, next| {
-    {
-        println!("{} {}", req.method(), req.uri().path());
-        (next)(req).await
-    }
+middleware!(LoggerMiddleware, |req, next| {
+    println!("Incoming Request: {} {}", req.method(), req.uri().path());
+
+    // Call the next middleware/handler in the chain
+    let res = (next)(req).await;
+
+    println!("Outgoing Response: {}", res.status());
+    res
 });
 ```
 
-# Global middleware
+---
 
-To run a middleware for every route:
+## Applying Middleware
+
+In NestForge, you configure middleware within the `NestForgeFactory` during application bootstrap. You can apply middleware globally or to specific routes.
+
+### Global Middleware
+
+To apply a middleware to every single route in your application:
 
 ```rust
+// src/main.rs
 NestForgeFactory::<AppModule>::create()?
-    .use_middleware::<RequestLogger>();
+    .use_middleware::<LoggerMiddleware>()
+    .listen(3000)
+    .await?;
 ```
 
-# Route-targeted middleware
+### Targeted Middleware
 
-For more precise control, use a consumer:
+You can use the `.configure_middleware()` builder to apply middleware selectively.
 
 ```rust
 NestForgeFactory::<AppModule>::create()?
     .configure_middleware(|consumer| {
-        consumer.apply::<RequestLogger>().for_all_routes();
-        consumer
-            .apply::<AdminAuditMiddleware>()
+        // Apply to all routes
+        consumer.apply::<LoggerMiddleware>().for_all_routes();
+
+        // Apply only to /users prefixed routes
+        consumer.apply::<AuthMiddleware>().for_routes(["/users"]);
+
+        // Apply to /admin but exclude the health check
+        consumer.apply::<AuditMiddleware>()
             .exclude(["/admin/health"])
             .for_routes(["/admin"]);
-    });
+
+        consumer
+    })
+    .listen(3000)
+    .await?;
 ```
 
-# Method-specific matching
+---
 
-If only certain verbs should trigger middleware, use `MiddlewareRoute`:
+## When to use Middleware?
+
+Middleware is best suited for cross-cutting HTTP concerns that don't require knowledge of the specific route handler being executed.
+
+- **Request Logging**: Logging details about every hit.
+- **CORS Configuration**: Handling Cross-Origin Resource Sharing.
+- **Header Manipulation**: Adding or removing standard HTTP headers.
+- **Compression**: Gzip/Brotli encoding of responses.
+- **Request ID Tracking**: Generating and attaching unique IDs to every request.
+
+<Aside type="important">
+  If your logic depends on **Authorization** or **Roles**, you should almost
+  always use a [Guard](/guides/guards-interceptors/) instead. Guards are
+  executed after middleware and have better access to the application context.
+</Aside>
+
+## Dependency Injection in Middleware
+
+NestForge middleware can also benefit from dependency injection. Since they are registered via the factory, they can resolve providers registered in your modules.
 
 ```rust
-use axum::http::Method;
-use nestforge::MiddlewareRoute;
+pub struct AuthMiddleware {
+    config: Inject<ConfigService>,
+}
 
-consumer
-    .apply::<WriteAuditMiddleware>()
-    .for_routes([MiddlewareRoute::methods("/users", [Method::POST, Method::PUT])]);
+middleware!(AuthMiddleware, |req, next| {
+   // Access self.config here
+   (next)(req).await
+});
 ```
-
-# When to choose middleware
-
-Use middleware for concerns such as:
-
-- request logging
-- header normalization
-- request correlation
-- legacy session or cookie adaptation
-- edge-level request shaping
-
-Do not use middleware for business authorization rules that belong in guards, or for
-response wrapping logic that belongs in interceptors.
