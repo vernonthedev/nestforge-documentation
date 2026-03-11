@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/vernonthedev/nestforge-documentation/compare/v1.2.0...v1.3.0) (2026-03-11)
+
+### Features
+
+* sync getting started docs with latest cli scaffold ([2ea1db8](https://github.com/vernonthedev/nestforge-documentation/commit/2ea1db86799e9ed4769468127c008b6169345bb4))
+
 ## [1.2.0](https://github.com/vernonthedev/nestforge-documentation/compare/v1.1.1...v1.2.0) (2026-03-06)
 
 ### Features
