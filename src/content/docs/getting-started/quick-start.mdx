@@ -22,59 +22,88 @@ This guide will walk you through creating a "Hello World" application using the 
 
 2. **Examine the Structure**
 
-   The CLI generates a modular structure. The key files are:
+   The CLI generates the app bootstrap files at the root of `src/`. The key
+   files are:
+
    - `src/main.rs`: Entry point that bootstraps the application.
    - `src/app_module.rs`: Root module that wires up controllers and providers.
+   - `src/app_controller.rs`: Starter HTTP controller.
+   - `src/app_service.rs`: A simple service used by the starter controller.
+   - `src/health_controller.rs`: A health check endpoint.
 
 3. **Define a Controller**
 
-   Open `src/main.rs` (or a dedicated controller file if you prefer). By default, the CLI creates a simple controller for you. Let's look at how a basic controller is defined:
+   Open `src/app_controller.rs`. By default, the CLI creates a simple
+   controller for you. Let's look at how that controller is defined:
 
    ```rust
-   use nestforge::{controller, routes, ApiResult};
-   use axum::Json;
+   use nestforge::{controller, routes, HttpException, Inject};
 
-   #[controller("/")]
+   use crate::app_service::AppService;
+
+   #[controller("")]
    pub struct AppController;
 
    #[routes]
    impl AppController {
        #[nestforge::get("/")]
-       async fn get_hello() -> ApiResult<String> {
-           Ok(Json("Hello from NestForge!".to_string()))
+       async fn root(service: Inject<AppService>) -> Result<String, HttpException> {
+           Ok(service.welcome_message())
        }
    }
    ```
 
-4. **Register the Controller**
+4. **Register the Controller and Service**
 
-   In `src/app_module.rs`, ensure your `AppController` is registered in the `AppModule`:
+   In `src/app_module.rs`, the generated `AppModule` registers the starter
+   controllers and the `AppService` provider:
 
    ```rust
-   use nestforge::module;
-   use crate::AppController;
+   use nestforge::{module, ConfigModule, ConfigOptions, Provider};
+   use crate::{
+       app_config::AppConfig,
+       app_controller::AppController,
+       app_service::AppService,
+       health_controller::HealthController,
+   };
+
+   fn load_app_config() -> anyhow::Result<AppConfig> {
+       Ok(ConfigModule::for_root::<AppConfig>(ConfigOptions::new().env_file(".env"))?)
+   }
 
    #[module(
-       controllers = [AppController],
-       providers = [],
+       controllers = [AppController, HealthController],
+       providers = [
+           load_app_config()?,
+           Provider::factory(|container| {
+               let config = container.resolve::<AppConfig>()?;
+               Ok(AppService::new(config.as_ref()))
+           }),
+       ],
    )]
    pub struct AppModule;
    ```
 
 5. **Bootstrap the App**
 
-   The `src/main.rs` file bootstraps the application using `NestForgeFactory`:
+   The `src/main.rs` file bootstraps the application using `NestForgeFactory`.
+   The current CLI scaffold also adds a global prefix and API version:
 
    ```rust
    use nestforge::NestForgeFactory;
    use crate::app_module::AppModule;
 
+   async fn bootstrap() -> anyhow::Result<()> {
+       NestForgeFactory::<AppModule>::create()?
+           .with_global_prefix("api")
+           .with_version("v1")
+           .listen(3000)
+           .await
+   }
+
    #[tokio::main]
    async fn main() -> anyhow::Result<()> {
-       NestForgeFactory::<AppModule>::create()?
-           .listen(3000)
-           .await?;
-       Ok(())
+       bootstrap().await
    }
    ```
 
@@ -86,8 +115,7 @@ This guide will walk you through creating a "Hello World" application using the 
    cargo run
    ```
 
-   Visit [http://localhost:3000](http://localhost:3000) in your browser. You should see:
-   `"Hello from NestForge!"`
+   Visit [http://localhost:3000/api/v1](http://localhost:3000/api/v1) in your browser. You should see a welcome message from the generated `AppService`.
 
 </Steps>
 
@@ -95,12 +123,18 @@ This guide will walk you through creating a "Hello World" application using the 
 
 - **`#[controller]`**: Defines a base path for all routes within the struct.
 - **`#[routes]`**: A required attribute for the `impl` block where your handlers live.
+- **`Inject<T>`**: Resolves a provider from the application container.
 - **`NestForgeFactory`**: The engine that resolves your module graph and mounts the Axum router.
+- **`.with_global_prefix("api")`** and **`.with_version("v1")`**: Add the application prefix and version segment used by generated routes.
 
 ## Next Steps
 
-Now that you have a basic app running, let's add some documentation!
-
-- [Setting up OpenAPI from Scratch](/guides/auth-openapi-workflow/)
 - [Understanding Modules and DI](/concepts/modules-and-di/)
-- [CLI Reference](/getting-started/cli-workflow/)
+- [Feature Modules](/getting-started/feature-modules/)
+- [CLI Workflow](/getting-started/cli-workflow/)
+
+<Aside type="tip">
+  If you want to add generated API documentation, continue with
+  [OpenAPI from Scratch](/guides/openapi-from-scratch/). The Quick Start stays
+  focused on the base HTTP app.
+</Aside>

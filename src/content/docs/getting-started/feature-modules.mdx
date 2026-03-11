@@ -3,6 +3,24 @@ title: Feature Modules
 description: Create a feature module in NestForge and understand how its DTOs, services, controllers, and exports fit together.
 ---
 
+# Root application structure
+
+Before you generate your first feature, the default HTTP scaffold keeps the app
+bootstrap files at the root of `src/`:
+
+```text
+src/
+  app_config.rs
+  app_controller.rs
+  app_service.rs
+  app_module.rs
+  health_controller.rs
+  main.rs
+```
+
+Feature folders such as `src/users/` are added later when you generate modules
+or resources.
+
 # What a feature module contains
 
 In NestForge, a feature module is the unit you add when your application gains a new
@@ -37,6 +55,31 @@ nestforge g resource users --module users
 
 That is the fastest path for a new app because it creates the folder layout and patches
 the module wiring for you.
+
+# Flat and nested layouts
+
+By default, the CLI creates the nested feature layout shown above. If you prefer
+to keep generated files together in the module root, use `--flat`:
+
+```bash
+nestforge g module users --flat
+nestforge g resource users --module users --flat
+```
+
+That produces a flatter structure:
+
+```text
+src/
+  users/
+    mod.rs
+    controller.rs
+    service.rs
+    user_dto.rs
+    create_user_dto.rs
+    update_user_dto.rs
+    users_controller.rs
+    users_service.rs
+```
 
 # What the module file looks like
 

@@ -1,16 +1,17 @@
 ---
 title: CLI Workflow
-description: A detailed guide to the NestForge CLI, including generators, DB commands, and utility commands.
+description: A detailed guide to the NestForge CLI, including generators, DB commands, and current utility commands.
 ---
 
 # CLI command families
 
-The NestForge CLI currently groups its workflow into four areas:
+The NestForge CLI currently groups its workflow into five areas:
 
 - `new` for scaffolding a fresh app
 - `g` or `generate` for adding code to an existing app
 - `db` for migration-oriented database workflows
-- `docs` and `fmt` for project maintenance
+- `export-docs` or `docs` for OpenAPI export
+- `fmt` for project formatting
 
 # Scaffold a new app
 
@@ -19,6 +20,7 @@ Base syntax:
 ```text
 nestforge new <app-name>
 nestforge new <app-name> --transport <http|graphql|grpc|microservices|websockets>
+nestforge new <app-name> --openapi
 ```
 
 What the transport flag changes:
@@ -29,6 +31,10 @@ What the transport flag changes:
 - `microservices`: pattern registry plus in-process client example
 - `websockets`: gateway-first bootstrap and `src/ws/`
 
+The default HTTP scaffold now keeps the bootstrap files at the root of `src/`
+and uses `.with_global_prefix("api")` and `.with_version("v1")` in
+`src/main.rs`.
+
 # Generate application code
 
 Generators are designed to work inside an application folder containing `Cargo.toml`
@@ -38,7 +44,7 @@ Core generators:
 
 ```bash
 nestforge g module users
-nestforge g resource users
+nestforge g resource users --module users
 nestforge g controller users
 nestforge g service users
 ```
@@ -77,6 +83,39 @@ The CLI will:
 - write DTO, service, and controller files under `src/users/`
 - patch the module exports, providers, and controller wiring
 
+# Flat and nested layouts
+
+The resource generator supports both nested and flat module layouts.
+
+Use the default nested layout:
+
+```bash
+nestforge g resource users --module users
+```
+
+Or generate a flat layout:
+
+```bash
+nestforge g resource users --module users --flat
+```
+
+The flat layout keeps generated files together in the feature root instead of
+placing them in `controllers/`, `services/`, and `dto/`.
+
+# DTO prompting
+
+When `nestforge g resource` runs in an interactive terminal, the CLI can prompt
+for DTO fields so the generated `Create*Dto`, `Update*Dto`, and entity DTO
+match your domain.
+
+```bash
+nestforge g resource users --module users --flat
+nestforge g resource users --module users --flat --no-prompt
+```
+
+Use `--no-prompt` when you want the generator to skip the DTO field prompt and
+fall back to the default field set.
+
 # Database commands
 
 The CLI includes a lightweight migration workflow.
@@ -103,12 +142,20 @@ If you want the full SQL application path around those commands, continue with:
 # Utility commands
 
 ```bash
+nestforge export-docs
 nestforge docs
 nestforge fmt
 ```
 
-- `docs` creates a `docs/openapi.json` skeleton in the current app
+- `export-docs` generates a static OpenAPI artifact from the current app
+- `docs` is an alias for `export-docs`
 - `fmt` runs `cargo fmt` in the app root
+
+You can export JSON or YAML:
+
+```bash
+nestforge export-docs --format yaml --output docs/openapi.yaml
+```
 
 # Practical advice
 
