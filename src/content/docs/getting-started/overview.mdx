@@ -18,12 +18,13 @@ In recent years, the Rust ecosystem has seen incredible growth in web developmen
 
 ## Core Features
 
-- 🧩 **Modular Architecture**: Group your code into logical feature sets using Modules.
-- 💉 **Dependency Injection**: First-class DI system that makes testing and decoupling a breeze.
-- 🛣️ **Declarative Routing**: Use simple attributes like `#[get("/")]` to define your API surface.
-- 🛡️ **Request Pipeline**: Robust support for Middleware, Guards, and Interceptors.
-- 📝 **Auto-OpenAPI**: Generate documentation directly from your controller metadata.
-- 🚀 **Multi-Transport**: First-class support for REST, GraphQL, gRPC, and WebSockets.
+- **Modular Architecture**: Group your code into logical feature sets using Modules.
+- **Dependency Injection**: First-class DI system that makes testing and decoupling a breeze.
+- **Declarative Routing**: Use simple attributes like `#[get("/")]` to define your API surface.
+- **Request Pipeline**: Robust support for Middleware, Guards, and Interceptors.
+- **Route Versioning**: Version routes with `#[nestforge::version("1")]` and the factory version helper.
+- **Auto-OpenAPI**: Generate documentation directly from your controller metadata.
+- **Multi-Transport**: First-class support for REST, GraphQL, gRPC, WebSockets, and Microservices.
 
 ## Comparing to NestJS
 
@@ -38,7 +39,7 @@ If you're coming from the NestJS world, you'll feel right at home. Here's how th
 | Pipe / ValidationPipe  | `ValidatedBody<T>`                                              |
 
 <Aside type="tip">
-  NestForge doesn't just copy NestJS—it adapts it. We use Rust's macros to
+  NestForge doesn't just copy NestJS. It adapts it. We use Rust's macros to
   handle a lot of the boilerplate that would typically be handled by decorators
   and reflection in TypeScript.
 </Aside>
@@ -46,15 +47,36 @@ If you're coming from the NestJS world, you'll feel right at home. Here's how th
 ## A Glimpse of NestForge
 
 ```rust
-#[controller("/users")]
-pub struct UsersController;
+NestForgeFactory::<AppModule>::create()?
+    .with_global_prefix("api")
+    .with_version("v1")
+    .listen(3000)
+    .await?;
+```
+
+The default HTTP scaffold keeps the application bootstrap files at the root of
+`src/`:
+
+```text
+src/
+  app_config.rs
+  app_controller.rs
+  app_service.rs
+  app_module.rs
+  health_controller.rs
+  main.rs
+```
+
+```rust
+#[controller("/versioning")]
+pub struct VersioningController;
 
 #[routes]
-impl UsersController {
-    #[nestforge::get("/")]
-    async fn list(users: Inject<UsersService>) -> ApiResult<Vec<UserDto>> {
-        let all_users = users.find_all().await?;
-        Ok(Json(all_users))
+impl VersioningController {
+    #[nestforge::get("/hello")]
+    #[nestforge::version("1")]
+    async fn hello_v1() -> String {
+        "Hello from API v1".to_string()
     }
 }
 ```
@@ -64,7 +86,7 @@ impl UsersController {
 We recommend following the documentation in this order:
 
 1.  **[Installation](/getting-started/installation/)**: Set up your environment.
-2.  **[Quick Start](/getting-started/quick-start/)**: Build your first "Hello World".
+2.  **[Quick Start](/getting-started/quick-start/)**: Build your first app and inspect the generated scaffold.
 3.  **[First Steps](/getting-started/build-your-first-feature/)**: Build a real feature with DTOs and Services.
 4.  **[Core Concepts](/concepts/architecture/)**: Understand the mental model.
 
