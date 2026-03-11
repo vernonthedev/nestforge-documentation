@@ -1,3 +1,9 @@
+## [1.3.1](https://github.com/vernonthedev/nestforge-documentation/compare/v1.3.0...v1.3.1) (2026-03-11)
+
+### Bug Fixes
+
+* **docs:** added a new nestforge cli module section under editor toolings ([9e429a5](https://github.com/vernonthedev/nestforge-documentation/commit/9e429a51ef23a186ee2bb77e2c83ae5e4b185dea))
+
 ## [1.3.0](https://github.com/vernonthedev/nestforge-documentation/compare/v1.2.0...v1.3.0) (2026-03-11)
 
 ### Features
