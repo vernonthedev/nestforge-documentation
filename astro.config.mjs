@@ -89,6 +89,10 @@ export default defineConfig({
               items: [
                 { label: "Overview", slug: "editor-tooling/overview" },
                 {
+                  label: "NestForge CLI",
+                  slug: "editor-tooling/nestforge-cli",
+                },
+                {
                   label: "VS Code Extension",
                   slug: "editor-tooling/vscode-extension",
                 },

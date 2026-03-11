@@ -1,0 +1,226 @@
+---
+title: NestForge CLI
+description: Install and use the NestForge CLI for scaffolding, generators, database workflows, and OpenAPI export.
+---
+
+# NestForge CLI
+
+The `nestforge` CLI is the main workflow tool for creating a new application,
+generating feature code, running database migration commands, and exporting
+OpenAPI artifacts.
+
+The VS Code extension builds on the same command surface. If you understand the
+CLI first, the editor commands become easier to follow.
+
+## Install the CLI
+
+You need a Rust toolchain before installing the CLI.
+
+```bash
+cargo install nestforge-cli
+```
+
+After installation, verify that the command is available:
+
+```bash
+nestforge --help
+```
+
+## Command families
+
+The CLI groups its workflow into five areas:
+
+- `new`
+- `generate` or `g`
+- `db`
+- `export-docs` or `docs`
+- `fmt`
+
+## Scaffold a new application
+
+Use `new` to create a fresh NestForge project.
+
+```bash
+nestforge new my-api
+nestforge new my-api --transport grpc
+nestforge new my-api --openapi
+nestforge new my-api --transport websockets --no-tui
+```
+
+Available options:
+
+- `<app-name>` sets the project folder and package name
+- `--transport` selects `http`, `graphql`, `grpc`, `microservices`, or `websockets`
+- `--openapi` wires OpenAPI setup into supported application scaffolds
+- `--no-tui` disables interactive prompts
+
+The generated HTTP scaffold keeps its bootstrap files at the root of `src/` and
+uses the current factory helpers in `src/main.rs`.
+
+## Generate code inside an existing app
+
+Use `generate` or the short alias `g` once you are inside an application
+workspace.
+
+```bash
+nestforge g module users
+nestforge g resource users --module users
+nestforge g service users
+```
+
+Available generator kinds:
+
+- `resource`
+- `controller`
+- `service`
+- `module`
+- `guard`
+- `decorator`
+- `filter`
+- `middleware`
+- `interceptor`
+- `serializer`
+- `graphql`
+- `grpc`
+- `gateway`
+- `microservice`
+
+Common options:
+
+- `--module <name>` targets an existing feature module
+- `--flat` keeps generated files in the module root
+- `--no-prompt` skips interactive DTO field prompts
+- `--no-tui` disables interactive prompts
+
+## Core generators
+
+Use these commands to build the normal application structure:
+
+```bash
+nestforge g module users
+nestforge g controller users --module users
+nestforge g service users --module users
+nestforge g resource users --module users
+```
+
+- `module` creates a feature boundary
+- `controller` adds a controller stub
+- `service` adds a service stub
+- `resource` generates a controller, service, and DTO set together
+
+## Cross-cutting generators
+
+These generators add reusable framework pieces:
+
+```bash
+nestforge g guard auth
+nestforge g decorator current_user
+nestforge g filter http_exception
+nestforge g middleware request_logger
+nestforge g interceptor timing
+nestforge g serializer user
+```
+
+- `guard` creates authorization flow
+- `decorator` creates custom parameter or metadata helpers
+- `filter` creates exception handling logic
+- `middleware` creates request pipeline middleware
+- `interceptor` creates response or execution wrappers
+- `serializer` creates response shaping helpers
+
+## Transport generators
+
+Use these when you are adding transport-specific features:
+
+```bash
+nestforge g graphql users
+nestforge g grpc billing
+nestforge g gateway events
+nestforge g microservice notifications
+```
+
+- `graphql` adds GraphQL-oriented module files
+- `grpc` adds gRPC-oriented transport files
+- `gateway` creates a WebSocket gateway
+- `microservice` adds a microservice handler module
+
+## Flat and nested layouts
+
+`resource` generation supports both nested and flat layouts.
+
+```bash
+nestforge g resource users --module users
+nestforge g resource users --module users --flat
+```
+
+Use the nested layout when you want separate folders such as `controllers/`,
+`services/`, and `dto/`. Use `--flat` when you want the generated files to stay
+directly under the feature root.
+
+## DTO prompting
+
+When `resource` generation runs in an interactive terminal, the CLI can prompt
+for DTO fields before writing the generated files.
+
+```bash
+nestforge g resource users --module users
+nestforge g resource users --module users --no-prompt
+```
+
+Use `--no-prompt` when you want the default DTO shape without the field prompt
+workflow.
+
+## Database commands
+
+Use `db` for the built-in migration workflow.
+
+```bash
+nestforge db init
+nestforge db generate create_users_table
+nestforge db migrate
+nestforge db status
+```
+
+- `init` prepares the migrations folder and tracking files
+- `generate <name>` creates a timestamped migration file
+- `migrate` applies pending SQL migrations using `DATABASE_URL`
+- `status` compares the recorded migration state with local files
+
+## Export OpenAPI docs
+
+Use `export-docs` to generate a static OpenAPI document from the current app.
+`docs` is a supported alias.
+
+```bash
+nestforge export-docs
+nestforge docs --format yaml --output docs/openapi.yaml
+```
+
+Available options:
+
+- `--format` accepts `json` or `yaml`
+- `--output` writes to a custom file path
+- `--title` sets the OpenAPI document title
+- `--version` sets the OpenAPI document version
+- `--module-type` selects the root module type to inspect
+
+## Format sources
+
+Use `fmt` when you want the CLI to run `cargo fmt` in the current app root.
+
+```bash
+nestforge fmt
+```
+
+## Setup checklist
+
+Before relying on the CLI for daily work, make sure:
+
+- Rust and `cargo` are installed
+- `nestforge --help` runs successfully
+- your NestForge workspace has `Cargo.toml` and `src/`
+- `DATABASE_URL` is set before running migration commands
+- the relevant Cargo features are enabled for transport or OpenAPI workflows
+
+If you prefer working inside the editor, continue with
+[VS Code Extension](/editor-tooling/vscode-extension/).
