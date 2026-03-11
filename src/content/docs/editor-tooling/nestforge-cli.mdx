@@ -3,6 +3,11 @@ title: NestForge CLI
 description: Install and use the NestForge CLI for scaffolding, generators, database workflows, and OpenAPI export.
 ---
 
+import cliScreenshot from "../../../assets/editor-tooling/main-cli.png";
+import cliScreenshotModule from "../../../assets/editor-tooling/module-cli.png";
+
+<img src={cliScreenshot.src} alt="NestForge CLI help output in a terminal." />
+
 # NestForge CLI
 
 The `nestforge` CLI is the main workflow tool for creating a new application,
@@ -58,6 +63,11 @@ The generated HTTP scaffold keeps its bootstrap files at the root of `src/` and
 uses the current factory helpers in `src/main.rs`.
 
 ## Generate code inside an existing app
+
+<img
+  src={cliScreenshotModule.src}
+  alt="NestForge CLI module generation output in a terminal."
+/>
 
 Use `generate` or the short alias `g` once you are inside an application
 workspace.
