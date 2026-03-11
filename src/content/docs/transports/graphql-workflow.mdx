@@ -38,18 +38,22 @@ let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription).finish()
 Attach the schema to the NestForge HTTP runtime:
 
 ```rust
-use nestforge::{NestForgeFactory, NestForgeFactoryGraphQlExt};
+use nestforge::{GraphQlConfig, NestForgeFactory, NestForgeFactoryGraphQlExt};
 
-NestForgeFactory::<AppModule>::create()?
-    .with_graphql(schema)
-    .listen(3000)
+let factory = NestForgeFactory::<AppModule>::create()?;
+let config = factory.container().resolve::<AppConfig>()?;
+let schema = build_schema(config.app_name.clone());
+
+factory
+    .with_graphql_config(schema, GraphQlConfig::new("/graphql").with_graphiql("/"))
+    .listen(3001)
     .await?;
 ```
 
-The default mounted routes are:
+The maintained example mounts:
 
 - `/graphql`
-- `/graphiql`
+- `/`
 
 # Step 4: resolve providers from resolver context
 
@@ -69,11 +73,12 @@ same provider model as the rest of the app.
 
 # Step 5: test the schema through the testing module
 
-Build the testing module, then mount the schema in test:
+Build the testing module, then mount the schema in test or by using the GraphQL
+router helpers:
 
 ```rust
 let module = nestforge::TestFactory::<AppModule>::create().build()?;
-let app = module.graphql_router(schema);
+let app = nestforge::graphql_router(schema).with_state(module.container().clone());
 ```
 
 That is the shortest path for verifying resolvers against real container state.
