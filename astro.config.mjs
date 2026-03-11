@@ -42,91 +42,82 @@ export default defineConfig({
       lastUpdated: true,
       sidebar: [
         {
-          label: "Application Development",
+          label: "Getting Started",
+          collapsed: false,
           items: [
+            { label: "Overview", slug: "getting-started/overview" },
+            { label: "Installation", slug: "getting-started/installation" },
+            { label: "Quick Start", slug: "getting-started/quick-start" },
             {
-              label: "Getting Started",
-              collapsed: false,
-              items: [
-                { label: "Overview", slug: "getting-started/overview" },
-                { label: "Installation", slug: "getting-started/installation" },
-                { label: "Quick Start", slug: "getting-started/quick-start" },
-                {
-                  label: "First Steps",
-                  slug: "getting-started/build-your-first-feature",
-                },
-              ],
-            },
-            {
-              label: "Core Fundamentals",
-              collapsed: true,
-              items: [
-                { label: "Modules", slug: "concepts/modules-and-di" },
-                { label: "Controllers", slug: "concepts/controllers-routing" },
-                { label: "Middleware", slug: "guides/middleware" },
-                {
-                  label: "Guards & Interceptors",
-                  slug: "guides/guards-interceptors",
-                },
-                { label: "Architecture", slug: "concepts/architecture" },
-              ],
-            },
-            {
-              label: "Advanced Techniques",
-              collapsed: true,
-              items: [
-                { label: "OpenAPI Setup", slug: "guides/openapi-from-scratch" },
-                { label: "Database (SQL)", slug: "guides/database-workflow" },
-                { label: "Database (Mongo)", slug: "guides/mongo-workflow" },
-                { label: "Caching (Redis)", slug: "guides/redis-workflow" },
-                { label: "Configuration", slug: "concepts/configuration" },
-                { label: "Testing", slug: "guides/testing" },
-              ],
-            },
-            {
-              label: "Editor Tooling",
-              collapsed: true,
-              items: [
-                { label: "Overview", slug: "editor-tooling/overview" },
-                {
-                  label: "NestForge CLI",
-                  slug: "editor-tooling/nestforge-cli",
-                },
-                {
-                  label: "VS Code Extension",
-                  slug: "editor-tooling/vscode-extension",
-                },
-              ],
-            },
-            {
-              label: "Transports",
-              collapsed: true,
-              items: [
-                { label: "GraphQL", slug: "transports/graphql" },
-                { label: "gRPC", slug: "transports/grpc" },
-                { label: "WebSockets", slug: "transports/websockets" },
-                { label: "Microservices", slug: "transports/microservices" },
-                { label: "Scheduling", slug: "transports/scheduling" },
-              ],
+              label: "First Steps",
+              slug: "getting-started/build-your-first-feature",
             },
           ],
         },
         {
-          label: "Framework Contribution",
+          label: "Core Fundamentals",
+          collapsed: true,
           items: [
+            { label: "Modules", slug: "concepts/modules-and-di" },
+            { label: "Controllers", slug: "concepts/controllers-routing" },
+            { label: "Middleware", slug: "guides/middleware" },
             {
-              label: "Internal Docs",
-              items: [
-                { label: "Contributing Guide", slug: "framework/contributing" },
-                {
-                  label: "Crate Architecture",
-                  slug: "framework/crate-architecture",
-                },
-                {
-                  label: "Workspace Structure",
-                  slug: "framework/workspace-structure",
-                },
-              ],
+              label: "Guards & Interceptors",
+              slug: "guides/guards-interceptors",
+            },
+            { label: "Architecture", slug: "concepts/architecture" },
+          ],
+        },
+        {
+          label: "Advanced Techniques",
+          collapsed: true,
+          items: [
+            { label: "OpenAPI Setup", slug: "guides/openapi-from-scratch" },
+            { label: "Database (SQL)", slug: "guides/database-workflow" },
+            { label: "Database (Mongo)", slug: "guides/mongo-workflow" },
+            { label: "Caching (Redis)", slug: "guides/redis-workflow" },
+            { label: "Configuration", slug: "concepts/configuration" },
+            { label: "Testing", slug: "guides/testing" },
+          ],
+        },
+        {
+          label: "Editor Tooling",
+          collapsed: true,
+          items: [
+            { label: "Overview", slug: "editor-tooling/overview" },
+            {
+              label: "NestForge CLI",
+              slug: "editor-tooling/nestforge-cli",
+            },
+            {
+              label: "VS Code Extension",
+              slug: "editor-tooling/vscode-extension",
+            },
+          ],
+        },
+        {
+          label: "Transports",
+          collapsed: true,
+          items: [
+            { label: "GraphQL", slug: "transports/graphql" },
+            { label: "gRPC", slug: "transports/grpc" },
+            { label: "WebSockets", slug: "transports/websockets" },
+            { label: "Microservices", slug: "transports/microservices" },
+            { label: "Scheduling", slug: "transports/scheduling" },
+          ],
+        },
+        {
+          label: "Framework Contribution",
+          collapsed: true,
+          items: [
+            { label: "Contributing Guide", slug: "framework/contributing" },
+            {
+              label: "Crate Architecture",
+              slug: "framework/crate-architecture",
+            },
+            {
+              label: "Workspace Structure",
+              slug: "framework/workspace-structure",
             },
           ],
         },
