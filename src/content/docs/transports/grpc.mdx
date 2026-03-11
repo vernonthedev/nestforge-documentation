@@ -25,13 +25,16 @@ The gRPC surface centers on:
 
 # Bootstrap pattern
 
+The maintained gRPC example boots the server like this:
+
 ```rust
 use nestforge::NestForgeGrpcFactory;
 
 NestForgeGrpcFactory::<AppModule>::create()?
     .with_addr("127.0.0.1:50051")
     .listen_with(|ctx, addr| async move {
-        tonic::transport::Server::builder()
+        nestforge::tonic::transport::Server::builder()
+            .add_service(GreeterServer::new(GreeterGrpcService::new(ctx)))
             .serve(addr)
             .await
     })
@@ -40,11 +43,15 @@ NestForgeGrpcFactory::<AppModule>::create()?
 
 # Provider resolution inside services
 
-Your tonic service stays the transport boundary, but it can still resolve providers from
-NestForge through `GrpcContext`.
+Your tonic service stays the transport boundary, but it can still resolve
+providers from NestForge through `GrpcContext`.
 
-That keeps the transport-specific code focused while reusing the same DI model as the
-rest of the application.
+```rust
+let config = self.ctx.resolve::<AppConfig>()?;
+```
+
+That keeps the transport-specific code focused while reusing the same DI model
+as the rest of the application.
 
 # Code generation
 
@@ -54,11 +61,11 @@ The gRPC-first example shows the expected toolchain:
 - `build.rs` compiles it through `tonic-build`
 - generated code is loaded with `tonic::include_proto!(...)`
 
-Because the setup follows the normal tonic workflow, `protoc` is part of the practical
-build requirements for generated apps.
+Because the setup follows the normal tonic workflow, `protoc` is part of the
+practical build requirements for generated apps.
 
 # gRPC plus microservices
 
 If both `grpc` and `microservices` are enabled, RPC handlers can dispatch into a
-transport-neutral `MicroserviceRegistry`. That is a good fit when you want a typed gRPC
-edge but a shared message-pattern core.
+transport-neutral `MicroserviceRegistry`. That is a good fit when you want a
+typed gRPC edge but a shared message-pattern core.

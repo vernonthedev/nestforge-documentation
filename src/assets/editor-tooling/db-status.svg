@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-labelledby="title desc">
+  <title id="title">NestForge DB Status</title>
+  <desc id="desc">Illustrated screenshot of the NestForge VS Code database status feature.</desc>
+  <rect width="1200" height="700" rx="24" fill="#111827"/>
+  <rect x="40" y="36" width="1120" height="64" rx="16" fill="#1f2937"/>
+  <text x="68" y="77" fill="#f3f4f6" font-family="Georgia, serif" font-size="26">Command Palette</text>
+  <rect x="68" y="130" width="1064" height="62" rx="12" fill="#0f172a" stroke="#334155"/>
+  <text x="96" y="170" fill="#e5e7eb" font-family="monospace" font-size="20">&gt; NestForge DB: Status</text>
+  <rect x="68" y="226" width="720" height="230" rx="16" fill="#0f172a" stroke="#334155"/>
+  <text x="94" y="266" fill="#94a3b8" font-family="monospace" font-size="14">NestForge Logs</text>
+  <text x="94" y="312" fill="#22c55e" font-family="monospace" font-size="18">nestforge db status</text>
+  <text x="94" y="348" fill="#e5e7eb" font-family="monospace" font-size="16">Migrations: 12 total</text>
+  <text x="94" y="380" fill="#e5e7eb" font-family="monospace" font-size="16">Applied: 11</text>
+  <text x="94" y="412" fill="#f59e0b" font-family="monospace" font-size="16">Pending: 1</text>
+  <text x="94" y="444" fill="#cbd5e1" font-family="monospace" font-size="16">Status: out of sync</text>
+  <rect x="842" y="520" width="290" height="82" rx="20" fill="#3f2a12" stroke="#f59e0b"/>
+  <circle cx="884" cy="561" r="10" fill="#f59e0b"/>
+  <text x="908" y="553" fill="#fde68a" font-family="Georgia, serif" font-size="24">NestForge DB</text>
+  <text x="908" y="578" fill="#fde68a" font-family="monospace" font-size="14">Pending migration detected</text>
+</svg>

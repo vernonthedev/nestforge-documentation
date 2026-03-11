@@ -3,15 +3,18 @@ title: GraphQL
 description: Building powerful GraphQL APIs with NestForge and async-graphql.
 ---
 
-import { Aside, Steps } from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
 
 # GraphQL
 
-NestForge provides a first-class integration with **`async-graphql`**, the most popular GraphQL library in the Rust ecosystem. This allows you to combine the power of schema-first development with the elegant dependency injection of NestForge.
+NestForge provides a first-class integration with **`async-graphql`**, the most
+popular GraphQL library in the Rust ecosystem. This allows you to combine the
+power of schema-first development with the dependency injection model used
+throughout NestForge.
 
 ---
 
-## 🚀 Getting Started
+## Feature activation
 
 First, enable the `graphql` feature in your `Cargo.toml`.
 
@@ -22,50 +25,40 @@ nestforge = { version = "1", features = ["graphql"] }
 
 ---
 
-## 🛠️ Basic Setup
+## Basic Setup
 
-To add GraphQL to your NestForge application, you simply build your `async-graphql` schema and mount it onto the framework during bootstrap using the `with_graphql` extension.
+To add GraphQL to your NestForge application, build your `async-graphql` schema
+and mount it during bootstrap using the `with_graphql` or
+`with_graphql_config` extension.
+
+The maintained GraphQL example uses `GraphQlConfig`:
 
 ```rust
-use nestforge::{
-    async_graphql::{EmptyMutation, EmptySubscription, Object, Schema},
-    NestForgeFactory, NestForgeFactoryGraphQlExt,
-};
+use nestforge::{GraphQlConfig, NestForgeFactory, NestForgeFactoryGraphQlExt};
 
-// 1. Define your Query root
-struct QueryRoot;
+async fn bootstrap() -> anyhow::Result<()> {
+    let factory = NestForgeFactory::<AppModule>::create()?;
+    let config = factory.container().resolve::<AppConfig>()?;
+    let schema = build_schema(config.app_name.clone());
 
-#[Object]
-impl QueryRoot {
-    async fn hello(&self) -> &str {
-        "Hello from NestForge GraphQL!"
-    }
-}
-
-// 2. Build the schema
-let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription).finish();
-
-// 3. Bootstrap and mount
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    NestForgeFactory::<AppModule>::create()?
-        .with_graphql(schema) // Mounts /graphql and /graphiql
-        .listen(3000)
-        .await?;
-    Ok(())
+    factory
+        .with_graphql_config(schema, GraphQlConfig::new("/graphql").with_graphiql("/"))
+        .listen(3001)
+        .await
 }
 ```
 
 By default, NestForge mounts:
 
+- **`POST /graphql`**: The GraphQL API endpoint.
 - **`GET /graphiql`**: The interactive playground.
-- **`POST /graphql`**: The actual API endpoint.
 
 ---
 
-## 💉 Dependency Injection in Resolvers
+## Dependency Injection in Resolvers
 
-This is where NestForge truly shines. Every GraphQL request automatically carries the **NestForge Container**. This means your resolvers can easily access services registered in your modules.
+Every GraphQL request carries the **NestForge Container**. This means your
+resolvers can access services registered in your modules.
 
 Use the `resolve_graphql` helper inside your resolver methods:
 
@@ -76,7 +69,6 @@ use crate::users::services::UsersService;
 #[Object]
 impl QueryRoot {
     async fn users(&self, ctx: &Context<'_>) -> Vec<UserDto> {
-        // Resolve the service directly from the request container
         let users_service = resolve_graphql::<UsersService>(ctx)
             .expect("UsersService should be registered");
 
@@ -92,9 +84,9 @@ impl QueryRoot {
 
 ---
 
-## ⚙️ Custom Configuration
+## Custom Configuration
 
-If you need to change the default paths or add custom GraphQL extensions, use the `GraphQlConfig`:
+If you need to change the default paths or request limits, use `GraphQlConfig`:
 
 ```rust
 use nestforge::GraphQlConfig;
@@ -102,9 +94,9 @@ use nestforge::GraphQlConfig;
 NestForgeFactory::<AppModule>::create()?
     .with_graphql_config(
         schema,
-        GraphQlConfig::new()
-            .with_path("/my-api")
-            .with_playground_path("/play")
+        GraphQlConfig::new("/graphql")
+            .with_graphiql("/play")
+            .with_max_request_bytes(2 * 1024 * 1024)
     )
     .listen(3000)
     .await?;
@@ -112,12 +104,12 @@ NestForgeFactory::<AppModule>::create()?
 
 ---
 
-## 🧩 Modularity
+## Modularity
 
-Just like the rest of NestForge, we recommend organizing your GraphQL logic into **Feature Modules**.
+Just like the rest of NestForge, we recommend organizing your GraphQL logic into
+**Feature Modules**.
 
 ```rust
-// users/mod.rs
 #[module(
     providers = [UsersService, UsersResolver],
     exports = [UsersService]
@@ -125,4 +117,5 @@ Just like the rest of NestForge, we recommend organizing your GraphQL logic into
 pub struct UsersModule;
 ```
 
-While NestForge doesn't currently auto-discover resolvers, the modular patterns ensure your DI remains clean and manageable as your schema grows.
+While NestForge does not auto-discover resolvers, the modular patterns keep your
+DI clean and manageable as your schema grows.

@@ -34,6 +34,7 @@ use crate::app_module::AppModule;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     NestForgeFactory::<AppModule>::create()?
+        .with_global_prefix("api")
         // This adds /openapi.json and /docs routes
         .with_openapi_docs("My API Title", "1.0.0")?
         .listen(3000)
@@ -41,6 +42,9 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 ```
+
+If you also use `.with_version("v1")`, the generated docs routes will follow the
+same prefixed application structure.
 
 ## Step 3: Document your Controllers
 
@@ -77,8 +81,11 @@ impl UsersController {
 ## Step 4: Verify the Documentation
 
 1. Run your application: `cargo run`
-2. Access the OpenAPI JSON: [http://localhost:3000/openapi.json](http://localhost:3000/openapi.json)
-3. Access the Documentation UI: [http://localhost:3000/docs](http://localhost:3000/docs)
+2. Access the OpenAPI JSON: [http://localhost:3000/api/openapi.json](http://localhost:3000/api/openapi.json)
+3. Access the Documentation UI: [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
+
+If you also enable `.with_version("v1")`, those routes would be mounted under
+`/api/v1/...`.
 
 ## Advanced Configuration
 

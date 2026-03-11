@@ -40,6 +40,18 @@ use `InProcessMicroserviceClient`.
 
 That gives you one core message-handling model with multiple possible edges.
 
+The maintained microservices example uses `TestFactory::<AppModule>` and creates
+an in-process client with transport metadata:
+
+```rust
+let module = TestFactory::<AppModule>::create().build()?;
+let client = module.microservice_client_with_metadata(
+    patterns.registry().clone(),
+    "example-cli",
+    TransportMetadata::new().insert("example", "hello-nestforge-microservices"),
+);
+```
+
 # Context
 
 `MicroserviceContext` exposes:

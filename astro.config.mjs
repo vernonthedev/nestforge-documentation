@@ -84,6 +84,17 @@ export default defineConfig({
               ],
             },
             {
+              label: "Editor Tooling",
+              collapsed: true,
+              items: [
+                { label: "Overview", slug: "editor-tooling/overview" },
+                {
+                  label: "VS Code Extension",
+                  slug: "editor-tooling/vscode-extension",
+                },
+              ],
+            },
+            {
               label: "Transports",
               collapsed: true,
               items: [

@@ -1,0 +1,119 @@
+---
+title: VS Code Extension
+description: Install and use the official NestForge VS Code extension for scaffolding, DB workflows, and project inspection.
+---
+
+import moduleGraphScreenshot from "../../../assets/editor-tooling/module-graph.svg";
+import dbStatusScreenshot from "../../../assets/editor-tooling/db-status.svg";
+
+# VS Code Extension
+
+NestForge ships with an official VS Code extension for driving the `nestforge`
+CLI from the editor.
+
+- Marketplace: [vernonthedev.nestforge](https://marketplace.visualstudio.com/items?itemName=vernonthedev.nestforge)
+- Current stable version: `0.7.0`
+- Minimum VS Code version: `1.109.0`
+
+## Requirements
+
+Before using the extension, make sure you have:
+
+- VS Code `1.109.0` or later
+- a `nestforge` CLI executable available on your `PATH`, or a custom path configured through settings
+- `cargo` installed if you want to use `NestForge: Format Rust`
+
+## Scaffolding Wizard
+
+Run `NestForge: New Application` from the Command Palette to scaffold a new app
+with a guided flow:
+
+1. Enter the application name.
+2. Pick one or more transports.
+3. Optionally enable `Midnight Notify`.
+4. Let the extension run `nestforge new <app-name>` with the selected options.
+
+Available transport values:
+
+- `http`
+- `graphql`
+- `grpc`
+- `microservices`
+- `websockets`
+
+## Generator Wizard
+
+Run `NestForge: Generate` to open a nested QuickPick workflow:
+
+1. Choose a category: `Core`, `Cross-Cutting`, or `Transport`.
+2. Choose a generator such as `Resource`, `Interceptor`, `Service`, or `Gateway`.
+3. Enter the resource name.
+4. If required, select the target module.
+
+The extension then runs the matching `nestforge g ...` command and refreshes the
+File Explorer so generated files appear immediately.
+
+## Explorer Context Menus
+
+Right-click a folder in the Explorer to access:
+
+- `NestForge: Generate`
+
+`Generate` opens the normal generator selection flow and also works from the
+selected folder in the Explorer. If the folder is a real Nest module such as
+`src/users`, module-aware generators will target `users` automatically.
+
+## Database Dashboard
+
+The extension contributes a dedicated `NestForge DB` command group:
+
+- `NestForge DB: Init`
+- `NestForge DB: Generate`
+- `NestForge DB: Migrate`
+- `NestForge DB: Status`
+
+Database status is also surfaced in the status bar. The extension can poll
+`nestforge db status` on an interval and after saves to detect pending
+migrations or database changes that need review.
+
+<img src={dbStatusScreenshot.src} alt="Illustrated example of the NestForge database status feature in the VS Code command palette and status bar." />
+
+## Environment Validation
+
+The extension validates `.env` files in Rust workspaces and highlights missing
+required variables such as `DATABASE_URL`.
+
+- required transport variables are inferred from the workspace
+- Quick Fix actions can add missing variables directly from diagnostics
+- hover text explains what each supported variable is used for
+
+## Utilities
+
+- `NestForge: OpenAPI Docs`
+- `NestForge: Format Rust`
+- `NestForge: Generate Run Config`
+- `NestForge: Initialize Git Repository`
+- `NestForge: Open Logs`
+- `NestForge: Show Module Graph`
+
+## Module Graph
+
+`NestForge: Show Module Graph` scans Rust modules under `src/` and renders a
+directed graph in a webview.
+
+- node clicks open the backing file in the editor
+- circular dependencies are highlighted in red
+- a `Refresh Graph` button reloads the current workspace structure
+
+<img src={moduleGraphScreenshot.src} alt="Illustrated example of the NestForge module graph view." />
+
+## Extension Settings
+
+This extension contributes the following settings:
+
+- `nestforge.cliPath`: executable used for NestForge CLI commands. Default: `nestforge`
+- `nestforge.cargoPath`: executable used for cargo commands. Default: `cargo`
+- `nestforge.docsUrl`: URL opened by `NestForge: OpenAPI Docs`. Default: `http://localhost:3000/api/docs`
+- `nestforge.dbStatus.enabled`: enable or disable DB status polling and the status bar item. Default: `true`
+- `nestforge.dbStatus.intervalMs`: polling interval for `nestforge db status`. Default: `300000`
+- `nestforge.status.connectionTimeout`: timeout for each initial DB connection check. Default: `5000`

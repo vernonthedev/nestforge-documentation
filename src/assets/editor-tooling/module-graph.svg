@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-labelledby="title desc">
+  <title id="title">NestForge Module Graph</title>
+  <desc id="desc">Illustrated screenshot of the NestForge VS Code module graph feature.</desc>
+  <rect width="1200" height="700" rx="24" fill="#0f1720"/>
+  <rect x="32" y="28" width="1136" height="62" rx="18" fill="#16202b"/>
+  <text x="60" y="67" fill="#d9e2ec" font-family="Georgia, serif" font-size="28">NestForge Module Graph</text>
+  <rect x="1010" y="42" width="126" height="34" rx="17" fill="#203040"/>
+  <text x="1036" y="64" fill="#d9e2ec" font-family="monospace" font-size="14">Refresh Graph</text>
+  <g fill="none" stroke-linecap="round">
+    <path d="M190 200 C270 200, 320 200, 380 200" stroke="#4fb3ff" stroke-width="3"/>
+    <path d="M510 200 C590 200, 640 200, 700 200" stroke="#7dd3fc" stroke-width="2" stroke-dasharray="6 6"/>
+    <path d="M830 200 C910 200, 960 200, 1020 200" stroke="#86efac" stroke-width="2" stroke-dasharray="6 6"/>
+    <path d="M510 380 C610 380, 630 380, 700 380" stroke="#ef4444" stroke-width="3"/>
+    <path d="M830 380 C730 380, 710 380, 620 380" stroke="#ef4444" stroke-width="3"/>
+  </g>
+  <g font-family="Georgia, serif">
+    <g transform="translate(60 156)">
+      <rect width="130" height="88" rx="18" fill="#182532" stroke="#334155"/>
+      <rect width="6" height="88" rx="3" fill="#f97316"/>
+      <text x="22" y="36" fill="#e2e8f0" font-size="22">Main</text>
+      <text x="22" y="60" fill="#94a3b8" font-family="monospace" font-size="12">main</text>
+    </g>
+    <g transform="translate(380 156)">
+      <rect width="130" height="88" rx="18" fill="#182532" stroke="#334155"/>
+      <rect width="6" height="88" rx="3" fill="#4fb3ff"/>
+      <text x="22" y="36" fill="#e2e8f0" font-size="22">Users</text>
+      <text x="22" y="60" fill="#94a3b8" font-family="monospace" font-size="12">users</text>
+    </g>
+    <g transform="translate(700 156)">
+      <rect width="130" height="88" rx="18" fill="#182532" stroke="#334155"/>
+      <rect width="6" height="88" rx="3" fill="#f59e0b"/>
+      <text x="22" y="36" fill="#e2e8f0" font-size="22">Controller</text>
+      <text x="22" y="60" fill="#94a3b8" font-family="monospace" font-size="12">users::controllers</text>
+    </g>
+    <g transform="translate(1020 156)">
+      <rect width="130" height="88" rx="18" fill="#182532" stroke="#334155"/>
+      <rect width="6" height="88" rx="3" fill="#22c55e"/>
+      <text x="22" y="36" fill="#e2e8f0" font-size="22">Service</text>
+      <text x="22" y="60" fill="#94a3b8" font-family="monospace" font-size="12">users::services</text>
+    </g>
+    <g transform="translate(380 336)">
+      <rect width="130" height="88" rx="18" fill="#182532" stroke="#ef4444"/>
+      <rect width="6" height="88" rx="3" fill="#4fb3ff"/>
+      <text x="22" y="36" fill="#e2e8f0" font-size="22">Billing</text>
+      <text x="22" y="60" fill="#94a3b8" font-family="monospace" font-size="12">billing</text>
+    </g>
+    <g transform="translate(700 336)">
+      <rect width="130" height="88" rx="18" fill="#182532" stroke="#ef4444"/>
+      <rect width="6" height="88" rx="3" fill="#22c55e"/>
+      <text x="22" y="36" fill="#e2e8f0" font-size="22">Invoices</text>
+      <text x="22" y="60" fill="#94a3b8" font-family="monospace" font-size="12">billing::services</text>
+    </g>
+  </g>
+</svg>

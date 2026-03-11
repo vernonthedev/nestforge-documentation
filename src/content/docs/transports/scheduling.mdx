@@ -43,6 +43,22 @@ The current registry supports:
 - one-shot delayed jobs with `after(...)`
 - named variants with `every_named(...)` and `after_named(...)`
 
+You can build the registry inline:
+
+```rust
+use std::time::Duration;
+use nestforge::ScheduleRegistry;
+
+fn build_schedule_registry() -> anyhow::Result<ScheduleRegistry> {
+    Ok(
+        ScheduleRegistry::builder()
+            .every_named("metrics", Duration::from_secs(30), || async {})
+            .after_named("warmup", Duration::from_secs(5), || async {})
+            .build(),
+    )
+}
+```
+
 # Practical use
 
 Scheduling belongs in modules when the jobs are part of application behavior, not as

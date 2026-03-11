@@ -46,7 +46,7 @@ impl WebSocketGateway for EventsGateway {
 ```rust
 NestForgeFactory::<AppModule>::create()?
     .with_websocket_gateway(EventsGateway)
-    .listen(3000)
+    .listen(3002)
     .await?;
 ```
 
@@ -56,12 +56,12 @@ Default path:
 
 # Access to providers
 
-`WebSocketContext` exposes the framework container, request data, optional auth identity,
-and request ID. That means a gateway can resolve the same application services already
-used by HTTP handlers or GraphQL resolvers.
+`WebSocketContext` exposes the framework container, request data, optional auth
+identity, and request ID. That means a gateway can resolve the same application
+services already used by HTTP handlers or GraphQL resolvers.
 
 # WebSockets plus microservices
 
 If `microservices` is also enabled, gateways can forward frames into a
-`MicroserviceRegistry`. That is useful for event-driven or command-style websocket
-protocols that map cleanly to pattern handlers.
+`MicroserviceRegistry`. That is useful for event-driven or command-style
+websocket protocols that map cleanly to pattern handlers.
