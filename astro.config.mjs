@@ -59,6 +59,7 @@ export default defineConfig({
           collapsed: true,
           items: [
             { label: "Modules", slug: "concepts/modules-and-di" },
+            { label: "Services", slug: "concepts/services" },
             { label: "Controllers", slug: "concepts/controllers-routing" },
             { label: "Middleware", slug: "guides/middleware" },
             {

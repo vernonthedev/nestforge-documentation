@@ -22,13 +22,24 @@ CLI first, the editor commands become easier to follow.
 You need a Rust toolchain before installing the CLI.
 
 ```bash
-cargo install nestforge-cli
+cargo install --path crates/nestforge-cli
 ```
 
 After installation, verify that the command is available:
 
 ```bash
 nestforge --help
+```
+
+## Interactive Mode
+
+The CLI automatically detects whether your terminal supports interactive features. When running in an interactive terminal (such as a proper TTY or supported terminals like bash, zsh, or Windows Terminal), it enables the TUI for a richer experience.
+
+For non-interactive environments (such as CI/CD pipelines, scripts, or legacy terminals), use the `--no-tui` flag to disable TUI features:
+
+```bash
+nestforge new my-api --no-tui
+nestforge g module users --no-tui
 ```
 
 ## Command families
@@ -199,15 +210,22 @@ nestforge db status
 ## Export OpenAPI docs
 
 Use `export-docs` to generate a static OpenAPI document from the current app.
-`docs` is a supported alias.
+The `docs` command is an alias that also opens the interactive CLI docs browser.
 
 ```bash
 nestforge export-docs
 nestforge docs --format yaml --output docs/openapi.yaml
+nestforge docs --no-tui
+nestforge docs modules
 ```
 
-Available options:
+The `docs` command supports:
+- `--no-tui` - Disable interactive TUI, output plain text
+- `<topic>` - Jump directly to a specific topic (e.g., `modules`, `services`, `controllers`)
 
+Available topics include: `modules`, `services`, `controllers`, `guards`, `interceptors`, `middleware`, `pipes`.
+
+Available options:
 - `--format` accepts `json` or `yaml`
 - `--output` writes to a custom file path
 - `--title` sets the OpenAPI document title
@@ -221,6 +239,27 @@ Use `fmt` when you want the CLI to run `cargo fmt` in the current app root.
 ```bash
 nestforge fmt
 ```
+
+## Prelude and App Barrels
+
+New scaffolds generated with NestForge include a root `src/lib.rs` barrel with `pub use` re-exports for top-level app symbols, and a slimmer `src/main.rs` that imports from the package crate.
+
+This gives generated apps a flatter import style:
+
+```rust
+use demo_api::AppModule;
+use nestforge::prelude::*;
+```
+
+The `nestforge::prelude::*` import provides common framework imports including:
+- Controller macros and attributes
+- Injectable macros
+- Request types (Param, Query, Body, etc.)
+- Response types and helpers
+
+<Aside type="tip">
+  When adding new modules with `nestforge g module`, the CLI patches the root `src/lib.rs` barrel so app-level imports can stay flat.
+</Aside>
 
 ## Setup checklist
 

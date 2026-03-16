@@ -67,6 +67,68 @@ A new instance of the provider is created every time it is injected into another
 
 ---
 
+## The `#[injectable]` Macro
+
+The recommended way to define providers is with the `#[injectable]` macro. This marks the struct as a managed provider and automatically implements `Clone`.
+
+### Basic Usage
+
+```rust
+use nestforge::prelude::*;
+
+#[injectable]
+pub struct UsersService;
+```
+
+This automatically:
+- Implements the `Injectable` trait
+- Registers the provider using `Self::default()` internally
+- Implements `Clone` for the service
+
+### Custom Factory
+
+For custom initialization, use the `factory` attribute:
+
+```rust
+#[injectable(factory = build_service)]
+pub struct CustomService;
+
+pub fn build_service() -> CustomService {
+    CustomService { /* custom setup */ }
+}
+```
+
+### Manual Provider Registration
+
+You can also register providers manually in a module with the `Provider` enum:
+
+```rust
+use nestforge::prelude::*;
+
+#[module(
+    providers = [
+        Provider::value(app_config),
+        Provider::factory(|container| {
+            let store = container.resolve::<InMemoryStore<User>>()?;
+            Ok(UsersService { store })
+        }),
+        Provider::request_factory(|container| {
+            let request_id = container.resolve::<RequestId>()?;
+            Ok(RequestScopedService { request_id })
+        }),
+        Provider::transient_factory(|container| {
+            Ok(FreshService::new())
+        })
+    ]
+)]
+pub struct AppModule;
+```
+
+- `Provider::value(...)` - Registers a direct value
+- `Provider::factory(|container| ...)` - Creates a singleton instance
+- `Provider::request_factory(|container| ...)` - Creates per-request instances
+- `Provider::transient_factory(|container| ...)` - Creates fresh instances on every resolve
+
 ## Feature Modules
 
 A feature module simply organizes code relevant for a specific feature, keeping code organized and establishing clear boundaries. This helps us manage complexity and develop with **SOLID** principles.
