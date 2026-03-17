@@ -1,3 +1,15 @@
+## [1.4.0](https://github.com/vernonthedev/nestforge-documentation/compare/v1.3.0...v1.4.0) (2026-03-16)
+
+### Features
+
+* updated documentation to match new service architecture & terminal docs ([149822a](https://github.com/vernonthedev/nestforge-documentation/commit/149822ad41bab720613c3ef42ec8d70c32679ced))
+* updated the remaining docs to match latest feats ([7584a34](https://github.com/vernonthedev/nestforge-documentation/commit/7584a34dbe8c044e94d070bdbd43f9398321689b))
+
+### Bug Fixes
+
+* **docs:** added a new nestforge cli module section under editor toolings ([9e429a5](https://github.com/vernonthedev/nestforge-documentation/commit/9e429a51ef23a186ee2bb77e2c83ae5e4b185dea))
+* fixed missing tags from the mdx setup ([c9e36cb](https://github.com/vernonthedev/nestforge-documentation/commit/c9e36cb9a0adadcde742d08d4c5131bb0cf1bf06))
+
 ## [1.3.1](https://github.com/vernonthedev/nestforge-documentation/compare/v1.3.0...v1.3.1) (2026-03-11)
 
 ### Bug Fixes
