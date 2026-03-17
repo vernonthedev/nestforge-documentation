@@ -3,7 +3,7 @@ title: Caching Workflow
 description: A step-by-step workflow for adding response caching through cache policy and interceptor registration.
 ---
 
-# Goal
+## Goal
 
 Use this flow when you want predictable response caching:
 
@@ -13,7 +13,7 @@ Use this flow when you want predictable response caching:
 4. run the app
 5. verify cache behavior on real routes
 
-# Step 1: enable the features
+## Step 1: enable the features
 
 ```toml
 nestforge = { version = "1", features = ["cache", "redis"] }

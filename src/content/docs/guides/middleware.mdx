@@ -5,8 +5,6 @@ description: Handle low-level HTTP concerns before they reach your controllers.
 
 import { Aside, Steps } from "@astrojs/starlight/components";
 
-# Middleware
-
 Middleware is a function which is called **before** the route handler. Middleware functions have access to the request and response objects, and the `next()` middleware function in the application’s request-response cycle.
 
 NestForge middleware are, by default, equivalent to **Axum/Tower middleware**. They are the perfect place to handle low-level HTTP concerns.

@@ -3,8 +3,6 @@ title: Request Pipeline
 description: A detailed explanation of middleware, auth resolution, guards, interceptors, handlers, and exception filters.
 ---
 
-# The request lifecycle
-
 For HTTP applications, the effective pipeline is:
 
 1. request enters the Axum router created by `NestForgeFactory`
@@ -18,13 +16,13 @@ For HTTP applications, the effective pipeline is:
 9. the handler executes
 10. exception filters can rewrite `HttpException` values
 
-# Scoped container behavior
+## Scoped container behavior
 
 Each request receives its own scoped container derived from the app container. This is
 why request-scoped providers and request metadata extraction work cleanly without turning
 the whole application into mutable shared state.
 
-# Request ID handling
+## Request ID handling
 
 The HTTP factory generates request IDs and adds them both:
 
@@ -34,7 +32,7 @@ The HTTP factory generates request IDs and adds them both:
 This makes request tracing available to handlers, middleware, filters, and external
 clients.
 
-# Auth resolution
+## Auth resolution
 
 If `with_auth_resolver(...)` is configured, the factory extracts the bearer token and
 asks your resolver to map it into an `AuthIdentity`. On success, the identity becomes
@@ -45,7 +43,7 @@ available to:
 - role-based guards
 - other code that resolves identity from the request container
 
-# Middleware vs guards vs interceptors
+## Middleware vs guards vs interceptors
 
 Use the stages deliberately:
 
@@ -56,7 +54,7 @@ Use the stages deliberately:
 That separation is one of the clearest architectural choices in the framework, and it is
 worth preserving in application code.
 
-# Exception filters
+## Exception filters
 
 Global and route-level exception filters can rewrite `HttpException` values before the
 response is finalized. This is useful when you want:
@@ -65,7 +63,7 @@ response is finalized. This is useful when you want:
 - translation from internal errors to public API errors
 - route-specific error rewriting
 
-# Testing the pipeline
+## Testing the pipeline
 
 The workspace test suites under `crates/nestforge/tests/` exercise many of these
 behaviors directly, including:

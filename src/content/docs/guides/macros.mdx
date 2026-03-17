@@ -3,8 +3,6 @@ title: Macros
 description: A reference guide to the macros that define modules, routes, metadata, DTO helpers, and lightweight pipeline components.
 ---
 
-# Why macros are central in NestForge
-
 Macros are how NestForge keeps application code concise while still exposing explicit
 Rust types. They are the main developer-facing layer for:
 
@@ -14,7 +12,7 @@ Rust types. They are the main developer-facing layer for:
 - DTO helpers
 - short-form guard, interceptor, middleware, and request decorator definitions
 
-# Module macros
+## Module macros
 
 `#[module(...)]` defines:
 
@@ -26,7 +24,7 @@ Rust types. They are the main developer-facing layer for:
 
 This macro is responsible for generating the module definition the runtime consumes.
 
-# Controller macros
+## Controller macros
 
 Main controller-related macros:
 
@@ -40,7 +38,7 @@ Main controller-related macros:
 `#[routes]` can also hold controller-level defaults for guards, interceptors, exception
 filters, auth requirements, roles, and tags.
 
-# Metadata macros
+## Metadata macros
 
 These shape route behavior and docs:
 
@@ -55,7 +53,7 @@ These shape route behavior and docs:
 - `#[nestforge::tag(...)]`
 - `#[nestforge::response(...)]`
 
-# Convenience macros
+## Convenience macros
 
 The public crate also exports utility macros:
 

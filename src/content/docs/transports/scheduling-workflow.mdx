@@ -3,7 +3,7 @@ title: Scheduling Workflow
 description: A step-by-step workflow for registering scheduled jobs through module providers and lifecycle hooks.
 ---
 
-# Goal
+## Goal
 
 Use this flow when your application needs repeated or delayed background jobs:
 
@@ -13,7 +13,7 @@ Use this flow when your application needs repeated or delayed background jobs:
 4. start schedules on bootstrap
 5. stop schedules on shutdown
 
-# Step 1: enable the feature
+## Step 1: enable the feature
 
 ```toml
 nestforge = { version = "1", features = ["schedule"] }

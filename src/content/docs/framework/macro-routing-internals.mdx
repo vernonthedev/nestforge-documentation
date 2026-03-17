@@ -3,7 +3,7 @@ title: Macro and Routing Internals
 description: How the macro layer and the routing layer relate, and what contributors should preserve when extending them.
 ---
 
-# Macro layer responsibilities
+## Macro layer responsibilities
 
 `nestforge-macros` is responsible for turning declarative user code into framework
 definitions the runtime can consume.
@@ -14,7 +14,7 @@ Examples:
 - `#[controller(...)]` and `#[routes]` become controller and route definitions
 - route metadata macros attach auth, versioning, and documentation information
 
-# Routing layer responsibilities
+## Routing layer responsibilities
 
 The runtime side of routing lives in the core and HTTP crates:
 

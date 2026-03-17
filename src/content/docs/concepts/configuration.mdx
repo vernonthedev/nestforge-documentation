@@ -3,8 +3,6 @@ title: Configuration
 description: How NestForge loads, validates, and injects typed configuration.
 ---
 
-# Configuration crate
-
 Configuration support lives in `nestforge-config` and is re-exported by the public
 `nestforge` crate when the `config` feature is enabled.
 
@@ -16,7 +14,7 @@ Important types:
 - `FromEnv`
 - `EnvStore`
 
-# Standard application pattern
+## Standard application pattern
 
 The example app uses a helper function that validates environment values before building
 the application config:
@@ -44,12 +42,25 @@ impl nestforge::FromEnv for AppConfig {
         Ok(Self {
             app_name: env.get("APP_NAME").unwrap_or("NestForge").to_string(),
             log_level: env.get("LOG_LEVEL").unwrap_or("info").to_string(),
+})
+}
+
+## Implementing `FromEnv`
+
+Your application config stays strongly typed by implementing `FromEnv`:
+
+```rust
+impl nestforge::FromEnv for AppConfig {
+    fn from_env(env: &nestforge::EnvStore) -> Result<Self, nestforge::ConfigError> {
+        Ok(Self {
+            app_name: env.get("APP_NAME").unwrap_or("NestForge").to_string(),
+            log_level: env.get("LOG_LEVEL").unwrap_or("info").to_string(),
         })
     }
 }
 ```
 
-# Why validation matters
+## Why validation matters
 
 Configuration errors are startup errors, not request-time surprises. Use `EnvSchema` to
 fail fast on:
@@ -58,7 +69,7 @@ fail fast on:
 - values that are too short
 - values outside an accepted set
 
-# Where configuration belongs
+## Where configuration belongs
 
 A useful application rule is:
 
