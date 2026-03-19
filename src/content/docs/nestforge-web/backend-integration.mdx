@@ -1,0 +1,264 @@
+---
+title: Backend Integration
+description: Connect your Rust NestForge backend with the frontend
+---
+
+# Backend Integration
+
+NestForge Web uses NestForge (Rust) as its backend framework, providing dependency injection, modules, and native performance.
+
+## Module Structure
+
+### Creating a Module
+
+```rust
+// src/backend/users/mod.rs
+use nestforge::prelude::*;
+
+#[nestforge::module]
+pub mod users {
+    use super::*;
+
+    #[nestforge::service]
+    pub struct UsersService;
+
+    impl UsersService {
+        pub async fn find_all(&self) -> Result<Vec<User>, DbError> {
+            // Database queries here
+            Ok(vec![])
+        }
+
+        pub async fn find_by_id(&self, id: Uuid) -> Result<Option<User>, DbError> {
+            // Find user by ID
+            Ok(None)
+        }
+
+        pub async fn create(&self, dto: CreateUserDto) -> Result<User, DbError> {
+            // Create new user
+            Ok(User::default())
+        }
+    }
+
+    #[nestforge::controller("/api/users")]
+    pub struct UsersController;
+
+    #[nestforge::routes]
+    impl UsersController {
+        #[nestforge::get("/")]
+        async fn get_all(svc: Inject<UsersService>) -> ApiResult<Vec<User>> {
+            Ok(ApiResult::ok(svc.find_all().await?))
+        }
+
+        #[nestforge::get("/{id}")]
+        async fn get_by_id(
+            svc: Inject<UsersService>,
+            path: Path<Uuid>,
+        ) -> ApiResult<Option<User>> {
+            Ok(ApiResult::ok(svc.find_by_id(path.id).await?))
+        }
+
+        #[nestforge::post("/")]
+        async fn create(
+            svc: Inject<UsersService>,
+            body: Json<CreateUserDto>,
+        ) -> ApiResult<User> {
+            Ok(ApiResult::created(svc.create(body.into_inner()).await?))
+        }
+
+        #[nestforge::put("/{id}")]
+        async fn update(
+            svc: Inject<UsersService>,
+            path: Path<Uuid>,
+            body: Json<UpdateUserDto>,
+        ) -> ApiResult<User> {
+            Ok(ApiResult::ok(svc.update(path.id, body.into_inner()).await?))
+        }
+
+        #[nestforge::delete("/{id}")]
+        async fn delete(
+            svc: Inject<UsersService>,
+            path: Path<Uuid>,
+        ) -> ApiResult<()> {
+            svc.delete(path.id).await?;
+            Ok(ApiResult::no_content())
+        }
+    }
+}
+```
+
+### Root Module
+
+```rust
+// src/backend/app_module.rs
+use nestforge::prelude::*;
+
+#[nestforge::module]
+pub mod app {
+    use super::*;
+
+    pub mod users;
+    pub mod posts;
+
+    #[nestforge::import]
+    users::users,
+    posts::posts,
+}
+```
+
+## Dependency Injection
+
+NestForge's DI system automatically resolves dependencies:
+
+```rust
+#[nestforge::service]
+pub struct DatabaseService {
+    pool: Pool<Postgres>,
+}
+
+#[nestforge::service]
+pub struct UsersService {
+    db: Inject<DatabaseService>,
+}
+
+#[nestforge::controller("/api/users")]
+pub struct UsersController;
+
+#[nestforge::routes]
+impl UsersController {
+    // UsersService is automatically injected
+    #[nestforge::get("/")]
+    async fn get_users(svc: Inject<UsersService>) -> ApiResult<Vec<User>> {
+        Ok(ApiResult::ok(svc.find_all().await?))
+    }
+}
+```
+
+## Data Transfer Objects (DTOs)
+
+```rust
+use serde::{Deserialize, Serialize};
+use nestforge::prelude::*;
+
+#[derive(Debug, Clone, Serialize, Deserialize, Dto)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateUserDto {
+    pub email: String,
+    pub name: String,
+    pub password: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Dto)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateUserDto {
+    pub email: Option<String>,
+    pub name: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Entity)]
+#[serde(rename_all = "camelCase")]
+pub struct User {
+    pub id: Uuid,
+    pub email: String,
+    pub name: String,
+    pub created_at: DateTime<Utc>,
+}
+```
+
+## API Result Handling
+
+```rust
+use nestforge::prelude::*;
+
+// Successful response
+async fn get_user() -> ApiResult<User> {
+    Ok(ApiResult::ok(user))
+}
+
+// Created response (201)
+async fn create_user() -> ApiResult<User> {
+    Ok(ApiResult::created(new_user))
+}
+
+// No content (204)
+async fn delete_user() -> ApiResult<()> {
+    Ok(ApiResult::no_content())
+}
+
+// Error responses
+async fn get_user_error() -> ApiResult<User> {
+    Err(ApiError::not_found("User not found"))
+}
+```
+
+## Middleware
+
+```rust
+#[nestforge::middleware]
+pub struct AuthMiddleware;
+
+impl MiddlewareTrait for AuthMiddleware {
+    async fn handle(
+        &self,
+        request: Request,
+        next: Next,
+    ) -> Result<Response, Error> {
+        // Verify auth token
+        match verify_token(request.headers()) {
+            Okclaims) => {
+                let request = request.with_context(claims);
+                next.run(request).await
+            }
+            Err(_) => Err(Error::unauthorized()),
+        }
+    }
+}
+```
+
+## Guards
+
+```rust
+#[nestforge::guard]
+pub struct AdminGuard;
+
+impl CanActivate for AdminGuard {
+    async fn can_activate(&self, context: ExecutionContext) -> bool {
+        let claims = context.get::<Claims>().unwrap();
+        claims.role == "admin"
+    }
+}
+
+#[nestforge::controller("/admin")]
+pub struct AdminController;
+
+#[nestforge::routes]
+impl AdminController {
+    #[nestforge::get("/users")]
+    #[nestforge::use(AdminGuard)]
+    async fn list_users() -> ApiResult<Vec<User>> {
+        // Only admins can access
+        Ok(ApiResult::ok(vec![]))
+    }
+}
+```
+
+## Interceptors
+
+```rust
+#[nestforge::interceptor]
+pub struct LoggingInterceptor;
+
+impl NestInterceptor for LoggingInterceptor {
+    fn before(&self, method: &str, path: &str) {
+        println!("Calling {method} at {path}");
+    }
+
+    fn after(&self, method: &str, duration_ms: u64) {
+        println!("{method} completed in {duration_ms}ms");
+    }
+}
+```
+
+## Related Pages
+
+- [Routing](./routing) - API route handlers
+- [CLI Reference](./cli) - Backend CLI commands

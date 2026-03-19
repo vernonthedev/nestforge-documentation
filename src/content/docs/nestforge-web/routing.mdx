@@ -1,0 +1,111 @@
+---
+title: Routing
+description: File-based routing inspired by Next.js
+---
+
+# Routing Guide
+
+NestForge Web uses file-based routing inspired by Next.js.
+
+## Route Types
+
+### Pages
+
+Pages are React components that render at specific URLs.
+
+| File | Route |
+|------|-------|
+| `page.tsx` | `/` |
+| `about/page.tsx` | `/about` |
+| `blog/page.tsx` | `/blog` |
+| `blog/[slug]/page.tsx` | `/blog/:slug` |
+
+### API Routes
+
+API routes handle HTTP requests and return JSON.
+
+```typescript
+// src/app/api/users/route.ts
+export async function GET() {
+  return Response.json({ users: [] });
+}
+
+export async function POST(request: Request) {
+  const body = await request.json();
+  return Response.json({ created: body });
+}
+```
+
+### Layouts
+
+Layouts wrap pages and persist across route changes.
+
+```tsx
+// src/app/layout.tsx
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+## Dynamic Routes
+
+### Required Parameters
+
+```tsx
+// src/app/users/[id]/page.tsx
+export default function UserPage({ params }: { params: { id: string } }) {
+  return <h1>User: {params.id}</h1>;
+}
+```
+
+### Catch-all Routes
+
+```tsx
+// src/app/docs/[...slug]/page.tsx
+// Matches /docs/a, /docs/a/b, /docs/a/b/c
+export default function DocPage({ params }: { params: { slug: string[] } }) {
+  return <h1>Docs: {params.slug.join('/')}</h1>;
+}
+```
+
+### Optional Catch-all
+
+```tsx
+// src/app/[[...slug]]/page.tsx
+// Matches /, /a, /a/b
+```
+
+## Route Groups
+
+Prefix directories with parentheses to group routes without affecting the URL:
+
+```
+(app)/
+  dashboard/
+    page.tsx        → /dashboard
+  settings/
+    page.tsx        → /settings
+```
+
+## Private Routes
+
+Prefix directories with underscore to exclude from routing:
+
+```
+_users/
+  admin/page.tsx    → NOT routed (ignored)
+```
+
+## Special Files
+
+| File | Purpose |
+|------|---------|
+| `layout.tsx` | Shared UI for routes |
+| `loading.tsx` | Loading state |
+| `error.tsx` | Error boundary |
+| `not-found.tsx` | 404 page |
+| `route.ts` | API endpoints |

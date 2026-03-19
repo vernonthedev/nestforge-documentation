@@ -1,0 +1,173 @@
+---
+title: Rendering Modes
+description: Server-Side Rendering, Static Site Generation, and Incremental Static Regeneration
+---
+
+# Rendering Modes
+
+NestForge Web supports multiple rendering strategies for optimal performance and user experience.
+
+## Server-Side Rendering (SSR)
+
+SSR renders pages on the server for each request. Best for dynamic content.
+
+```tsx
+// src/app/dashboard/page.tsx
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage() {
+  const user = await getCurrentUser();
+  const data = await fetchLatestData();
+  
+  return (
+    <Dashboard user={user} data={data} />
+  );
+}
+```
+
+### When to Use SSR
+
+- User-specific content (dashboards, profiles)
+- Frequently changing data
+- Real-time information
+- SEO-critical dynamic pages
+
+## Static Site Generation (SSG)
+
+SSG renders pages at build time. Best for content that rarely changes.
+
+```tsx
+// src/app/about/page.tsx
+export default function AboutPage() {
+  return (
+    <main>
+      <h1>About Us</h1>
+      <p>Static content rendered at build time</p>
+    </main>
+  );
+}
+```
+
+### Static Pages with Data
+
+```tsx
+// src/app/blog/[slug]/page.tsx
+export async function generateStaticParams() {
+  const posts = await getAllPosts();
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
+}
+
+export default async function BlogPost({ params }: { params: { slug: string } }) {
+  const post = await getPostBySlug(params.slug);
+  return <Article post={post} />;
+}
+```
+
+### When to Use SSG
+
+- Marketing pages (landing, about, pricing)
+- Documentation
+- Blog posts
+- Content that doesn't change often
+
+## Incremental Static Regeneration (ISR)
+
+ISR combines SSG and SSR - pages are statically generated but can be regenerated in the background.
+
+```tsx
+// src/app/blog/page.tsx
+export const revalidate = 60; // Revalidate every 60 seconds
+
+export default async function BlogIndex() {
+  const posts = await fetchPosts();
+  
+  return (
+    <main>
+      <h1>Blog</h1>
+      <ul>
+        {posts.map((post) => (
+          <li key={post.id}>
+            <a href={`/blog/${post.slug}`}>{post.title}</a>
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+```
+
+### On-Demand Revalidation
+
+```typescript
+// src/app/api/revalidate/route.ts
+export async function POST(request: Request) {
+  const body = await request.json();
+  const secret = request.headers.get("x-revalidate-secret");
+  
+  if (secret !== process.env.REVALIDATE_SECRET) {
+    return Response.json({ error: "Invalid secret" }, { status: 401 });
+  }
+  
+  await revalidatePath(`/blog/${body.slug}`);
+  return Response.json({ revalidated: true });
+}
+```
+
+### When to Use ISR
+
+- Content that updates periodically
+- E-commerce product pages
+- News or blog listings
+- Pages with mix of static/dynamic content
+
+## Rendering Mode Summary
+
+| Mode | When Rendered | Performance | Use Case |
+|------|---------------|-------------|----------|
+| SSR | Each request | Slower (fresh data) | Dynamic user content |
+| SSG | Build time | Fastest (static) | Static marketing/docs |
+| ISR | Build + background | Fast + fresh | Dynamic + performant |
+
+## Route Segment Config
+
+```tsx
+// Opt out of static rendering (SSR)
+export const dynamic = "force-dynamic";
+
+// Use PPR (Partial Prerendering) - experimental
+export const dynamic = "force-static";
+
+// Set runtime
+export const runtime = "edge";  // or "nodejs"
+
+// Set revalidation for ISR
+export const revalidate = 3600; // 1 hour
+
+// Set fetch cache behavior
+export const fetchCache = "force-no-store";
+```
+
+## Edge Runtime
+
+Deploy to edge locations for lowest latency:
+
+```tsx
+export const runtime = "edge";
+
+export default async function EdgePage() {
+  const data = await fetch("https://api.example.com/data", {
+    next: { revalidate: 60 },
+  });
+  
+  return <Page data={data} />;
+}
+```
+
+### Edge vs Node.js
+
+| Runtime | Latency | Capabilities | Cold Start |
+|---------|---------|--------------|------------|
+| Edge | ~0ms (global) | Limited APIs | ~0ms |
+| Node.js | Region-based | Full Node APIs | ~50ms |

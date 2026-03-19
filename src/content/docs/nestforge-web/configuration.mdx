@@ -1,0 +1,181 @@
+---
+title: Configuration
+description: Configure your NestForge Web application
+---
+
+# Configuration
+
+NestForge Web can be configured via `nestforge-web.config.ts` or environment variables.
+
+## Configuration File
+
+```typescript
+// nestforge-web.config.ts
+export const config = {
+  // Application name
+  name: "my-app",
+
+  // Directories
+  appDir: "./src/app",
+  backendDir: "./src/backend",
+
+  // Server
+  port: 3000,
+  host: "127.0.0.1",
+
+  // Build options
+  outDir: ".nestforge",
+  sourcemap: true,
+
+  // OpenAPI
+  openapi: {
+    title: "My API",
+    version: "1.0.0",
+    description: "API documentation",
+  },
+
+  // Features
+  features: {
+    hmr: true,
+    ssr: true,
+    apiDocs: true,
+  },
+};
+```
+
+## Environment Variables
+
+### Server Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `3000` | Server port |
+| `HOST` | `127.0.0.1` | Server host |
+| `RUST_LOG` | `info` | Rust logging level |
+
+### Application Paths
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `APP_DIR` | `src/app` | Frontend source directory |
+| `NESTFORGE_DIR` | `src/backend` | Backend source directory |
+| `OUT_DIR` | `.nestforge` | Build output directory |
+
+### Build Options
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NODE_ENV` | `development` | Environment mode |
+| `SOURCEMAP` | `true` | Generate source maps |
+| `MINIFY` | `false` | Minify output |
+
+### Database (Optional)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATABASE_URL` | - | PostgreSQL connection string |
+| `REDIS_URL` | - | Redis connection string |
+| `MONGODB_URL` | - | MongoDB connection string |
+
+### Authentication
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `JWT_SECRET` | - | JWT signing secret |
+| `SESSION_SECRET` | - | Session encryption key |
+
+## CLI Options
+
+### dev
+
+```bash
+nestforge-web dev [options]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `-p, --port <port>` | `3000` | Port to listen on |
+| `-h, --host <host>` | `127.0.0.1` | Host to bind to |
+| `--app-dir <dir>` | `src/app` | Frontend source directory |
+
+### build
+
+```bash
+nestforge-web build [options]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--app-dir <dir>` | `src/app` | Frontend source directory |
+| `--out-dir <dir>` | `.nestforge` | Output directory |
+| `--no-sourcemap` | `false` | Disable source maps |
+| `--release` | `false` | Production build |
+
+### start
+
+```bash
+nestforge-web start [options]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `-p, --port <port>` | `3000` | Port to listen on |
+| `-h, --host <host>` | `127.0.0.1` | Host to bind to |
+
+## TypeScript Configuration
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@backend/*": ["./src/backend/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
+```
+
+## Cargo Configuration
+
+```toml
+# Cargo.toml
+[package]
+name = "my-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nestforge-web = { version = "0.1", features = ["full"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+```
+
+## Feature Flags
+
+```toml
+[dependencies.nestforge-web]
+version = "0.1"
+default-features = false
+features = [
+  "axum",        # HTTP server
+  "openapi",     # OpenAPI generation
+  "hmr",         # Hot module replacement
+  "redis",       # Redis caching
+  "postgres",    # PostgreSQL support
+  "mongodb",     # MongoDB support
+]
+```

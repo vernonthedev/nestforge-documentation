@@ -1,0 +1,170 @@
+---
+title: Overview
+description: A blazing-fast fullstack framework combining NestForge's Rust backend with a Next.js-inspired frontend serving layer.
+---
+
+# NestForge Web
+
+A blazing-fast fullstack framework combining NestForge's high-performance Rust backend with a Next.js-inspired frontend serving layer.
+
+[![crates.io](https://img.shields.io/crates/v/nestforge-web)](https://crates.io/crates/nestforge-web)
+[![docs.rs](https://img.shields.io/docsrs/nestforge-web)](https://docs.rs/nestforge-web)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+## Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **NestForge Backend** | Rust-powered with dependency injection, modules, and runtime performance |
+| **File-based Routing** | Next.js-style app directory with pages and API routes |
+| **SSR/SSG/ISR** | Server-Side Rendering, Static Site Generation, and Incremental Static Regeneration |
+| **API Routes** | Backend endpoints co-located with frontend code |
+| **Type Sharing** | Automatic TypeScript types from Rust backend |
+| **Hot Module Replacement** | Fast development with HMR |
+| **OpenAPI Docs** | Auto-generated API documentation with Swagger UI |
+| **Edge Deployment** | Cloudflare Workers, serverless, or containers |
+
+## Quick Start
+
+### Install CLI
+
+```bash
+cargo install nestforge-web-cli
+```
+
+### Create Project
+
+```bash
+nestforge-web new my-app
+cd my-app
+```
+
+### Start Development
+
+```bash
+nestforge-web dev
+```
+
+Your app is now running at `http://localhost:3000`.
+
+## Minimal Fullstack App
+
+### Frontend (TypeScript/React)
+
+```tsx
+// src/app/users/page.tsx
+export default async function UsersPage() {
+  const users = await fetch('/api/users').then(r => r.json());
+  
+  return (
+    <main>
+      <h1>Users</h1>
+      <ul>
+        {users.map(user => (
+          <li key={user.id}>{user.name}</li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+```
+
+### Backend (Rust/NestForge)
+
+```rust
+// src/backend/users/users_controller.rs
+use nestforge::prelude::*;
+
+#[nestforge::controller("/api/users")]
+pub struct UsersController;
+
+#[nestforge::routes]
+impl UsersController {
+    #[nestforge::get("/")]
+    async fn get_users(_service: Inject<UsersService>) -> ApiResult<Vec<User>> {
+        Ok(ApiResult::ok(users_service.find_all().await?))
+    }
+}
+```
+
+## Directory Structure
+
+```
+my-app/
+├── src/
+│   ├── app/                    # Next.js-style app directory
+│   │   ├── page.tsx            # Homepage (/)
+│   │   ├── about/
+│   │   │   └── page.tsx        # /about
+│   │   ├── api/                # API routes
+│   │   │   └── users/
+│   │   │       └── route.ts    # /api/users
+│   │   └── layout.tsx          # Root layout
+│   ├── components/             # Shared React components
+│   ├── backend/                # NestForge backend modules
+│   │   ├── app_module.rs       # Root module
+│   │   ├── users/
+│   │   │   ├── mod.rs
+│   │   │   ├── users_controller.rs
+│   │   │   └── users_service.rs
+│   │   └── posts/
+│   │       ├── mod.rs
+│   │       ├── posts_controller.rs
+│   │       └── posts_service.rs
+│   └── lib/
+│       └── bridge.rs           # Bridge between frontend/backend
+├── nestforge-web.config.ts     # Framework configuration
+└── Cargo.toml
+```
+
+## Comparison with Next.js
+
+| Feature | Next.js | NestForge Web |
+|---------|---------|---------------|
+| Backend Language | JavaScript/TypeScript | Rust |
+| Runtime | Node.js | Native + Axum |
+| DI System | Manual/Modules | Native NestForge |
+| Cold Start (serverless) | 100-500ms | < 50ms |
+| Memory Usage | 50-200MB | < 20MB |
+| Type Sharing | Generated | Native shared crate |
+| Deployment | Node.js hosts | Native binaries |
+
+## CLI Commands
+
+```bash
+# Development
+nestforge-web dev           # Start dev server with HMR
+nestforge-web build         # Build for production
+nestforge-web start         # Run production server
+
+# Project management
+nestforge-web new <name>   # Create new project
+nestforge-web generate      # Generate code scaffolds
+nestforge-web docs          # Open API documentation
+```
+
+## Resources
+
+| Resource | Link |
+|----------|------|
+| GitHub Repository | [vernonthedev/nestforge-web](https://github.com/vernonthedev/nestforge-web) |
+| crates.io | [nestforge-web](https://crates.io/crates/nestforge-web) |
+| docs.rs | [nestforge-web](https://docs.rs/nestforge-web) |
+| Wiki | [GitHub Wiki](https://github.com/vernonthedev/nestforge-web/wiki) |
+| Changelog | [CHANGELOG.md](https://github.com/vernonthedev/nestforge-web/blob/main/CHANGELOG.md) |
+| CLI Crate | [nestforge-web-cli](https://crates.io/crates/nestforge-web-cli) |
+| Core Crate | [nfw-core](https://crates.io/crates/nfw-core) |
+
+## Crates
+
+The project is organized as a Cargo workspace:
+
+| Crate | Description |
+|-------|-------------|
+| `nestforge-web` | Main public crate |
+| `nfw-core` | Core framework (routing, HMR, API generation, OpenAPI) |
+| `nestforge-web-cli` | CLI binary for scaffolding and development |
+
+---
+
+*Developed with love by [@vernonthedev](https://github.com/vernonthedev)*

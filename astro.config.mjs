@@ -134,6 +134,20 @@ export default defineConfig({
           ],
         },
         {
+          label: "NestForge Web",
+          collapsed: false,
+          items: [
+            { label: "Overview", slug: "nestforge-web/overview" },
+            { label: "Routing", slug: "nestforge-web/routing" },
+            { label: "Backend Integration", slug: "nestforge-web/backend-integration" },
+            { label: "Rendering Modes", slug: "nestforge-web/rendering-modes" },
+            { label: "Configuration", slug: "nestforge-web/configuration" },
+            { label: "Architecture", slug: "nestforge-web/architecture" },
+            { label: "Performance", slug: "nestforge-web/performance" },
+            { label: "CLI Reference", slug: "nestforge-web/cli" },
+          ],
+        },
+        {
           label: "Framework Contribution",
           collapsed: true,
           items: [

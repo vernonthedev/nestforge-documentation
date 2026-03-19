@@ -1,0 +1,123 @@
+---
+title: CLI Reference
+description: Command-line interface for NestForge Web
+---
+
+# CLI Reference
+
+## Global Options
+
+```
+-h, --help     Show help
+-V, --version  Show version
+```
+
+## Commands
+
+### new
+
+Create a new NestForge Web project.
+
+```bash
+nestforge-web new <name> [options]
+```
+
+**Options:**
+- `-p, --path <path>` - Directory to create project (default: `.`)
+- `--ts` - Use TypeScript (default)
+- `--rs` - Include Rust backend
+
+**Example:**
+```bash
+nestforge-web new my-app
+nestforge-web new my-app --path ./projects
+```
+
+### dev
+
+Start the development server with hot module replacement.
+
+```bash
+nestforge-web dev [options]
+```
+
+**Options:**
+- `-p, --port <port>` - Port to listen on (default: `3000`)
+- `-h, --host <host>` - Host to bind to (default: `127.0.0.1`)
+- `--app-dir <dir>` - Frontend source directory (default: `src/app`)
+
+**Example:**
+```bash
+nestforge-web dev
+nestforge-web dev --port 8080
+nestforge-web dev --host 0.0.0.0
+```
+
+### build
+
+Build the application for production.
+
+```bash
+nestforge-web build [options]
+```
+
+**Options:**
+- `--app-dir <dir>` - Frontend source directory (default: `src/app`)
+- `--out-dir <dir>` - Output directory (default: `.next`)
+- `--no-sourcemap` - Disable source maps
+
+**Example:**
+```bash
+nestforge-web build
+nestforge-web build --out-dir dist
+```
+
+### start
+
+Start the production server.
+
+```bash
+nestforge-web start [options]
+```
+
+**Options:**
+- `-p, --port <port>` - Port to listen on (default: `3000`)
+- `-h, --host <host>` - Host to bind to (default: `127.0.0.1`)
+
+**Example:**
+```bash
+nestforge-web start
+nestforge-web start --port 8080 --host 0.0.0.0
+```
+
+### generate (planned)
+
+Generate code scaffolds.
+
+```bash
+nestforge-web generate <type> <name> [options]
+```
+
+**Types:**
+- `page` - New page component
+- `component` - New React component
+- `api` - New API route
+- `module` - New NestForge module
+- `resource` - Full CRUD resource
+
+**Example:**
+```bash
+nestforge-web generate page about
+nestforge-web generate api users
+nestforge-web generate module blog
+```
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `3000` | Server port |
+| `HOST` | `127.0.0.1` | Server host |
+| `APP_DIR` | `src/app` | Frontend source |
+| `NESTFORGE_DIR` | `src/nestforge` | Backend source |
+| `NODE_ENV` | `development` | Environment mode |

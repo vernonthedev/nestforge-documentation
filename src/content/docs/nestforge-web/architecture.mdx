@@ -1,0 +1,213 @@
+---
+title: Architecture
+description: How NestForge Web is structured internally
+---
+
+# Architecture
+
+NestForge Web combines a Next.js-inspired frontend serving layer with NestForge's Rust backend into a unified fullstack framework.
+
+## High-Level Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      NestForge Web                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────────┐    ┌─────────────────────────┐   │
+│  │      Frontend        │    │        Backend           │   │
+│  │     (TypeScript)     │◄──►│        (Rust)            │   │
+│  │                      │    │                         │   │
+│  │  ┌────────────────┐  │    │  ┌───────────────────┐  │   │
+│  │  │ React Pages    │  │    │  │ NestForge Modules │  │   │
+│  │  │ API Routes     │  │    │  │ Controllers       │  │   │
+│  │  │ Components     │  │    │  │ Services          │  │   │
+│  │  │ Layouts        │  │    │  │ Middleware        │  │   │
+│  │  └────────────────┘  │    │  └───────────────────┘  │   │
+│  └─────────────────────┘    └─────────────────────────┘   │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │              HTTP Server (Axum)                       │   │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐             │   │
+│  │  │ Routing  │ │  HMR     │ │ OpenAPI  │             │   │
+│  │  │ Matcher  │ │ Client   │ │ Generator│             │   │
+│  │  └──────────┘ └──────────┘ └──────────┘             │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │              Rust Runtime                             │   │
+│  │  tokio ─ async/await, task scheduling                │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Crate Structure
+
+### nfw-core
+
+Core framework primitives:
+
+| Module | Responsibility |
+|--------|----------------|
+| `routing` | File-based routing, URL matching |
+| `api` | API route handlers, HTTP methods |
+| `openapi` | OpenAPI spec generation |
+| `hmr` | Hot module replacement client/server |
+| `server` | HTTP server (Axum integration) |
+| `config` | Configuration loading |
+
+### nestforge-web
+
+Public API crate that re-exports `nfw-core`:
+
+```rust
+pub use nfw_core::*;
+
+pub mod prelude {
+    pub use nfw_core::prelude::*;
+}
+```
+
+### nestforge-web-cli
+
+CLI binary for development:
+
+```bash
+nestforge-web new <name>     # Scaffold project
+nestforge-web dev            # Start dev server
+nestforge-web build          # Production build
+nestforge-web generate       # Code generation
+```
+
+## Request Flow
+
+### SSR Request
+
+```
+1. Browser → HTTP Request
+2. Axum Server receives request
+3. Route matcher identifies page component
+4. Backend modules prepare data (DI resolves services)
+5. React component renders to HTML
+6. HTML + serialized data sent to client
+7. Browser receives complete page (hydrates)
+```
+
+### API Request
+
+```
+1. Browser → API Request (/api/users)
+2. Axum routes to NestForge controller
+3. Middleware runs (auth, logging)
+4. Guard checks authorization
+5. Service executes business logic
+6. Response serialized (JSON)
+7. Client receives response
+```
+
+### HMR Flow
+
+```
+1. File changes detected (watcher)
+2. Change notification sent to browser (WebSocket)
+3. Browser fetches changed modules
+4. React fast-refresh updates component
+5. State preserved where possible
+```
+
+## Data Flow
+
+### Frontend → Backend
+
+```tsx
+// Frontend calls API
+const users = await fetch('/api/users').then(r => r.json());
+
+// API returns JSON
+// TypeScript types match Rust structs
+```
+
+### Type Sharing
+
+Rust structs generate TypeScript types:
+
+```rust
+// Rust
+#[derive(Debug, Serialize, Deserialize)]
+pub struct User {
+    pub id: Uuid,
+    pub name: String,
+    pub email: String,
+}
+```
+
+```typescript
+// Generated TypeScript
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+```
+
+## Module Dependencies
+
+```
+┌─────────────────────────────────────────┐
+│           Application Module             │
+│  (user defines in src/backend/)          │
+├─────────────────────────────────────────┤
+│         NestForge Modules               │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐   │
+│  │ Users   │ │ Posts   │ │ Auth    │   │
+│  └────┬────┘ └────┬────┘ └────┬────┘   │
+├───────┼───────────┼───────────┼─────────┤
+│       │           │           │          │
+│  ┌────▼───────────▼───────────▼────┐    │
+│  │        DI Container             │    │
+│  │  Service Resolution + Lifecycle│    │
+│  └─────────────────────────────────┘    │
+├─────────────────────────────────────────┤
+│        Database Adapters                │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐   │
+│  │Postgres│ │  Redis  │ │ MongoDB │   │
+│  └─────────┘ └─────────┘ └─────────┘   │
+└─────────────────────────────────────────┘
+```
+
+## Deployment Options
+
+### Standalone Binary
+
+```bash
+cargo build --release
+./target/release/my-app
+```
+
+### Docker
+
+```dockerfile
+FROM rust:1.75-slim
+WORKDIR /app
+COPY . .
+RUN cargo build --release
+EXPOSE 3000
+CMD ["./target/release/my-app"]
+```
+
+### Edge (Cloudflare Workers)
+
+```bash
+# Configure for Cloudflare
+nestforge-web build --target cloudflare-workers
+```
+
+## Performance Characteristics
+
+| Component | Optimization |
+|-----------|--------------|
+| Cold Start | < 50ms (native binary) |
+| Memory | < 20MB baseline |
+| Throughput | 100k+ req/s |
+| TTFB | < 10ms (local) |
