@@ -1,3 +1,5 @@
+## [1.4.2](https://github.com/vernonthedev/nestforge-documentation/compare/v1.4.1...v1.4.2) (2026-03-19)
+
 ## [1.4.1](https://github.com/vernonthedev/nestforge-documentation/compare/v1.4.0...v1.4.1) (2026-03-17)
 
 ## [1.4.0](https://github.com/vernonthedev/nestforge-documentation/compare/v1.3.0...v1.4.0) (2026-03-16)
