@@ -1,0 +1,24 @@
+
+> nestforge-documentation@1.4.2 dev
+> astro dev
+
+▶ Astro collects anonymous usage data.
+  This information helps us improve Astro.
+  Run "astro telemetry disable" to opt-out.
+  https://astro.build/telemetry
+
+14:05:28 [types] Generated 1ms
+
+ update  ▶ New version of Astro available: 6.4.8
+  Run npx @astrojs/upgrade to update
+
+14:05:29 [content] Syncing content
+14:05:29 [content] Synced content
+
+ astro  v5.18.0 ready in 2468 ms
+
+┃ Local    http://localhost:4321/
+┃ Network  use --host to expose
+
+14:05:29 watching for file changes...
+14:06:07 [200] / 361ms
