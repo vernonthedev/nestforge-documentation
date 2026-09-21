@@ -3,6 +3,140 @@ import { Image } from 'astro:assets';
 import '../styles/home.css';
 import faviconSrc from '../assets/favicon.ico';
 import logo from '../assets/logo.svg';
+
+const commands = [
+  { id: 'install', label: 'install', text: 'cargo install nestforge-cli' },
+  { id: 'scaffold', label: 'scaffold', text: 'nestforge new my-api' },
+];
+
+const pipeline = [
+  { n: '01', name: 'Router', desc: 'Axum router, request context', href: '/concepts/request-pipeline/' },
+  { n: '02', name: 'Middleware', desc: 'Logging, header prep', href: '/guides/middleware/' },
+  { n: '03', name: 'Guards', desc: 'Access rules', href: '/guides/guards-interceptors/' },
+  { n: '04', name: 'Interceptors', desc: 'Wrap execution', href: '/guides/guards-interceptors/' },
+  { n: '05', name: 'Handler', desc: 'Your code runs', href: '/concepts/controllers-routing/' },
+  { n: '06', name: 'Response', desc: 'Filters, then 200', href: '/concepts/request-pipeline/#exception-filters' },
+];
+
+const solutions = [
+  {
+    pain: 'Wiring every service by hand.',
+    title: 'Modules & DI',
+    links: [
+      { label: 'Modules and dependency injection', href: '/concepts/modules-and-di/' },
+      { label: 'Services and providers', href: '/concepts/services/' },
+      { label: 'Request-scoped container', href: '/concepts/request-pipeline/' },
+    ],
+  },
+  {
+    pain: 'Auth checks scattered everywhere.',
+    title: 'Guards & Interceptors',
+    links: [
+      { label: 'Guards and interceptors', href: '/guides/guards-interceptors/' },
+      { label: 'Auth with OpenAPI', href: '/guides/auth-openapi/' },
+      { label: 'Middleware bindings', href: '/guides/middleware/' },
+    ],
+  },
+  {
+    pain: 'API docs that rot behind the code.',
+    title: 'OpenAPI',
+    links: [
+      { label: 'OpenAPI from scratch', href: '/guides/openapi-from-scratch/' },
+      { label: 'Auth + OpenAPI workflow', href: '/guides/auth-openapi-workflow/' },
+      { label: 'Controllers and routing', href: '/concepts/controllers-routing/' },
+    ],
+  },
+  {
+    pain: 'A new database, a new mess.',
+    title: 'Data Layer',
+    links: [
+      { label: 'Data layer overview', href: '/guides/data-layer/' },
+      { label: 'SQL workflow', href: '/guides/database-workflow/' },
+      { label: 'Mongo workflow', href: '/guides/mongo-workflow/' },
+    ],
+  },
+  {
+    pain: 'REST today, gRPC tomorrow, rewrite everything.',
+    title: 'Transports',
+    links: [
+      { label: 'GraphQL transport', href: '/transports/graphql/' },
+      { label: 'gRPC transport', href: '/transports/grpc/' },
+      { label: 'WebSockets transport', href: '/transports/websockets/' },
+    ],
+  },
+  {
+    pain: 'Untested glue holding it together.',
+    title: 'Testing & CLI',
+    links: [
+      { label: 'Testing your app', href: '/guides/testing/' },
+      { label: 'Testing workflow', href: '/guides/testing-workflow/' },
+      { label: 'CLI workflow', href: '/getting-started/cli-workflow/' },
+    ],
+  },
+];
+
+const lanes = [
+  {
+    tag: '// build',
+    title: 'Build applications',
+    desc: 'Ship services with the runtime: routing, auth, data access, and transports.',
+    links: [
+      { label: 'Installation', href: '/getting-started/installation/' },
+      { label: 'Quick Start', href: '/getting-started/quick-start/' },
+      { label: 'CLI Workflow', href: '/getting-started/cli-workflow/' },
+    ],
+    cta: { label: 'Start building', href: '/getting-started/overview/' },
+  },
+  {
+    tag: '// framework',
+    title: 'Work on the framework',
+    desc: 'Evolve NestForge itself: crates, macros, API boundaries, and releases.',
+    links: [
+      { label: 'Crate Architecture', href: '/framework/crate-architecture/' },
+      { label: 'Workspace Structure', href: '/framework/workspace-structure/' },
+      { label: 'Contributing', href: '/framework/contributing/' },
+    ],
+    cta: { label: 'Read the internals', href: '/framework/crate-architecture/' },
+  },
+];
+
+const groups = [
+  {
+    label: 'Build',
+    links: [
+      { label: 'Installation', href: '/getting-started/installation/' },
+      { label: 'CLI Workflow', href: '/getting-started/cli-workflow/' },
+      { label: 'Modules', href: '/concepts/modules-and-di/' },
+      { label: 'Services', href: '/concepts/services/' },
+      { label: 'Controllers', href: '/concepts/controllers-routing/' },
+      { label: 'Architecture', href: '/concepts/architecture/' },
+      { label: 'Testing', href: '/guides/testing/' },
+      { label: 'Example App', href: '/examples/hello-nestforge/' },
+    ],
+  },
+  {
+    label: 'Runtime',
+    links: [
+      { label: 'Request Pipeline', href: '/concepts/request-pipeline/' },
+      { label: 'Auth and OpenAPI', href: '/guides/auth-openapi/' },
+      { label: 'Data Layer', href: '/guides/data-layer/' },
+      { label: 'GraphQL', href: '/transports/graphql/' },
+      { label: 'gRPC', href: '/transports/grpc/' },
+      { label: 'WebSockets', href: '/transports/websockets/' },
+      { label: 'Microservices', href: '/transports/microservices/' },
+    ],
+  },
+  {
+    label: 'Framework',
+    links: [
+      { label: 'Workspace Structure', href: '/framework/workspace-structure/' },
+      { label: 'Crate Architecture', href: '/framework/crate-architecture/' },
+      { label: 'Public API Surface', href: '/framework/public-api-surface/' },
+      { label: 'Macro Internals', href: '/framework/macro-routing-internals/' },
+      { label: 'Contributing', href: '/framework/contributing/' },
+    ],
+  },
+];
 ---
 
 <!doctype html>
@@ -32,14 +166,13 @@ import logo from '../assets/logo.svg';
     <link rel="shortcut icon" href={faviconSrc} type="image/x-icon" />
   </head>
   <body class="home-body">
+    <div class="rails" aria-hidden="true"></div>
+    <div class="dither" aria-hidden="true"></div>
     <header class="home-header">
       <div class="home-container home-header-inner">
         <a href="/" class="home-brand" aria-label="NestForge home">
           <Image src={logo} alt="NestForge" width={40} height={23} loading="eager" fetchpriority="high" />
-          <div class="home-brand-copy">
-            <span class="home-brand-name">NestForge</span>
-            <span class="home-brand-subtitle">Framework docs</span>
-          </div>
+          <span class="home-brand-name">NestForge</span>
         </a>
 
         <nav class="home-nav" aria-label="Primary">
@@ -62,107 +195,160 @@ import logo from '../assets/logo.svg';
             </span>
           </button>
           <a href="https://github.com/vernonthedev/nestforge" class="home-header-link">GitHub</a>
-          <a href="/getting-started/overview/" class="home-header-cta">Open Docs</a>
         </div>
       </div>
     </header>
 
-    <main>
+    <main class="home-container">
       <section class="hero">
-        <div class="home-container hero-inner">
-          <p class="eyebrow">NestForge documentation</p>
-          <h1>Build NestForge services without guessing the runtime or the workspace.</h1>
-          <p class="hero-copy">
-            Documentation for application teams shipping APIs and for contributors working
-            inside the framework: installation, CLI workflow, core concepts, transport
-            guides, examples, crate architecture, and release process.
-          </p>
-          <div class="hero-actions">
-            <a href="/getting-started/quick-start/" class="button button-primary">Quick Start</a>
-            <a href="/framework/crate-architecture/" class="button button-secondary">Crate Architecture</a>
+        <a href="https://github.com/vernonthedev/nestforge-documentation/releases" class="kicker kicker-link"><span>//</span> docs v1.4 <span aria-hidden="true">→</span></a>
+        <h1>Ship Rust APIs without the boilerplate.</h1>
+        <p class="hero-copy">
+          NestForge is a Nest-style framework on Axum: modules, dependency
+          injection, guards, and interceptors built in. These docs cover
+          building on it — and building it.
+        </p>
+        <div class="install" role="group" aria-label="Install commands">
+          <div class="install-line">
+            <label class="install-pick">
+              <span class="visually-hidden">Command</span>
+              <select id="install-select" aria-label="Command">
+                {commands.map((cmd, i) => (
+                  <option value={cmd.text} selected={i === 0}>{cmd.label}</option>
+                ))}
+              </select>
+            </label>
+            <span class="install-sep" aria-hidden="true"></span>
+            <code id="install-text">{commands[0].text}</code>
+            <button type="button" class="install-copy" id="install-copy" aria-label="Copy install command">copy</button>
           </div>
+        </div>
+        <div class="hero-actions">
+          <a href="/getting-started/quick-start/" class="home-cta home-cta-large">Read the Quick Start</a>
+          <a href="/concepts/architecture/" class="hero-link">Explore the architecture</a>
         </div>
       </section>
 
-      <div class="home-flow">
-        <section class="paths">
-          <div class="home-container paths-layout">
-            <div class="paths-intro">
-              <p class="eyebrow">Choose your lane</p>
-              <h2>The docs split cleanly between building on NestForge and evolving NestForge itself.</h2>
-            </div>
-
-            <div class="paths-stack">
-              <a href="/getting-started/overview/" class="path-band">
-                <div class="path-band-meta">
-                  <span class="path-label">Build applications</span>
-                  <strong>Ship services with the runtime, guides, transports, and examples.</strong>
-                </div>
-                <p>Start here for installation, request flow, auth, data access, testing, GraphQL, gRPC, WebSockets, and microservices.</p>
+      <section class="pipeline" aria-label="Request lifecycle">
+        <div class="section-head">
+          <p class="kicker">// request lifecycle</p>
+          <a href="/concepts/request-pipeline/" class="section-more">Full pipeline</a>
+        </div>
+        <ol class="pipeline-strip">
+          {pipeline.map((stage) => (
+            <li>
+              <a href={stage.href} class="pipeline-cell">
+                <span class="pipeline-num">{stage.n}</span>
+                <strong>{stage.name}</strong>
+                <span class="pipeline-desc">{stage.desc}</span>
               </a>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-              <a href="/framework/crate-architecture/" class="path-band path-band-alt">
-                <div class="path-band-meta">
-                  <span class="path-label">Work on the framework</span>
-                  <strong>Navigate the workspace through crate ownership, API boundaries, and release flow.</strong>
-                </div>
-                <p>Use this lane for macro internals, workspace structure, contribution rules, framework quality, and release mechanics.</p>
-              </a>
+      <section class="playground" aria-label="What NestForge handles">
+        <div class="section-head home-container">
+          <p class="kicker">// what nestforge handles</p>
+        </div>
+        <div class="play-tabs" role="tablist" aria-label="Topics">
+          {solutions.map((s, i) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={i === 0 ? 'true' : 'false'}
+              data-topic={i}
+              class:list={['play-tab', { active: i === 0 }]}
+            >
+              {s.title}
+            </button>
+          ))}
+        </div>
+        <div class="home-container">
+          {solutions.map((s, i) => (
+            <div class="play-panel" data-panel={i} hidden={i !== 0}>
+              <p class="play-pain">{s.pain}</p>
+              <ul class="play-links">
+                {s.links.map((link) => (
+                  <li><a href={link.href}>{link.label} <span aria-hidden="true">→</span></a></li>
+                ))}
+              </ul>
             </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="model">
+        <div class="section-head">
+          <p class="kicker">// the mental model</p>
+          <a href="/concepts/modules-and-di/" class="section-more">How modules work</a>
+        </div>
+        <div class="model-grid">
+          <pre class="model-code"><code><span class="tok-macro">#[module(</span>
+    <span data-part="imports"><span class="tok-key">imports</span> = [DatabaseModule],</span>
+    <span data-part="controllers"><span class="tok-key">controllers</span> = [UsersController],</span>
+    <span data-part="providers"><span class="tok-key">providers</span> = [UsersService],</span>
+    <span data-part="exports"><span class="tok-key">exports</span> = [UsersService]</span>
+<span class="tok-macro">)]</span>
+<span class="tok-kw">pub struct</span> UsersModule;</code></pre>
+          <ul class="model-notes">
+            <li data-part="imports"><code>imports</code><span>Pull in providers exported by other modules.</span></li>
+            <li data-part="controllers"><code>controllers</code><span>Route handlers instantiated with the module.</span></li>
+            <li data-part="providers"><code>providers</code><span>Services built by the injector, shared in scope.</span></li>
+            <li data-part="exports"><code>exports</code><span>The subset other modules are allowed to use.</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="lanes">
+        {lanes.map((lane) => (
+          <article class="lane">
+            <p class="kicker">{lane.tag}</p>
+            <h2>{lane.title}</h2>
+            <p class="lane-desc">{lane.desc}</p>
+            <ul class="lane-links">
+              {lane.links.map((link) => (
+                <li>
+                  <a href={link.href}>{link.label}</a>
+                </li>
+              ))}
+            </ul>
+            <a href={lane.cta.href} class="lane-cta">{lane.cta.label} <span aria-hidden="true">↗</span></a>
+          </article>
+        ))}
+      </section>
+
+      <section class="index">
+        {groups.map((group) => (
+          <div class="index-group">
+            <p class="kicker">// {group.label.toLowerCase()}</p>
+            <ul>
+              {group.links.map((link) => (
+                <li>
+                  <a href={link.href}>
+                    {link.label}
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
-        </section>
-
-        <section class="explore">
-          <div class="home-container">
-            <div class="explore-head">
-              <p class="eyebrow">Jump directly</p>
-              <h2>Start from the part of NestForge you need right now.</h2>
-            </div>
-
-            <div class="explore-layout">
-              <a href="/getting-started/quick-start/" class="explore-feature">
-                <span class="explore-feature-label">Start here</span>
-                <strong>Quick Start</strong>
-                <p>Spin up a NestForge project, see the first run path, and move into the docs with context.</p>
-              </a>
-
-              <div class="explore-groups">
-                <article class="explore-group">
-                  <span class="explore-group-label">Build</span>
-                  <a href="/getting-started/installation/">Installation</a>
-                  <a href="/getting-started/cli-workflow/">CLI Workflow</a>
-                  <a href="/concepts/modules-and-di/">Modules</a>
-                  <a href="/concepts/services/">Services</a>
-                  <a href="/concepts/controllers-routing/">Controllers</a>
-                  <a href="/concepts/architecture/">Architecture</a>
-                  <a href="/guides/testing/">Testing</a>
-                  <a href="/examples/hello-nestforge/">Example App</a>
-                </article>
-
-                <article class="explore-group">
-                  <span class="explore-group-label">Runtime</span>
-                  <a href="/concepts/request-pipeline/">Request Pipeline</a>
-                  <a href="/guides/auth-openapi/">Auth and OpenAPI</a>
-                  <a href="/guides/data-layer/">Data Layer</a>
-                  <a href="/transports/graphql/">GraphQL</a>
-                  <a href="/transports/grpc/">gRPC</a>
-                  <a href="/transports/websockets/">WebSockets</a>
-                  <a href="/transports/microservices/">Microservices</a>
-                </article>
-
-                <article class="explore-group">
-                  <span class="explore-group-label">Framework</span>
-                  <a href="/framework/workspace-structure/">Workspace Structure</a>
-                  <a href="/framework/crate-architecture/">Crate Architecture</a>
-                  <a href="/framework/public-api-surface/">Public API Surface</a>
-                  <a href="/framework/macro-routing-internals/">Macro Internals</a>
-                  <a href="/framework/contributing/">Contributing</a>
-                </article>
-              </div>
-            </div>
+        ))}
+      </section>
+      <section class="closing">
+        <p class="kicker">// get started</p>
+        <h2>Stop wiring boilerplate.</h2>
+        <div class="install" role="group" aria-label="Install commands">
+          <div class="install-line">
+            <span class="install-prompt" aria-hidden="true">$</span>
+            <code>cargo install nestforge-cli</code>
           </div>
-        </section>
-      </div>
+        </div>
+        <div class="closing-actions">
+          <a href="/getting-started/quick-start/" class="home-cta home-cta-large">Get started</a>
+          <a href="https://github.com/vernonthedev/nestforge" class="home-cta home-cta-large home-cta-ghost">GitHub</a>
+        </div>
+      </section>
     </main>
 
     <footer class="home-footer">
@@ -170,15 +356,9 @@ import logo from '../assets/logo.svg';
         <div class="home-footer-brand">
           <a href="/" class="home-brand home-brand-footer" aria-label="NestForge home">
             <Image src={logo} alt="NestForge" width={40} height={23} loading="lazy" />
-            <div class="home-brand-copy">
-              <span class="home-brand-name">NestForge</span>
-              <span class="home-brand-subtitle">Framework docs</span>
-            </div>
+            <span class="home-brand-name">NestForge</span>
           </a>
-          <p>
-            Documentation for building applications with NestForge and contributing to the
-            framework workspace itself.
-          </p>
+          <p>Documentation for building applications with NestForge and contributing to the framework workspace itself.</p>
         </div>
 
         <div class="home-footer-links">
@@ -238,6 +418,37 @@ import logo from '../assets/logo.svg';
 
         media.addEventListener('change', () => {
           if (!getStoredTheme()) setTheme(getSystemTheme());
+        });
+
+        const select = document.getElementById('install-select');
+        const text = document.getElementById('install-text');
+        const copy = document.getElementById('install-copy');
+        select?.addEventListener('change', () => {
+          if (text) text.textContent = select.value;
+          if (copy) copy.textContent = 'copy';
+        });
+        copy?.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(text?.textContent ?? '');
+            copy.textContent = 'copied';
+          } catch {
+            copy.textContent = 'copy';
+          }
+        });
+
+        const playTabs = Array.from(document.querySelectorAll('.play-tab'));
+        const playPanels = Array.from(document.querySelectorAll('.play-panel'));
+        playTabs.forEach((tab) => {
+          tab.addEventListener('click', () => {
+            const idx = tab.dataset.topic;
+            playTabs.forEach((t) => {
+              t.classList.toggle('active', t === tab);
+              t.setAttribute('aria-selected', String(t === tab));
+            });
+            playPanels.forEach((p) => {
+              p.hidden = p.dataset.panel !== idx;
+            });
+          });
         });
       })();
     </script>
