@@ -5,12 +5,11 @@
   "version": "1.4.2",
   "description": "NestForge Documentation",
   "author": "vernonthedev",
-  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/vernonthedev/nestforge-documentation.git"
   },
-  "homepage": "https://github.com/vernonthedev/nestforge-documentation",
+  "homepage": "https://nestforge.suredoc.net",
   "bugs": {
     "url": "https://github.com/vernonthedev/nestforge-documentation/issues"
   },
