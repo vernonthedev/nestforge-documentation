@@ -66,7 +66,7 @@ Use lowercase kebab-case file names so routes stay predictable, such as `guides/
 
 ## Contribution Notes
 
-Before opening a PR, run `pnpm build` and `vp astro check`. Verify links, code fences, and asset references in local preview. Keep content aligned with the current NestForge workspace and prefer updating an existing page over creating overlapping docs.
+Before opening a PR, run `pnpm build` and `pnpm astro check`. Verify links, code fences, and asset references in local preview. Keep content aligned with the current NestForge workspace and prefer updating an existing page over creating overlapping docs.
 
 ## Releases
 
