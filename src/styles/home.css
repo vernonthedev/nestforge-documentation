@@ -24,13 +24,19 @@
   --faint: #71717a;           /* zinc-500 */
   --line: #27272a;            /* zinc-800 */
   --line-strong: #3f3f46;     /* zinc-700 */
-  --success: #34d399;         /* emerald-500-ish */
+
+  /* Brand ember accent (matches the flame in the logo) */
+  --ember: #ff5a1f;
+  --ember-ink: #1c0d04;        /* text on ember fills */
+  --ember-strong: #ff7a47;     /* hover fill */
+  --ember-soft: rgb(255 90 31 / 0.12);  /* tinted chip/icon backgrounds */
+
   --header-bg: rgb(9 9 11 / 0.92);
 
   /* Rails use Effect's exact rail color: zinc-800 on the zinc-950 page
      background. Visible on every section, never loud. */
   --rail-line: #27272a;
-  --btn-primary-ink: #09090b;   /* dark text on the light primary button */
+  --btn-primary-ink: #1c0d04;   /* dark ember-ink text on the ember button */
   --btn-secondary-ink: var(--ink);
 
   /* Hero grid visibility per theme (default = dark) */
@@ -50,10 +56,16 @@ html[data-theme='light'] {
   --faint: #71717a;
   --line: #e4e4e7;
   --line-strong: #d4d4d8;
-  --success: #059669;
+
+  /* Brand ember accent (logo flame), darkened for light backgrounds */
+  --ember: #c2410c;
+  --ember-ink: #ffffff;
+  --ember-strong: #9a3412;
+  --ember-soft: rgb(194 65 12 / 0.1);
+
   --header-bg: rgb(255 255 255 / 0.92);
   --rail-line: #e4e4e7;
-  --btn-primary-ink: #ffffff;   /* light text on the dark primary button */
+  --btn-primary-ink: #ffffff;   /* white text on the dark ember button */
   --btn-secondary-ink: var(--ink);
   --grid-light-opacity: 1;
   --grid-dark-opacity: 0;
@@ -87,8 +99,12 @@ body.home-body {
 }
 
 .home-body :where(a, button, summary):focus-visible {
-  outline: 2px solid var(--muted);
+  outline: 2px solid var(--ember);
   outline-offset: 2px;
+}
+
+.home-body ::selection {
+  background: var(--ember-soft);
 }
 
 .home-body a,
@@ -228,13 +244,15 @@ body.home-body {
 }
 
 .btn-primary {
-  background: var(--ink);
-  border-color: var(--ink);
-  /* color set via --btn-primary-ink above (specificity workaround) */
+  background: var(--ember);
+  border-color: var(--ember);
+  font-weight: 600;
 }
 
 .btn-primary:hover {
-  opacity: 0.9;
+  background: var(--ember-strong);
+  border-color: var(--ember-strong);
+  opacity: 1;
 }
 
 .btn svg {
@@ -339,7 +357,7 @@ body.home-body {
 
 .home-theme-switch[aria-checked='true'] .home-theme-switch-thumb {
   transform: translateX(1.25rem);
-  background: var(--ink);
+  background: var(--ember);
 }
 
 /* ============ Hero ============ */
@@ -386,15 +404,15 @@ body.home-body {
   height: 37.5rem;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 50% 80% at 70% -20%, rgb(255 255 255 / 0.12) 0%, transparent 40%),
-    radial-gradient(ellipse 30% 50% at 80% 0%, rgb(255 255 255 / 0.08) 0%, transparent 30%);
+    radial-gradient(ellipse 50% 80% at 70% -20%, rgb(255 106 40 / 0.1) 0%, transparent 40%),
+    radial-gradient(ellipse 30% 50% at 80% 0%, rgb(255 90 31 / 0.07) 0%, transparent 30%);
   animation: hero-glow-pulse 4s ease-in-out infinite;
 }
 
 html[data-theme='light'] .hero-glow {
   background:
-    radial-gradient(ellipse 50% 80% at 70% -20%, rgb(9 9 11 / 0.05) 0%, transparent 40%),
-    radial-gradient(ellipse 30% 50% at 80% 0%, rgb(9 9 11 / 0.03) 0%, transparent 30%);
+    radial-gradient(ellipse 50% 80% at 70% -20%, rgb(255 90 31 / 0.06) 0%, transparent 40%),
+    radial-gradient(ellipse 30% 50% at 80% 0%, rgb(255 90 31 / 0.04) 0%, transparent 30%);
 }
 
 @keyframes hero-glow-pulse {
@@ -433,7 +451,7 @@ html[data-theme='light'] .hero-glow {
 }
 
 .hero-kicker-slashes {
-  color: var(--faint);
+  color: var(--ember);
 }
 
 .hero-kicker svg {
@@ -606,6 +624,10 @@ html[data-theme='light'] .hero-glow {
   letter-spacing: -0.01em;
 }
 
+.pipeline-cell:hover strong {
+  color: var(--ember);
+}
+
 .pipeline-desc {
   font-size: 0.82rem;
   color: var(--muted);
@@ -701,7 +723,7 @@ html[data-theme='light'] .pipeline-strip {
   align-items: center;
   gap: 0.5rem;
   margin: 1rem 0;
-  color: var(--ink);
+  color: var(--ember);
 }
 
 .solve-divider-line {
@@ -729,8 +751,8 @@ html[data-theme='light'] .pipeline-strip {
   justify-content: center;
   width: 1.5rem;
   height: 1.5rem;
-  background: var(--line);
-  color: var(--subtle);
+  background: var(--ember-soft);
+  color: var(--ember);
 }
 
 .solve-links {
@@ -755,7 +777,7 @@ html[data-theme='light'] .pipeline-strip {
   justify-content: center;
   width: 1.5rem;
   height: 1.5rem;
-  color: var(--success);
+  color: var(--ember);
 }
 
 .solve-links span:last-child {
@@ -773,7 +795,7 @@ html[data-theme='light'] .pipeline-strip {
 }
 
 .solve-cta:hover {
-  color: var(--ink);
+  color: var(--ember);
 }
 
 /* ============ Mental model ============ */
@@ -882,16 +904,13 @@ html[data-theme='light'] .model-type-box {
 }
 
 .model-part--macro {
-  color: var(--ink);
+  color: var(--ember);
   font-weight: 700;
 }
 
 .model-part--field {
-  color: #a5b4fc; /* indigo-300: "field" accent */
-}
-
-html[data-theme='light'] .model-part--field {
-  color: #4f46e5;
+  color: var(--ember);
+  font-weight: 500;
 }
 
 .model-part--value {
@@ -939,7 +958,7 @@ html[data-theme='light'] .model-part--field {
   margin: 0;
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--ember);
 }
 
 .model-note-desc {
@@ -1045,6 +1064,7 @@ html[data-theme='light'] .model-part--field {
 
 .index-group a:hover .index-arrow {
   opacity: 1;
+  color: var(--ember);
 }
 
 /* ============ FAQ ============ */
@@ -1204,7 +1224,7 @@ html[data-theme='light'] .closing-wash {
 }
 
 .closing-import-name {
-  color: var(--ink);
+  color: var(--ember);
 }
 
 .closing-title {
@@ -1325,7 +1345,7 @@ html[data-theme='light'] .footer-wash {
 }
 
 .footer-col a:hover {
-  color: var(--ink);
+  color: var(--ember);
   border-bottom-color: currentColor;
 }
 
@@ -1365,11 +1385,6 @@ html[data-theme='light'] .footer-wash {
 .footer-logo img {
   height: 1.75rem;
   width: auto;
-  filter: invert(1);
-}
-
-html[data-theme='light'] .footer-logo img {
-  filter: none;
 }
 
 .footer-social {
@@ -1448,7 +1463,7 @@ html[data-theme='light'] .footer-logo img {
 }
 
 .footer-bottom-links a:hover {
-  color: var(--ink);
+  color: var(--ember);
   border-bottom-color: currentColor;
 }
 
