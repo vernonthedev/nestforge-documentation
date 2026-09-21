@@ -557,7 +557,11 @@ html[data-theme='light'] .hero-glow {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  padding: 0.25rem;
+  border: 0;
+  background: transparent;
   color: var(--faint);
+  cursor: pointer;
   transition: color 0.15s;
 }
 
@@ -1515,6 +1519,20 @@ html[data-theme='light'] .footer-wash {
 
   .header-inner {
     gap: 1rem;
+  }
+
+  /* Keep the header inside the documented 320px minimum width: the
+     secondary action cannot fit beside the brand and theme switch. */
+  .home-header-actions {
+    gap: 0.5rem;
+  }
+
+  .home-header-actions .btn-secondary {
+    display: none;
+  }
+
+  .home-header-actions .btn {
+    padding-inline: 0.5rem;
   }
 
   .pipeline-strip {
