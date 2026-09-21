@@ -1,7 +1,8 @@
 ---
+import { Image } from 'astro:assets';
 import '../styles/home.css';
 import faviconSrc from '../assets/favicon.ico';
-import logoSrc from '../assets/logo.svg?url';
+import logo from '../assets/logo.svg';
 ---
 
 <!doctype html>
@@ -34,7 +35,7 @@ import logoSrc from '../assets/logo.svg?url';
     <header class="home-header">
       <div class="home-container home-header-inner">
         <a href="/" class="home-brand" aria-label="NestForge home">
-          <img src={logoSrc} alt="NestForge" />
+          <Image src={logo} alt="NestForge" width={40} height={23} loading="eager" fetchpriority="high" />
           <div class="home-brand-copy">
             <span class="home-brand-name">NestForge</span>
             <span class="home-brand-subtitle">Framework docs</span>
@@ -168,7 +169,7 @@ import logoSrc from '../assets/logo.svg?url';
       <div class="home-container home-footer-inner">
         <div class="home-footer-brand">
           <a href="/" class="home-brand home-brand-footer" aria-label="NestForge home">
-            <img src={logoSrc} alt="NestForge" />
+            <Image src={logo} alt="NestForge" width={40} height={23} loading="lazy" />
             <div class="home-brand-copy">
               <span class="home-brand-name">NestForge</span>
               <span class="home-brand-subtitle">Framework docs</span>
