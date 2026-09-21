@@ -40,16 +40,16 @@ Navigation is configured in `astro.config.mjs`. Static assets for this site are 
 Install dependencies and run the docs locally from the repository root:
 
 ```bash
-yarn install
-yarn dev
+vp install
+pnpm dev
 ```
 
 Useful commands:
 
-- `yarn dev` starts the site at `http://localhost:4321`
-- `yarn build` creates a production build in `dist/`
-- `yarn preview` serves the built site locally
-- `yarn astro check` validates Astro content and configuration changes
+- `pnpm dev` starts the site at `http://localhost:4321`
+- `pnpm build` creates a production build in `dist/`
+- `pnpm preview` serves the built site locally
+- `pnpm astro check` validates Astro content and configuration changes
 
 ## Writing and Updating Docs
 
@@ -66,7 +66,7 @@ Use lowercase kebab-case file names so routes stay predictable, such as `guides/
 
 ## Contribution Notes
 
-Before opening a PR, run `yarn build` and `yarn astro check`. Verify links, code fences, and asset references in local preview. Keep content aligned with the current NestForge workspace and prefer updating an existing page over creating overlapping docs.
+Before opening a PR, run `pnpm build` and `pnpm astro check`. Verify links, code fences, and asset references in local preview. Keep content aligned with the current NestForge workspace and prefer updating an existing page over creating overlapping docs.
 
 ## Releases
 

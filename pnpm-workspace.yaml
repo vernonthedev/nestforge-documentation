@@ -1,0 +1,5 @@
+allowBuilds:
+  esbuild: true
+  sharp: true
+patchedDependencies:
+  '@six-tech/starlight-theme-six': patches/@six-tech__starlight-theme-six.patch

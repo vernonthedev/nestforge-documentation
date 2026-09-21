@@ -3,18 +3,17 @@
   "private": true,
   "type": "module",
   "version": "1.4.2",
+  "packageManager": "pnpm@12.5.1",
   "description": "NestForge Documentation",
   "author": "vernonthedev",
-  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/vernonthedev/nestforge-documentation.git"
   },
-  "homepage": "https://github.com/vernonthedev/nestforge-documentation",
+  "homepage": "https://nestforge.suredoc.net",
   "bugs": {
     "url": "https://github.com/vernonthedev/nestforge-documentation/issues"
   },
-  "packageManager": "yarn@1.22.22",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -25,21 +24,23 @@
     "release:dry-run": "semantic-release --dry-run"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.37.6",
-    "@fontsource/inter": "^5.2.8",
-    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@astrojs/starlight": "^0.42.2",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
     "@six-tech/starlight-theme-six": "^1.0.16",
-    "astro": "^5.6.1",
-    "sharp": "^0.34.5"
+    "astro": "^7.3.3",
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^11.0.6",
-    "@semantic-release/npm": "^12.0.2",
+    "@semantic-release/changelog": "^7.0.0",
     "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/release-notes-generator": "^14.1.0",
-    "conventional-changelog-conventionalcommits": "^8.0.0",
-    "semantic-release": "^24.2.3"
+    "@semantic-release/git": "^11.0.1",
+    "@semantic-release/github": "^12.0.9",
+    "@semantic-release/npm": "^13.1.5",
+    "@semantic-release/release-notes-generator": "^14.1.1",
+    "conventional-changelog-conventionalcommits": "^10.4.0",
+    "semantic-release": "^25.0.9",
+    "typescript": "^6.0.0",
+    "@astrojs/check": "^0.9.0"
   }
 }
