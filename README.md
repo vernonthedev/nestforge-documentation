@@ -41,15 +41,15 @@ Install dependencies and run the docs locally from the repository root:
 
 ```bash
 vp install
-vpr dev
+pnpm dev
 ```
 
 Useful commands:
 
-- `vpr dev` starts the site at `http://localhost:4321`
-- `vpr build` creates a production build in `dist/`
-- `vpr preview` serves the built site locally
-- `vpr astro check` validates Astro content and configuration changes
+- `pnpm dev` starts the site at `http://localhost:4321`
+- `pnpm build` creates a production build in `dist/`
+- `pnpm preview` serves the built site locally
+- `pnpm astro check` validates Astro content and configuration changes
 
 ## Writing and Updating Docs
 
@@ -66,7 +66,7 @@ Use lowercase kebab-case file names so routes stay predictable, such as `guides/
 
 ## Contribution Notes
 
-Before opening a PR, run `vpr build` and `vp astro check`. Verify links, code fences, and asset references in local preview. Keep content aligned with the current NestForge workspace and prefer updating an existing page over creating overlapping docs.
+Before opening a PR, run `pnpm build` and `vp astro check`. Verify links, code fences, and asset references in local preview. Keep content aligned with the current NestForge workspace and prefer updating an existing page over creating overlapping docs.
 
 ## Releases
 

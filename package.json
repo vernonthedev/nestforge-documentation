@@ -13,7 +13,6 @@
   "bugs": {
     "url": "https://github.com/vernonthedev/nestforge-documentation/issues"
   },
-  "packageManager": "yarn@1.22.22",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
