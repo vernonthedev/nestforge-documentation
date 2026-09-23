@@ -1,3 +1,22 @@
+## [1.5.0](https://github.com/vernonthedev/nestforge-documentation/compare/v1.4.2...v1.5.0) (2026-09-23)
+
+### Features
+
+* **home:** redesign landing page with new layout and self-hosted fonts ([ae400d9](https://github.com/vernonthedev/nestforge-documentation/commit/ae400d9444ee0f1a680147543fac989be82f34e8))
+
+### Bug Fixes
+
+* **ci:** enable pnpm before dependency install ([82f3b1c](https://github.com/vernonthedev/nestforge-documentation/commit/82f3b1cda8d80303a4efb4e013dd0597fba3f45d))
+* **ci:** migrate release workflow to pnpm ([04ebba2](https://github.com/vernonthedev/nestforge-documentation/commit/04ebba2abfdeea4ead707c06e792d3eea9021098))
+* **deploy:** pin pnpm 12 so Vercel stops resolving an older pnpm ([28c3f38](https://github.com/vernonthedev/nestforge-documentation/commit/28c3f38408b8fa55c601cd4c0b19e9136b6f2f8a))
+* **home:** apply review fixes for copy button and narrow header ([2994193](https://github.com/vernonthedev/nestforge-documentation/commit/2994193aa5338ded0a0c1a262478c1b197578b58))
+* **home:** rebuild the landing page on effect.website's design system ([7549cc7](https://github.com/vernonthedev/nestforge-documentation/commit/7549cc7eb8f542608c5582a2d84c8045fe19c75d))
+* **release:** align changelog writer version ([fbc06d5](https://github.com/vernonthedev/nestforge-documentation/commit/fbc06d5fb2b0045939cdb38c50910f3e4314e4d1))
+
+### Performance Improvements
+
+* optimize logo image with Astro Image component ([93030b9](https://github.com/vernonthedev/nestforge-documentation/commit/93030b9d984fbe308d69ae9b05dff0632711f6d6))
+
 ## [1.4.2](https://github.com/vernonthedev/nestforge-documentation/compare/v1.4.1...v1.4.2) (2026-03-19)
 
 ## [1.4.1](https://github.com/vernonthedev/nestforge-documentation/compare/v1.4.0...v1.4.1) (2026-03-17)
