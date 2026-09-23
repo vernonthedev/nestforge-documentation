@@ -48,8 +48,8 @@ Useful verification targets in the framework repo:
 Run:
 
 ```bash
-yarn astro check
-yarn build
+pnpm astro check
+pnpm build
 ```
 
 Also confirm:

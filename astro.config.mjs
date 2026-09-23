@@ -4,6 +4,7 @@ import starlight from "@astrojs/starlight";
 import starlightThemeSix from "@six-tech/starlight-theme-six";
 
 export default defineConfig({
+  site: "https://nestforge.suredoc.net",
   integrations: [
     starlight({
       title: "NestForge Docs",

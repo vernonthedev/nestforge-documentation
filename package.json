@@ -4,6 +4,9 @@
   "type": "module",
   "version": "1.4.2",
   "packageManager": "pnpm@12.5.1",
+  "engines": {
+    "node": ">=24"
+  },
   "description": "NestForge Documentation",
   "author": "vernonthedev",
   "repository": {
@@ -32,6 +35,7 @@
     "sharp": "^0.35.4"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.0",
     "@semantic-release/changelog": "^7.0.0",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^11.0.1",
@@ -40,7 +44,6 @@
     "@semantic-release/release-notes-generator": "^14.1.1",
     "conventional-changelog-conventionalcommits": "^10.4.0",
     "semantic-release": "^25.0.9",
-    "typescript": "^6.0.0",
-    "@astrojs/check": "^0.9.0"
+    "typescript": "^6.0.0"
   }
 }
